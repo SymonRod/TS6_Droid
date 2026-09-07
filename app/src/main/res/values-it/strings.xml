@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="channel_connection">Connessione</string>
+    <string name="channel_connection_desc">Notifica di connessione al server</string>
+
+    <!-- ConnectionScreen -->
+    <string name="server_address">Indirizzo del server</string>
+    <string name="nickname">Nickname</string>
+    <string name="password_optional">Password (facoltativa)</string>
+    <string name="channel_optional">Canale (facoltativo)</string>
+    <string name="default_channel">Canale predefinito</string>
+    <string name="browse_channels">Sfoglia i canali</string>
+    <string name="connecting">Connessione…</string>
+    <string name="connect">Connetti</string>
+    <string name="add_bookmark">Aggiungi preferito</string>
+    <string name="edit_bookmark">Modifica preferito</string>
+    <string name="save">Salva</string>
+    <string name="bookmarks">Preferiti</string>
+    <string name="no_bookmarks">Nessun preferito</string>
+    <string name="manual_connection">Connessione manuale</string>
+    <string name="auto_reconnect">Riconnessione automatica</string>
+    <string name="remove">Rimuovi</string>
+    <string name="edit">Modifica</string>
+    <string name="select_channel">Seleziona un canale</string>
+    <string name="cancel">Annulla</string>
+
+    <!-- ServerScreen -->
+    <string name="server">Server</string>
+    <string name="disconnect">Disconnetti</string>
+    <string name="settings">Impostazioni</string>
+    <string name="audio_gain">Guadagno audio</string>
+    <string name="show_link_thumbnails">Anteprime dei link video</string>
+    <string name="auto_load_images">Carica le immagini automaticamente</string>
+    <string name="chat">Chat</string>
+    <string name="push_to_talk">Premi per parlare</string>
+    <string name="ptt">PTT</string>
+    <string name="mute_mic">Disattiva il microfono</string>
+    <string name="mute">Muto</string>
+    <string name="unmute_mic">Attiva il microfono</string>
+    <string name="tab_channel">Canale</string>
+    <string name="tab_private">MP</string>
+    <string name="close">Chiudi</string>
+    <string name="filter_all">Tutti</string>
+    <string name="message_channel_placeholder">Messaggio nel canale…</string>
+    <string name="message_private_placeholder">Messaggio a %1$s…</string>
+    <string name="send">Invia</string>
+    <string name="user_fallback">Utente #%1$d</string>
+
+    <!-- UserItem -->
+    <string name="status_recording">Registrazione</string>
+    <string name="status_talking">Sta parlando</string>
+    <string name="status_muted">Microfono disattivato</string>
+    <string name="status_output_muted">Audio disattivato</string>
+    <string name="status_away">Assente</string>
+
+    <!-- MessageBubble -->
+    <string name="image">Immagine</string>
+    <string name="file_attachment_info">%1$s · File condiviso</string>
+    <string name="file_attachment_server">%1$s · File del server</string>
+    <string name="download_not_supported">Download non supportato</string>
+    <string name="tap_to_download">Tocca per scaricare</string>
+    <string name="tap_to_view">Tocca per visualizzare</string>
+    <string name="tap_to_open">Tocca per aprire</string>
+    <string name="downloading">Download in corso…</string>
+    <string name="download">Scarica</string>
+    <string name="file_saved_label">Salvato in Download</string>
+    <string name="file_saved">%1$s salvato</string>
+    <string name="attach_file">Allegato</string>
+    <string name="file_size_bytes">%1$d B</string>
+    <string name="file_size_kb">%1$.1f KB</string>
+    <string name="file_size_mb">%1$.1f MB</string>
+    <string name="file_size_gb">%1$.1f GB</string>
+
+    <!-- File Manager -->
+    <string name="file_manager">File</string>
+    <string name="no_files">Nessun file</string>
+    <string name="new_folder">Nuova cartella</string>
+    <string name="rename">Rinomina</string>
+    <string name="delete_file">Elimina</string>
+    <string name="confirm_delete">Eliminare %1$s?</string>
+    <string name="enter_folder_name">Nome della cartella</string>
+    <string name="enter_new_name">Nuovo nome</string>
+    <string name="refresh">Aggiorna</string>
+    <string name="create">Crea</string>
+    <string name="folder">Cartella</string>
+    <string name="upload">Carica</string>
+    <string name="share_in_channel">Canale attuale</string>
+    <string name="share_file_title">Condividi %1$s</string>
+
+    <!-- Notification -->
+    <string name="notif_unmute">Riattiva</string>
+    <string name="notif_mute">Muto</string>
+
+    <!-- ViewModel -->
+    <string name="unknown_sender">Sconosciuto</string>
+    <string name="me_sender">Io</string>
+    <string name="error_address_nickname_required">Indirizzo e nickname sono obbligatori</string>
+    <string name="connection_failed">Connessione non riuscita</string>
+    <string name="browse_failed">Impossibile sfogliare i canali</string>
+    <string name="error_not_connected">Non connesso</string>
+    <string name="error_download_failed">Download non riuscito</string>
+</resources>
