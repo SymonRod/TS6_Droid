@@ -1,9 +1,13 @@
 # Screen sharing — Phase 2 working plan
 
-> **Status:** done for P2P mode. The capture ran 2026-09-07 against a live TS6
-> server and closed questions §9.1–§9.4 of `screenshare-protocol.md` (now
-> §9a there). SFU mode (§9.5, §9.6) still needs a server with
-> `virtualserver_sfu_endpoint` configured — same tool, same procedure below.
+> **Status:** done for P2P mode, in both roles. Two captures ran 2026-09-07
+> against a live TS6 server: session 1 (viewer, `screenshare-protocol.md` §9a)
+> and session 2 (broadcaster, §9b), which together closed §9.1–§9.3 and
+> confirmed the wire spelling of every command except `requestsfuaccessinfo`.
+> §9.4 and §9.6 are blocked upstream — TeamSpeak has not released the SFU, and
+> `virtualserver_sfu_endpoint` is inert on self-hosted servers — so no further
+> capture can reach them. §9.5 (TURN) needs a client behind symmetric NAT, not
+> another server.
 >
 > One bug was found and fixed along the way: `stream-capture` called
 > `Connection::get_tsproto_client_mut()` immediately after `connect()`, before
@@ -187,7 +191,11 @@ known, so it gates Phase 4 entirely.
 Fold the transcript's findings back into `screenshare-protocol.md`, promoting
 the *inferred* rows in §4.2 to literal and correcting them where they are wrong.
 
-**Met, for P2P, on 2026-09-07** — see `screenshare-protocol.md` §0 and §9a. The
+**Met, for P2P, on 2026-09-07** — see `screenshare-protocol.md` §0, §9a and
+§9b (session 2, the broadcaster side: `setupstream`, `updatestream`,
+`stopstream`, `respondjoinstreamrequest`, `removeclientfromstream`,
+`streamsignaling` and `requeststreaminfo`, each minimised against the server's
+own error replies). The
 answer to §9.1 was not the escaped-JSON-parameter shape everyone assumed: most
 screen-share commands are flat TS3 parameters with no JSON at all, and even
 `notifystreamsignaling` only wraps the WebRTC message, not the SDP offer

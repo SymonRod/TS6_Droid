@@ -7,13 +7,21 @@
 ## Where things stand
 
 - **Phase 1** (static analysis of the desktop client) — done.
-- **Phase 2** (live capture) — done **for P2P mode only**, 2026-09-07, against
-  `god.serod.tech:9988` (channel `Salotto`,
-  `virtualserver_capability_extensions=FILETIME,STREAM_P2P`). Evidence and
-  analysis: [screenshare-protocol.md](screenshare-protocol.md) §0 and §9a.
-- **Still open, needs a server with `virtualserver_sfu_endpoint` configured**:
-  §9.5 (is TURN relaying available) and §9.6 (are the SFU/mediasoup payloads
-  stock). Same tool, same procedure — see "Re-running the capture" below.
+- **Phase 2** (live capture) — done **for P2P mode**, in both roles, 2026-09-07,
+  against `god.serod.tech:9988` (channel `Salotto`,
+  `virtualserver_capability_extensions=FILETIME,STREAM_P2P`). Session 1 captured
+  the viewer side, session 2 published streams from the capture client and drove
+  every remaining client → server command by hand. Evidence and analysis:
+  [screenshare-protocol.md](screenshare-protocol.md) §0, §9a (viewer) and §9b
+  (broadcaster).
+- **Blocked upstream, not merely open:** §9.6 (SFU/mediasoup payloads).
+  TeamSpeak has not released the SFU — `virtualserver_sfu_endpoint` does
+  nothing on a self-hosted server, there is no SFU binary to install and no
+  setup documentation. §9.4 (`notifystreamattendees`) is almost certainly part
+  of that same SFU path, since a full broadcaster lifecycle never triggered it.
+- **Still open and testable:** §9.5, whether TURN relaying is available — it
+  needs a client behind symmetric NAT (a phone on mobile data will do), not a
+  different server.
 - **No application code yet.** Per AGENTS.md, screen sharing stays out of the
   app until the protocol is confirmed. The one exception that needs none of
   it: `client_is_streaming`, a plain client property — see
@@ -81,15 +89,33 @@ git.** It's already covered by `../tslib/.gitignore`; a completed run there
 carries a real public IP, LAN/Tailscale addresses and myteamspeak account
 tokens. Only hand-redacted excerpts belong in `screenshare-protocol.md`.
 
+## How session 2 probed the client → server commands
+
+Worth reusing, because it turned guesswork into a decision procedure: send the
+command with `return_code=<tag>`, then read the tagged reply. The server echoes
+`return_code` on the `error` line *and* on the notification that answers the
+request, so replies can be matched even when several probes are in flight. A
+command that is missing something answers `error id=1542 missing required
+parameter` **without naming the field**, so the method is: send a superset,
+then remove one field at a time. Two constraints: pace probes ~4 s apart or
+flood protection (`error id=524`) locks you out for 10 s and up, and a stale
+UUID gives `error id=5635 Stream does not exist`, not 1542.
+
+This is how `accessibility` was found — `setupstream` refuses the `access`
+spelling that `notifystreamstarted` itself uses (§9b.1).
+
 ## Next steps, in order of value
 
-1. Find or stand up a TS6 server with `virtualserver_sfu_endpoint` set, to
-   close §9.5/§9.6 — this is the only thing P2P testing can't reach.
-2. Figure out what triggers `notifystreamattendees` — never seen in the P2P
-   session; possibly a dedicated request command not yet identified, or it
-   only fires above some viewer count.
-3. Exercise `setupstream`/`updatestream`/`stopstream`/`removeclientfromstream`
-   from the client side (the P2P session only ever observed the *receiving*
-   end of a share someone else started) to confirm those bodies are flat too.
-4. Once §9 is fully closed: Phase 4 per screenshare-research-plan.md — still
-   gated on "no application code" until then.
+1. **Phase 4, P2P viewer.** The signaling contract is complete for the viewer
+   role (§9a.3, §9b) and nothing still open blocks it. Order: `tslib-core`
+   parses the `notifystream*` family → `tslib-jni` forwards it → Kotlin drives
+   `org.webrtc`. Note `client_is_streaming` needs no `tsproto` hook, only a
+   field added to `ts-bookkeeping`'s argument declarations (§0), which makes it
+   the natural first commit.
+2. **§9.5, TURN.** Answerable without a new server: run the viewer from a phone
+   on mobile data (symmetric NAT) against a sharer elsewhere and see whether
+   ICE completes. This decides whether P2P is usable at all from mobile, so it
+   is worth answering early in Phase 4 rather than after.
+3. **§9.4 / §9.6 — wait for TeamSpeak.** Neither is reachable until the SFU
+   ships. Re-check the community thread linked in §9.6 rather than spending
+   effort on them.

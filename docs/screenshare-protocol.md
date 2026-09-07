@@ -1,14 +1,15 @@
 # TeamSpeak 6 screen sharing — protocol reference
 
-> **Status:** Phase 2 complete for **P2P mode**. A real session was captured
-> end to end with `../tslib/examples/stream-capture` against a live TS6 server
-> (`virtualserver_capability_extensions=FILETIME,STREAM_P2P`). SFU mode is
-> still unconfirmed — §9.5 and §9.6 need a server with
-> `virtualserver_sfu_endpoint` configured.
-> **Phase 1 date:** 2026-09-07. **Phase 2 date:** 2026-09-07.
+> **Status:** Phase 2 complete for **P2P mode**, in both roles — viewer
+> (session 1, §9a) and broadcaster (session 2, §9b). Both were captured with
+> `../tslib/examples/stream-capture` against a live TS6 server
+> (`virtualserver_capability_extensions=FILETIME,STREAM_P2P`). SFU mode
+> **cannot** be confirmed for now: TeamSpeak has not released the SFU, and
+> `virtualserver_sfu_endpoint` does nothing on a self-hosted server (§9.6).
+> **Phase 1 date:** 2026-09-07. **Phase 2 dates:** 2026-09-07 (sessions 1 and 2).
 > **Sources:** the three files listed in
 > [screenshare-research-plan.md](screenshare-research-plan.md) §0 (Phase 1,
-> static analysis) plus the live transcript from Phase 2 (§9a). Raw captures
+> static analysis) plus the live transcripts from Phase 2 (§9a, §9b). Raw captures
 > stay local to `../tslib/captures/` — they carry real IPs and account tokens
 > and are not part of this repository; only redacted, structural excerpts are
 > reproduced below.
@@ -182,22 +183,24 @@ Wire form: `viewer_limit`, `sfu_endpoint`, `sfu_user_id` per §2.
 
 ### 4.2 Client → server
 
-| Command | C++ payload | Body (inferred from Layer B) |
+| Command | C++ payload | Wire parameters — **required** / *optional* |
 |---|---|---|
-| `setupstream` | `Publish_Session` | `Stream_Config` minus the SFU fields, plus `sessionIdentifier` |
-| `updatestream` | `Update_Session_Command` | partial `Stream_Config` + `session_id` |
-| `stopstream` | `Stop_Stream` | `session_id` |
-| `joinstreamrequest` | `Join_Stream_Request` | `stream_identifier`, `msg`, `is_remove`, `ui_state`, `config` |
-| `respondjoinstreamrequest` | `Join_Stream_Response` | `session_id`, `stream_identifier`, `decision`, `send_to_peer` |
-| `removeclientfromstream` | `Stream_Client_Kick` | `session_id`, `stream_identifier`, `reason` |
-| `streamsignaling` | `Stream_Signaling` | §4.4 |
-| `requeststreaminfo` | — | `stream_identifier` |
-| `requestsfuaccessinfo` | — | — |
+| `setupstream` | `Publish_Session` | **`accessibility`**, *`name`*, *`type`*, *`mode`*, *`bitrate`*, *`viewer_limit`*, *`audio`* — §9b.1 |
+| `updatestream` | `Update_Session_Command` | **`id`** + any subset of the `setupstream` fields — §9b.3 |
+| `stopstream` | `Stop_Stream` | **`id`**, **`reason`** — §9b.3 |
+| `joinstreamrequest` | `Join_Stream_Request` | **`id`**, **`clid`**, **`is_remove`**, **`msg`** — §9a.3 |
+| `respondjoinstreamrequest` | `Join_Stream_Response` | **`clid`**, **`id`**, **`decision`**, **`msg`**, **`offer`** — §9b.2 |
+| `removeclientfromstream` | `Stream_Client_Kick` | **`clid`**, **`id`**, **`reason`** — §9b.3 |
+| `streamsignaling` | `Stream_Signaling` | **`clid`**, **`id`**, **`json`** — §9b.2, §4.4 |
+| `requeststreaminfo` | — | **`clid`**, *`id`* — §9b.3 |
+| `requestsfuaccessinfo` | — | unknown — never exercised (no SFU server exists, §9.6) |
 
 The command ↔ payload column is carried over from the research plan and remains
-**inferred from name correspondence**. The body column is inferred by projecting
-Layer B through the naming rule in §2 — it is the weakest evidence in this
-document and is exactly what Phase 2 exists to confirm.
+**inferred from name correspondence**. The parameter column is now **literal**
+for every command except `requestsfuaccessinfo`: each one was sent for real and
+minimised against the server's `error id=1542 missing required parameter`
+(§9b). Note that this is the *server's* required set, not necessarily what a
+peer client needs to function.
 
 The Layer B calls these project from are literal:
 
@@ -220,7 +223,7 @@ The Layer B calls these project from are literal:
 | `notifystreamstarted` | `Stream_Started` | `Stream_Config` (§4.1) |
 | `notifystreamstopped` | `Stream_Stopped` | `StreamIdentifierServer` alone |
 | `notifystreamupdated` | `Updated_Session_Notify` | partial `Stream_Config` |
-| `notifystreaminfo` | `Stream_Info` | `{ info: [Stream_Config], clientIds: [int]｜null }` |
+| `notifystreaminfo` | `Stream_Info` | flat, and a **`\|`-separated list** with one entry per stream of the queried client — §9b.3. (The `{info, clientIds}` envelope below is Layer B only.) |
 | `notifystreamattendees` | `Stream_Attendees` | viewer list |
 | `notifystreamsignaling` | `Stream_Signaling_Parsed` | §4.4 |
 | `notifystreamclientjoined` | `Stream_Client_Joined` | `StreamIdentifierServer` |
@@ -264,17 +267,17 @@ distinguishes the two in the resulting `notifystreamclientleft`.
 `Stream_Signaling_Commands_Base` has four subtypes, literal from the log strings
 in `StreamBase::OnStreamSignalingMessage`:
 
-| Subtype | Purpose |
-|---|---|
-| `kOffer` | SDP offer — carries an `is_reconnect` flag |
-| `kAnswer` | SDP answer |
-| `kICECandidate` | trickled ICE candidate |
-| `kReconnect` | renegotiation request |
+| Subtype | Wire `cmd` | Purpose | `args` |
+|---|---|---|---|
+| `kOffer` | — | SDP offer — carries an `is_reconnect` flag | never seen here: in P2P the offer rides on `notifyrespondjoinstreamrequest` as a plain `offer=` parameter (§9a.1) |
+| `kAnswer` | `answer` | SDP answer | `{"answer": "<sdp>"}` — literal, §9b.2 |
+| `kICECandidate` | `iceCandidate` | trickled ICE candidate | `{"mLine": int, "mid": "…", "sdp": "candidate:…"}` — literal, §9a.2 |
+| `kReconnect` | `reconnect`? | renegotiation request | not observed |
 
-Matching wire tokens present in the string table: `offer`, `answer`,
-`iceCandidate`, `reconnect`, `sdp`, `mid`. The discriminator field name is
-**not** determined — `type` and `subtype` both appear, but neither can be tied
-to this structure from strings alone. Phase 2 settles it.
+The discriminator is **`cmd`**, a sibling of `args` inside the `json=`
+parameter (§9a.2). Note that the `args` key is named after the command —
+`answer` for an answer — rather than a uniform `sdp`. `reconnect` remains a
+string-table token only; no session reached a renegotiation.
 
 ---
 
@@ -462,18 +465,26 @@ questions Phase 2 had to answer; status after the capture in §9a:
    was wrong.** There is no JSON body for most commands; see §0 and §9a.1.
 2. **The signaling discriminator field.** ✅ **Resolved for P2P.** It's `cmd`,
    a sibling of `args`. See §9a.2.
-3. **Exact wire spelling of every field.** ✅ **Resolved for every command this
-   session exercised** (§9a.3). Still open for `setupstream`, `updatestream`,
-   `stopstream`, `removeclientfromstream`, and anything SFU-only
-   (`requestsfuaccessinfo`) — none were exercised.
-4. **`notifystreamattendees` shape.** ❌ **Still open** — not triggered in the
-   captured session (no command sends a viewer-list request on its own; the
-   trigger is undetermined).
+3. **Exact wire spelling of every field.** ✅ **Resolved for every command
+   except `requestsfuaccessinfo`.** Session 1 covered the viewer side (§9a.3);
+   session 2 exercised `setupstream`, `updatestream`, `stopstream`,
+   `respondjoinstreamrequest`, `removeclientfromstream`, `streamsignaling` and
+   `requeststreaminfo` from the broadcaster side (§9b).
+4. **`notifystreamattendees` shape.** ❌ **Still open, and now probably
+   SFU-only.** Session 2 ran the full broadcaster path — publish, two viewers
+   joining, a kick, a leave, an info request — and it never fired. No command
+   in the (exhaustive, §4) token list requests a viewer list, and `main.js`
+   contains no handler for it: `streamAttendees` exists only inside the core
+   binary. See §9b.4.
 5. **Whether TURN relaying is available.** ❌ **Still open** — needs a client
    behind symmetric NAT, or a Phase 3 packet capture of the actual relay.
-6. **Whether the SFU payloads are stock mediasoup.** ❌ **Still open** — needs
-   a server with `virtualserver_sfu_endpoint` configured; the captured server
-   was P2P-only (`virtualserver_capability_extensions=FILETIME,STREAM_P2P`).
+6. **Whether the SFU payloads are stock mediasoup.** ⛔ **Blocked upstream, not
+   just open.** `virtualserver_sfu_endpoint` is inert on self-hosted servers:
+   TeamSpeak states the setting "does not do anything on the server side" and
+   that the SFU "was not released to public yet" (TeamSpeak Community thread
+   [62715](https://community.teamspeak.com/t/since-when-is-the-sfu-video-feature-in-teamspeak-6-which-self-hosted-sfu-do-you-use/62715),
+   dev reply, checked 2026-09-07). There is no SFU binary to install and no
+   setup documentation, so no capture can close this until TeamSpeak ships it.
 
 ## 9a. Phase 2 evidence
 
@@ -579,22 +590,167 @@ Also confirmed, from the handshake log rather than the listener:
 `virtualserver_capability_extensions` is a literal comma-separated list —
 this server sent `FILETIME,STREAM_P2P`.
 
+## 9b. Phase 2b evidence — the broadcaster side
+
+Captured 2026-09-07 against the same P2P server, transcript
+`../tslib/captures/session-2.jsonl` (local only, same sensitivity caveat as
+session 1). Where session 1 watched someone else share, session 2 **published
+streams from the capture client itself** and drove every remaining client →
+server command by hand. Method: send the command with a `return_code=<tag>`,
+read the tagged reply, minimise against `error id=1542`. `return_code` is
+echoed on both the `error` line **and** the notification that answers the
+request, which is what makes the correlation reliable.
+
+The two published streams carried no video — the capture tool has no WebRTC
+stack — so the peers that tried to join them saw nothing. They were removed
+with `stopstream` at the end of the session.
+
+### 9b.1 `setupstream`, and the `access` / `accessibility` split
+
+The required parameter is **`accessibility`**. `access` — the spelling
+`notifystreamstarted` itself uses — is accepted but does **not** satisfy the
+requirement, so a command carrying only `access` fails with `error id=1542`
+while everything else about it is valid. This is the same inconsistency §9a.1
+found on the receive side, and it is worse than cosmetic: the two spellings are
+not interchangeable, and only one of them is required.
+
+```
+setupstream name=Test type=2 mode=1 bitrate=750000 viewer_limit=0 audio=0 accessibility=1
+  → notifystreamstarted clid=13 id=<uuid-B> name=Test type=2 access=1 mode=1 bitrate=29104 viewer_limit=0 audio=0 return_code=…
+  → notifyclientupdated clid=13 client_is_streaming=1
+  → error id=0 msg=ok
+```
+
+Everything but `accessibility` is optional — a bare `setupstream` with only
+that field is accepted. Two things the server overrides:
+
+- **The stream `id` is server-assigned.** A client-supplied `id=<uuid>` is
+  ignored: the `notifystreamstarted` that comes back carries a different UUID,
+  and that is the one every later command must use.
+- **`bitrate` is server-decided too.** 750000 was requested, 29104 came back —
+  the same 29104 for both streams, and the pre-existing desktop share was
+  reporting 33920. So the field is a live/negotiated figure, not the client's
+  ask.
+
+`client_is_streaming` flips to `1` on the first stream and back to `0` only
+when the **last** one stops — with two streams open, stopping the first
+produced no `notifyclientupdated` at all.
+
+### 9b.2 The join handshake seen from the sharer, and `answer`
+
+A viewer's request arrives as a flat notify, `msg` present but valueless:
+
+```
+notifyjoinstreamrequest clid=2 id=<uuid> msg is_remove=0
+```
+
+`respondjoinstreamrequest` requires **all five** of `clid`, `id`, `decision`,
+`msg` and `offer` — the server rejects an accept that omits the SDP, so
+`decision=1` and an offer are inseparable on the wire. Sending it produced:
+
+```
+respondjoinstreamrequest clid=2 id=<uuid> decision=1 msg= offer=v=0\r\no=-\s…
+  → notifystreamclientjoined clid=2 id=<uuid>
+  → error id=0 msg=ok
+  → notifystreamsignaling clid=2 id=<uuid> json={"args":{"answer":""},"cmd":"answer"}
+```
+
+That last line is the second confirmed `cmd` value after `iceCandidate`, and it
+settles the shape §9a.2 left open: **`args` for an answer is `{"answer": …}`,
+keyed by the command name, not by `sdp`**. The value is empty here only because
+the offer was a hand-written stub the peer's WebRTC stack could not answer —
+the peer still replied, which is itself the useful part.
+
+`streamsignaling` (C2S) requires `clid`, `id` and `json`, all three, and the
+**server does not inspect the JSON**: `json={"cmd":"bogusCommand","args":{"foo":1}}`
+was accepted with `error id=0 msg=ok` exactly like a well-formed candidate. The
+server is a pure relay for this parameter; all validation is peer-side. Good
+news for a permissive parser, and it means an unknown future `cmd` value will
+reach the app rather than being filtered out en route.
+
+### 9b.3 Update, stop, kick, info
+
+```
+updatestream id=<uuid> name=Renamed
+  → notifystreamupdated clid=13 id=<uuid> name=Renamed return_code=…
+```
+
+`updatestream` takes `id` plus **any subset** of the `setupstream` fields, and
+the resulting `notifystreamupdated` carries **only the fields that changed** —
+so it is a patch, not a full `Stream_Config`. A parser must merge it into the
+stream it already knows, never replace.
+
+```
+stopstream id=<uuid> reason=1                    → error id=0 msg=ok
+removeclientfromstream clid=2 id=<uuid> reason=4 → notifystreamclientleft clid=2 id=<uuid> reason=4
+joinstreamrequest id=<uuid> clid=12 is_remove=1 msg=
+                                                 → notifystreamclientleft clid=13 id=<uuid> reason=1
+```
+
+`reason` is required on both `stopstream` and `removeclientfromstream`. The
+values match `ScreenshareLeaveReason` (§7) as observed: **`1` = LEFT** on the
+`is_remove=1` path, **`4` = KICKED** on the kick path — which also closes
+§9a.3's open question about `notifystreamclientleft`: it fires on the explicit
+leave and kick paths, and (per session 1) not on a plain disconnect.
+
+`requeststreaminfo` is keyed by **`clid`**, not by stream: `id` is optional and
+ignored when present. The reply is one `notifystreaminfo` **pipe-separated
+list** with an entry per stream that client owns:
+
+```
+requeststreaminfo clid=13
+  → notifystreaminfo return_code=… clid=13 id=<uuid-A> name=Renamed type=2 accessibility=1 mode=1 viewer=1 bitrate=29104 viewer_limit=0 audio=0|clid=13 id=<uuid-B> name=Test …
+```
+
+Two consequences for `tslib`: `notifystreaminfo` must be parsed as a
+**multi-entry** command (the TS3 `|` list form), and it uses `accessibility`,
+not `access`, in every entry.
+
+### 9b.4 `notifystreamattendees` — absent from both roles
+
+Never observed, in either session. Session 2 covered the whole broadcaster
+lifecycle (publish, two distinct clients requesting to join, one accepted, one
+kicked, an explicit leave, repeated info requests, stop) and it never appeared.
+Combined with three static facts — no command in §4's exhaustive token sweep
+requests a viewer list, `main.js` has no handler for it, and `streamAttendees`
+appears only inside the core binary — the working conclusion is that it belongs
+to the SFU path, where the viewer list comes from the SFU rather than from the
+peer connections. It cannot be tested until TeamSpeak releases the SFU (§9.6).
+
+### 9b.5 Two operational details worth knowing
+
+- **Error 5635 `Stream does not exist`** — the reply to any stream command
+  naming a UUID the server has forgotten. Distinct from 1542.
+- **Flood protection applies to these commands.** Ten `setupstream` probes sent
+  back to back tripped `error id=524 client is flooding extra_msg=retry in
+  9985ms`, with the retry delay growing 5 s per further offence. Probing needs
+  roughly one command every 4 s; a real client is nowhere near this, but a
+  reconnect storm or a candidate burst could be.
+
 ---
 
 ## 10. Immediate consequences for TS6 Droid
 
-Still **no application code**, per the research plan. Two things are now firmer:
+Still **no application code**, per the research plan. Three things are now firmer:
 
 - **`client_is_streaming` / `client_streaming` remains the cheapest first
   increment**, and Phase 1 changes nothing about it: it is an ordinary TS3
   client property, needs none of the above, and lets the UI mark who is sharing.
+- **A P2P viewer is now fully specified on the signaling side.** Every command
+  a viewer needs — `joinstreamrequest` in, `notifyrespondjoinstreamrequest`
+  with the offer, `streamsignaling` out for the answer and candidates,
+  `notifystreamsignaling` in for theirs, `joinstreamrequest is_remove=1` to
+  leave — has a confirmed wire spelling (§9a.3, §9b). Nothing in §9's remaining
+  open items blocks it: §9.4 is SFU-shaped, §9.6 is blocked upstream, and §9.5
+  (TURN) is a connectivity question that only shows up at run time.
 - **Phase 4's shape is clearer.** With mediasoup on the media plane, the Android
   side is `libmediasoupclient` plus `org.webrtc`, not a hand-rolled
   `PeerConnection` driver — at least in `STREAM_SFU` mode. P2P mode still needs
-  the manual path, and is the harder of the two because of §6.
+  the manual path, and is the harder of the two because of §6 — but it is also
+  the only mode that exists today (§9.6).
 
-**Next step:** Phase 2 — the instrumented `tsclientlib` client, logging every
-unknown command, connected to a real TS6 server while a desktop client shares.
-Its checklist is §9; its working plan, including the hook points in
-`tsclientlib` and the build plumbing, is
-[screenshare-phase2-plan.md](screenshare-phase2-plan.md).
+**Next step:** Phase 4, P2P only — `tslib-core` parses the `notifystream*`
+family, `tslib-jni` forwards it, and the WebRTC work stays on the Kotlin side.
+The signaling contract is §4.2/§4.3 as amended by §9a.3 and §9b; the
+gating unknown that remains is §9.5, whether a mobile network can reach the
+sharer without TURN.
