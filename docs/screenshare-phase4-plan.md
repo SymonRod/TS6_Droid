@@ -114,8 +114,42 @@ offer, opaque signaling JSON, and the four commands refusing without a
 connection) plus the doctest; `cargo check --workspace`; `./gradlew
 assembleDebug`. No live run yet — nothing calls join from the UI until step 4.
 
-The step 5 network test is done (see "The §9.5 answer"); WebRTC and the Android
-UI remain undone, and they are now the only thing between here and video.
+Step 4 implementation (2026-09-07):
+
+- `io.github.webrtc-sdk:android:137.7151.05` (namespace `org.webrtc`) is the
+  WebRTC stack. Its AAR ships four ABIs, so `defaultConfig.ndk.abiFilters`
+  now pins the APK to `arm64-v8a` and `x86_64`, the two `buildRustLibs`
+  produces. The APK grows to ~110 MB in debug because of it.
+- `bridge/StreamViewer.kt` owns the session: one stream at a time, STUN-only
+  `RTCConfiguration` with the two hardcoded TeamSpeak servers (§6), unified
+  plan. `join` sends `joinstreamrequest` and arms a 30 s timeout, because a
+  sharer can simply never answer. On an accepted response it applies the
+  `offer=` SDP, answers with `{"cmd":"answer","args":{"answer":…}}` and
+  publishes the received `VideoTrack`; incoming audio tracks are enabled.
+- Trickled candidates are paced through a `Channel` at one per 120 ms, so a
+  gathering burst cannot trip flood protection (§9b.5). Remote candidates that
+  arrive before the offer is applied are queued, not dropped.
+- Signaling parsing is permissive: the server relays `json` unchecked (§9b.2),
+  so a malformed payload or an unknown `cmd` is ignored rather than fatal.
+- The registry closes the loop the notifications do not: when the stream
+  disappears from `TsClient.streams` — stopped, or owner gone — the viewer
+  tears down and reports `stream_ended`.
+- `StreamEgl` is a process-wide `EglBase`: renderers come and go with the UI,
+  the decoder wants a stable context.
+- App side: `ServerViewModel` creates the viewer when the service binds and
+  exposes `streams`, `streamViewerState`, `viewStream` and `stopViewingStream`.
+  `ServerScreen` shows a screen-share action in the top bar whenever a stream
+  is on offer, a picker dialog, and a full-screen `SurfaceViewRenderer`
+  overlay covering the requesting/connecting/failed/playing phases.
+- Failure reasons cross the boundary as codes (`refused`, `join_timeout`,
+  `stream_ended`, `ice_failed`, …) and are localized in en/fr/it; a sharer's
+  own refusal text is shown verbatim. SDP and ICE are still never logged.
+
+Validation: `./gradlew assembleDebug`, no warnings in the new files, and the
+APK carries exactly the two expected ABIs. Installed on the test device.
+**Not yet verified live**: no end-to-end ICE run against a desktop sharer has
+been done, so the answer/candidate exchange and the decoder path are untested
+on the wire. That run is what remains of step 4.
 
 ## Order of work
 

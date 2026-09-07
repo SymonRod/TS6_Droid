@@ -29,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.filled.ScreenShare
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.Close
@@ -80,7 +81,10 @@ import dev.tslib.User
 import dev.tsdroid.ui.component.ChannelTree
 import dev.tsdroid.ui.component.ChatView
 import dev.tsdroid.ui.component.FileManagerDialog
+import dev.tsdroid.ui.component.StreamListDialog
+import dev.tsdroid.ui.component.StreamViewerOverlay
 import dev.tsdroid.ui.component.ShareTarget
+import dev.tsdroid.bridge.StreamViewPhase
 import dev.tsdroid.viewmodel.ChatMessage
 import dev.tsdroid.viewmodel.DownloadState
 import dev.tsdroid.viewmodel.FileAttachment
@@ -112,8 +116,11 @@ fun ServerScreen(
     val currentFilePath by viewModel.currentFilePath.collectAsState()
     val fileManagerLoading by viewModel.fileManagerLoading.collectAsState()
     val channelPermissions by viewModel.currentChannelPermissions.collectAsState()
+    val streams by viewModel.streams.collectAsState()
+    val streamViewerState by viewModel.streamViewerState.collectAsState()
 
     var showSettings by remember { mutableStateOf(false) }
+    var showStreamList by remember { mutableStateOf(false) }
     var chatOpen by remember { mutableStateOf(false) }
     var chatEverOpened by remember { mutableStateOf(false) }
     var chatTab by remember { mutableIntStateOf(0) }
@@ -168,11 +175,41 @@ fun ServerScreen(
         )
     }
 
+    if (showStreamList) {
+        StreamListDialog(
+            streams = streams,
+            users = users,
+            onSelect = { stream ->
+                showStreamList = false
+                viewModel.viewStream(stream)
+            },
+            onDismiss = { showStreamList = false },
+        )
+    }
+
+    // The player takes over the screen while a stream is being watched.
+    if (streamViewerState.phase != StreamViewPhase.IDLE) {
+        StreamViewerOverlay(
+            state = streamViewerState,
+            onClose = { viewModel.stopViewingStream() },
+        )
+        return
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(serverInfo?.name ?: stringResource(R.string.server)) },
                 actions = {
+                    if (streams.isNotEmpty()) {
+                        IconButton(onClick = { showStreamList = true }) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ScreenShare,
+                                contentDescription = stringResource(R.string.screen_share_open),
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
                     IconButton(onClick = { viewModel.toggleFileManager() }) {
                         Icon(Icons.Default.Folder, contentDescription = stringResource(R.string.file_manager))
                     }

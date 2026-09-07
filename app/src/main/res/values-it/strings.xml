@@ -101,4 +101,14 @@
     <string name="browse_failed">Impossibile sfogliare i canali</string>
     <string name="error_not_connected">Non connesso</string>
     <string name="error_download_failed">Download non riuscito</string>
+    <string name="screen_shares">Schermi condivisi</string>
+    <string name="screen_share_open">Guarda uno schermo condiviso</string>
+    <string name="screen_share_of">Condiviso da %1$s</string>
+    <string name="screen_share_viewers">%1$d spettatori</string>
+    <string name="screen_share_requesting">In attesa che l’utente accetti…</string>
+    <string name="screen_share_connecting">Connessione in corso…</string>
+    <string name="screen_share_refused">L’utente ha rifiutato la richiesta</string>
+    <string name="screen_share_timeout">Nessuna risposta dall’utente</string>
+    <string name="screen_share_ended">La condivisione è terminata</string>
+    <string name="screen_share_failed">Impossibile connettersi alla condivisione</string>
 </resources>

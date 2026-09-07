@@ -101,4 +101,14 @@
     <string name="browse_failed">Échec du parcours des channels</string>
     <string name="error_not_connected">Pas connecté</string>
     <string name="error_download_failed">Échec du téléchargement</string>
+    <string name="screen_shares">Écrans partagés</string>
+    <string name="screen_share_open">Regarder un écran partagé</string>
+    <string name="screen_share_of">Partagé par %1$s</string>
+    <string name="screen_share_viewers">%1$d spectateurs</string>
+    <string name="screen_share_requesting">En attente de l’acceptation…</string>
+    <string name="screen_share_connecting">Connexion…</string>
+    <string name="screen_share_refused">Le partage a été refusé</string>
+    <string name="screen_share_timeout">Aucune réponse du partageur</string>
+    <string name="screen_share_ended">Le partage est terminé</string>
+    <string name="screen_share_failed">Connexion au partage impossible</string>
 </resources>

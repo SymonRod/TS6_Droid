@@ -104,4 +104,14 @@
     <string name="browse_failed">Failed to browse channels</string>
     <string name="error_not_connected">Not connected</string>
     <string name="error_download_failed">Download failed</string>
+    <string name="screen_shares">Shared screens</string>
+    <string name="screen_share_open">Watch a shared screen</string>
+    <string name="screen_share_of">Shared by %1$s</string>
+    <string name="screen_share_viewers">%1$d watching</string>
+    <string name="screen_share_requesting">Waiting for the sharer to accept…</string>
+    <string name="screen_share_connecting">Connecting…</string>
+    <string name="screen_share_refused">The sharer refused your request</string>
+    <string name="screen_share_timeout">No answer from the sharer</string>
+    <string name="screen_share_ended">The stream has ended</string>
+    <string name="screen_share_failed">Could not connect to the stream</string>
 </resources>

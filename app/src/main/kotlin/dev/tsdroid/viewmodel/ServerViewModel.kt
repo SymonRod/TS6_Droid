@@ -22,6 +22,8 @@ import dev.tsdroid.bridge.AudioBridge
 import dev.tsdroid.bridge.FileCache
 import dev.tsdroid.bridge.IconCache
 import dev.tsdroid.bridge.TsClient
+import dev.tsdroid.bridge.StreamViewer
+import dev.tsdroid.bridge.StreamViewerState
 import dev.tsdroid.bridge.TsFileEntry
 import dev.tsdroid.R
 import dev.tsdroid.data.BookmarkStore
@@ -32,6 +34,7 @@ import dev.tslib.Channel
 import dev.tslib.ConnectionState
 import dev.tslib.Event
 import dev.tslib.ServerInfo
+import dev.tslib.Stream
 import dev.tslib.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -41,6 +44,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -106,6 +111,17 @@ class ServerViewModel(application: Application) : AndroidViewModel(application) 
 
     private val _serverInfo = MutableStateFlow<ServerInfo?>(null)
     val serverInfo: StateFlow<ServerInfo?> = _serverInfo.asStateFlow()
+
+    // Screen sharing: the streams on offer, and the WebRTC viewer showing one
+    private val _streams = MutableStateFlow<List<Stream>>(emptyList())
+    val streams: StateFlow<List<Stream>> = _streams.asStateFlow()
+
+    private val _streamViewer = MutableStateFlow<StreamViewer?>(null)
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val streamViewerState: StateFlow<StreamViewerState> = _streamViewer
+        .flatMapLatest { viewer -> viewer?.state ?: flowOf(StreamViewerState()) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, StreamViewerState())
 
     private val _channelIcons = MutableStateFlow<Map<Long, ImageBitmap>>(emptyMap())
     val channelIcons: StateFlow<Map<Long, ImageBitmap>> = _channelIcons.asStateFlow()
@@ -251,6 +267,16 @@ class ServerViewModel(application: Application) : AndroidViewModel(application) 
                             }
                         }
                     }
+                }
+                viewModelScope.launch {
+                    binder.tsClient.streams.collect { _streams.value = it }
+                }
+                if (_streamViewer.value == null) {
+                    _streamViewer.value = StreamViewer(
+                        getApplication(),
+                        binder.tsClient,
+                        viewModelScope,
+                    )
                 }
                 viewModelScope.launch {
                     binder.tsClient.state.collect { _connectionState.value = it }
@@ -813,8 +839,30 @@ class ServerViewModel(application: Application) : AndroidViewModel(application) 
         connectionService?.disconnect()
     }
 
+    /**
+     * Start viewing a shared screen. The sharer decides, so the answer — or
+     * the lack of one — shows up on [streamViewerState].
+     */
+    fun viewStream(stream: Stream) {
+        val owner = _users.value.find { it.id == stream.ownerId }?.nickname
+        val title = stream.name ?: owner ?: stream.id
+        _streamViewer.value?.join(stream.ownerId, stream.id, title)
+    }
+
+    /** Stop viewing the current stream. */
+    fun stopViewingStream() {
+        _streamViewer.value?.leave()
+    }
+
+    /** Ask a sharer for the metadata its announcement did not carry. */
+    fun requestStreamInfo(ownerId: Int) {
+        tsClient?.requestStreamInfo(ownerId)
+    }
+
     override fun onCleared() {
         saveNow()
+        _streamViewer.value?.release()
+        _streamViewer.value = null
         if (bound) {
             serviceConnection?.let {
                 try {

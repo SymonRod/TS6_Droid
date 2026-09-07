@@ -16,6 +16,12 @@ android {
         versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // The WebRTC AAR ships four ABIs; keep the APK to the two that
+        // buildRustLibs produces, so every native library matches.
+        ndk {
+            abiFilters += listOf("arm64-v8a", "x86_64")
+        }
     }
 
     signingConfigs {
@@ -153,5 +159,6 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.coil.compose)
+    implementation(libs.webrtc)
     debugImplementation(libs.androidx.ui.tooling)
 }
