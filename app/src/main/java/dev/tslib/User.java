@@ -17,6 +17,8 @@ public class User {
     public final boolean hasOutputHardware;
     public final boolean isAway;
     public final boolean isRecording;
+    /** Whether the user is sharing its screen (TeamSpeak 6 servers only). */
+    public final boolean isStreaming;
     public final boolean isPrioritySpeaker;
     public final boolean isChannelCommander;
     public final boolean isTalker;
@@ -35,7 +37,7 @@ public class User {
                 String nickname, byte clientType, boolean isTalking,
                 boolean isInputMuted, boolean isOutputMuted,
                 boolean hasInputHardware, boolean hasOutputHardware,
-                boolean isAway, boolean isRecording,
+                boolean isAway, boolean isRecording, boolean isStreaming,
                 boolean isPrioritySpeaker, boolean isChannelCommander,
                 boolean isTalker, int talkPower, String awayMessage,
                 long[] serverGroups, long channelGroup,
@@ -55,6 +57,7 @@ public class User {
         this.hasOutputHardware = hasOutputHardware;
         this.isAway = isAway;
         this.isRecording = isRecording;
+        this.isStreaming = isStreaming;
         this.isPrioritySpeaker = isPrioritySpeaker;
         this.isChannelCommander = isChannelCommander;
         this.isTalker = isTalker;

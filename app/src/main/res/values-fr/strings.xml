@@ -53,6 +53,7 @@
     <string name="status_muted">Micro coupé</string>
     <string name="status_output_muted">Son coupé</string>
     <string name="status_away">Absent</string>
+    <string name="status_streaming">Partage d\'écran</string>
 
     <!-- MessageBubble -->
     <string name="image">Image</string>

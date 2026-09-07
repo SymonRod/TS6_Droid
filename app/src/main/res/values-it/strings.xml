@@ -53,6 +53,7 @@
     <string name="status_muted">Microfono disattivato</string>
     <string name="status_output_muted">Audio disattivato</string>
     <string name="status_away">Assente</string>
+    <string name="status_streaming">Condivisione schermo</string>
 
     <!-- MessageBubble -->
     <string name="image">Immagine</string>

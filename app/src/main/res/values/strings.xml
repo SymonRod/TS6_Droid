@@ -56,6 +56,7 @@
     <string name="status_muted">Muted</string>
     <string name="status_output_muted">Output muted</string>
     <string name="status_away">Away</string>
+    <string name="status_streaming">Sharing screen</string>
 
     <!-- MessageBubble -->
     <string name="image">Image</string>

@@ -22,10 +22,11 @@
 - **Still open and testable:** §9.5, whether TURN relaying is available — it
   needs a client behind symmetric NAT (a phone on mobile data will do), not a
   different server.
-- **No application code yet.** Per AGENTS.md, screen sharing stays out of the
-  app until the protocol is confirmed. The one exception that needs none of
-  it: `client_is_streaming`, a plain client property — see
-  screenshare-protocol.md §0, second finding.
+- **Application code: only `client_is_streaming`.** Done — the field is
+  declared in the tsclientlib fork (see AGENTS.md), flows through
+  `tslib-core` → JNI → `User.isStreaming`, and shows as a green screen icon in
+  `UserItem`. Everything else stays out of the app until the protocol is
+  confirmed. Background: screenshare-protocol.md §0, second finding.
 
 ## The one-paragraph version of what Phase 2 found
 
@@ -109,9 +110,9 @@ spelling that `notifystreamstarted` itself uses (§9b.1).
 1. **Phase 4, P2P viewer.** The signaling contract is complete for the viewer
    role (§9a.3, §9b) and nothing still open blocks it. Order: `tslib-core`
    parses the `notifystream*` family → `tslib-jni` forwards it → Kotlin drives
-   `org.webrtc`. Note `client_is_streaming` needs no `tsproto` hook, only a
-   field added to `ts-bookkeeping`'s argument declarations (§0), which makes it
-   the natural first commit.
+   `org.webrtc`. The first increment, `client_is_streaming`, is already done
+   (§0) — unlike the `notifystream*` family it needed no `tsproto` hook, only
+   an argument declaration in the tsclientlib fork (see AGENTS.md).
 2. **§9.5, TURN.** Answerable without a new server: run the viewer from a phone
    on mobile data (symmetric NAT) against a sharer elsewhere and see whether
    ICE completes. This decides whether P2P is usable at all from mobile, so it

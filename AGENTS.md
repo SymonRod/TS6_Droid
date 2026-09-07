@@ -27,6 +27,18 @@ The native library `tslib` (Rust) handles the TeamSpeak protocol over JNI and
 `tslib-jni`, `tslib-python`, `tslib-bot`) built on
 [tsclientlib](https://github.com/ReSpeak/tsclientlib).
 
+`tslib` depends on a **fork**,
+[SymonRod/tsclientlib](https://github.com/SymonRod/tsclientlib) (branch
+`ts6-client-is-streaming`), whose only change is declaring TeamSpeak 6
+arguments upstream does not know — currently just `client_is_streaming`. The
+declarations live in a submodule, forked as
+[SymonRod/tsdeclarations](https://github.com/SymonRod/tsdeclarations) on the
+same branch; cargo checks it out on its own, so no `git submodule` step is
+needed here. Adding a TS6 argument means a commit in *both* forks: the field in
+`declarations/Messages.toml` (plus the command's `attributes`, optional with
+`?`) and, for a book property, `declarations/Book.toml` with `opt=true`; then
+bump the submodule pointer in the tsclientlib fork.
+
 ## Build
 
 ```bash
@@ -125,5 +137,8 @@ Note that `tsclientlib` drops genuinely unknown *commands* — arguments and all
 — before `tslib` ever sees them, so the capture hooks `tsproto`'s packet event
 listener instead of listening in `tslib-core`.
 
-The cheapest useful increment meanwhile is the `client_is_streaming` client
-property: it lets the UI show *who* is sharing before any stream can be decoded.
+The one piece already **in** the app is `client_is_streaming`, the client
+property that says *who* is sharing — it needs no signaling, only the argument
+declaration in the tsclientlib fork described above. It reaches the UI as
+`User.isStreaming` and shows as a green screen icon in `UserItem`. Everything
+else stays out of the app until the protocol is confirmed.

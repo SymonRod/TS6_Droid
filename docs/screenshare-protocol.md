@@ -47,7 +47,12 @@ that field, not the whole command, because those three are already
 *recognized* commands. Unlike `notifystreamstarted` and friends (unrecognized
 **commands**, dropped whole per §1 below), this one only needs the field added
 to `ts-bookkeeping`'s argument declarations — no `tsproto`-level hook required.
-This confirms it as the cheap first increment AGENTS.md already calls out.
+This confirms it as the cheap first increment AGENTS.md already calls out —
+now **implemented**: declared in the tsclientlib fork (`Messages.toml` plus the
+`attributes` of `InitServer`, `ClientEnterView` and `ClientUpdated`, all
+optional, and `Book.toml` as `IsStreaming`, `opt=true` so TeamSpeak 3 servers
+leave it `None`), then carried through `tslib-core` → JNI → `User.isStreaming`
+→ a screen icon in `UserItem`.
 
 ## 1. What Phase 1 changed
 

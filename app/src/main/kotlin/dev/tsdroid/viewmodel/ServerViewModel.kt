@@ -845,7 +845,7 @@ class ServerViewModel(application: Application) : AndroidViewModel(application) 
 private fun User.withTalking(talking: Boolean): User = User(
     id, uid, databaseId, channelId, nickname, clientType,
     talking, isInputMuted, isOutputMuted, hasInputHardware, hasOutputHardware,
-    isAway, isRecording, isPrioritySpeaker, isChannelCommander, isTalker,
+    isAway, isRecording, isStreaming, isPrioritySpeaker, isChannelCommander, isTalker,
     talkPower, awayMessage, serverGroups, channelGroup,
     platform, version, country, description, avatarId, iconId,
 )

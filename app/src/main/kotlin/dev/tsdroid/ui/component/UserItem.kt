@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ScreenShare
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.NightsStay
@@ -75,6 +76,15 @@ fun UserItem(
                 contentDescription = stringResource(R.string.status_recording),
                 modifier = Modifier.size(14.dp),
                 tint = Color(0xFFF44336),
+            )
+            Spacer(Modifier.width(2.dp))
+        }
+        if (user.isStreaming) {
+            Icon(
+                Icons.AutoMirrored.Filled.ScreenShare,
+                contentDescription = stringResource(R.string.status_streaming),
+                modifier = Modifier.size(14.dp),
+                tint = Color(0xFF4CAF50),
             )
             Spacer(Modifier.width(2.dp))
         }
