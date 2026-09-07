@@ -33,7 +33,8 @@ would fight the fact that a client can own several streams at once.
 
 ## Implementation status (2026-09-07)
 
-Step 1 is published and verified offline, but not tested against a live sharer.
+Steps 1 and 2 are integrated in `../tslib`; started/info delivery and registry
+metadata were verified against a live desktop sharer on 2026-09-07.
 Both forks retain the `ts6-client-is-streaming` branch: declarations `9ed2a74`,
 tsclientlib `298e431` (including the updated submodule pointer). Files:
 
@@ -51,21 +52,43 @@ local checkout. No persistent path dependency was added. That check updates
 the untracked `../tslib/Cargo.lock`; an ordinary Cargo invocation resolves the
 published dependencies again.
 
-Before treating step 1 as integrated:
+Step 2 implementation:
 
-- Refresh existing `tslib` Cargo lockfiles to resolve the published fork update.
-- Verify typed notification delivery against a desktop sharer. The existing
-  `process_message_event` fallback logs command names, not parsed fields; no
-  diagnostic arms or registry were added yet. Avoid logging raw SDP/ICE.
-- Verify empty outbound messages on the server: the existing serializer emits
+- Refreshed the ignored `../tslib/Cargo.lock` to the published fork `298e431`;
+  no path overrides are needed.
+- `crates/tslib-core/src/streams.rs`: registry keyed by `(u16, String)` (owner
+  client ID and stream ID), optional metadata, patch merging for started/info/
+  updated, and idempotent stopped/owner removal/disconnect cleanup.
+- `Client::streams()` returns a sorted snapshot; `Event::StreamsChanged`
+  contains the complete snapshot and reaches the normal return/broadcast/handler
+  paths. Explicit synchronous disconnect broadcasts the empty snapshot, like
+  the existing disconnect event. Temporary loss also clears stale streams.
+- Ten new tests cover parsed metadata lifecycle and client integration; all
+  61 core tests plus the doctest pass, as does `cargo check --workspace`.
+- JNI/Python exhaustive matches recognize the new event name only to keep the
+  workspace compiling. Stream payloads/accessors in bindings, Kotlin, and
+  WebRTC are still deferred.
+
+Live check: `cargo run -p tslib-core --example stream-registry --
+god.serod.tech:9988 Salotto 90` observed `Wayland Source` from owner 24 via
+started, then requested info with the typed command. The info response added
+`viewer_count=0` while preserving name, type 3, access 1, mode 1, bitrate 33920,
+viewer limit 0, and audio false. No stop/restart/update or owner departure was
+observed in this session; those paths are tested offline only. The diagnostic
+does not join a stream or start media and does not log SDP/ICE.
+
+Still to verify live:
+
+- Updated/stopped notifications and owner-departure cleanup in the registry.
+- Empty outbound messages on the server: the existing serializer emits
   a bare `msg` key rather than literal `msg=`. Offline tests establish presence
   and empty-value round-trip, not server acceptance.
 
 The generated parser inherits omitted fields from the first list entry. Keep
 this in mind for registry merge tests. Update access spelling beyond captured
 name-only patches remains unconfirmed; both `access` and `accessibility` are
-optional in the declaration. Next implementation increment: step 2, the stream
-registry. JNI, WebRTC, Android UI, and the mobile-network ICE test remain undone.
+optional in the declaration. Next implementation increment: step 3, JNI and
+Kotlin exposure. WebRTC, Android UI, and the mobile-network ICE test remain undone.
 
 ## Order of work
 

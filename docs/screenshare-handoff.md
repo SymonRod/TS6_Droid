@@ -33,10 +33,19 @@
   incoming and three outgoing commands plus offline tests. Tests and a local
   dependency-override check of `tslib-core`/`stream-capture` pass. Published on
   `ts6-client-is-streaming`: declarations `9ed2a74`, tsclientlib `298e431`.
-  Existing Cargo lockfiles may need a dependency refresh. Live
-  typed-message delivery and bare empty `msg` server acceptance still need
-  verification. See the phase-4 plan's implementation status for paths and
-  integration steps. The registry, JNI, and WebRTC remain unimplemented.
+  The `tslib` lockfile now resolves this published revision. Bare empty `msg`
+  server acceptance still needs verification.
+- **Phase 4, step 2: Rust stream registry implemented (2026-09-07).**
+  `Client::streams()` and `Event::StreamsChanged` expose metadata snapshots;
+  partial updates preserve absent fields, and stops, owner departures, and
+  disconnects remove entries. All 61 core tests plus the doctest pass; the
+  full workspace passes `cargo check`. A 90-second desktop check on the same
+  server/channel observed `Wayland Source` via started and enriched it through
+  typed requeststreaminfo/info without losing fields. Stops, updates, and owner
+  departures were not exercised live. Re-run with `cargo run -p tslib-core
+  --example stream-registry -- god.serod.tech:9988 Salotto 90` from `../tslib`.
+  See the phase-4 plan for details. Binding payloads/accessors, Kotlin, and
+  WebRTC remain the next increments; no video is received yet.
 
 ## The one-paragraph version of what Phase 2 found
 
