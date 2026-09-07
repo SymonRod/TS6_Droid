@@ -95,9 +95,12 @@ recipe for re-running the capture tool. Then, in order:
   reference (Phase 1 output). Start here for anything concrete.
 - **[docs/screenshare-research-plan.md](docs/screenshare-research-plan.md)** —
   rationale and roadmap. The protocol document supersedes it where they differ.
+- **[docs/screenshare-phase4-plan.md](docs/screenshare-phase4-plan.md)** — the
+  build plan for the next step, the P2P viewer: what to write, in what order,
+  and the wire details that bite. Read this before touching `../tslib`.
 - **[docs/screenshare-phase2-plan.md](docs/screenshare-phase2-plan.md)** — the
-  working plan for the next step, including where to hook `tsproto` and why the
-  obvious hook does not work. Read this before touching `../tslib`.
+  capture plan, including where to hook `tsproto` and why the obvious hook does
+  not work. Historical now, except for re-running a capture.
 
 Summary of what static analysis of the desktop client established:
 

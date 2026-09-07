@@ -2,7 +2,8 @@
 
 > Read this first if you're picking up the screen sharing work in a new
 > session. It's a pointer, not a schema reference — the schemas live in
-> [screenshare-protocol.md](screenshare-protocol.md).
+> [screenshare-protocol.md](screenshare-protocol.md), and the build plan for
+> the next step in [screenshare-phase4-plan.md](screenshare-phase4-plan.md).
 
 ## Where things stand
 
@@ -107,7 +108,9 @@ spelling that `notifystreamstarted` itself uses (§9b.1).
 
 ## Next steps, in order of value
 
-1. **Phase 4, P2P viewer.** The signaling contract is complete for the viewer
+1. **Phase 4, P2P viewer** — planned in
+   [screenshare-phase4-plan.md](screenshare-phase4-plan.md). The signaling
+   contract is complete for the viewer
    role (§9a.3, §9b) and nothing still open blocks it. Order: `tslib-core`
    parses the `notifystream*` family → `tslib-jni` forwards it → Kotlin drives
    `org.webrtc`. The first increment, `client_is_streaming`, is already done
