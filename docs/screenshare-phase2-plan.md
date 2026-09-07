@@ -1,7 +1,17 @@
 # Screen sharing — Phase 2 working plan
 
-> **Status:** the capture tool is written and builds; the capture itself is
-> blocked on the prerequisites in §7 (a TS6 server with a live sharer).
+> **Status:** done for P2P mode. The capture ran 2026-09-07 against a live TS6
+> server and closed questions §9.1–§9.4 of `screenshare-protocol.md` (now
+> §9a there). SFU mode (§9.5, §9.6) still needs a server with
+> `virtualserver_sfu_endpoint` configured — same tool, same procedure below.
+>
+> One bug was found and fixed along the way: `stream-capture` called
+> `Connection::get_tsproto_client_mut()` immediately after `connect()`, before
+> the handshake completed, and failed every time with `Error::NotConnected`.
+> `connect()` returns while still in the `Connecting` state; the fix waits for
+> `StreamItem::BookEvents` first, matching `tslib-core`'s own
+> `Client::do_connect` (`crates/tslib-core/src/client.rs:262`).
+>
 > Everything below was verified against `../tslib` and the vendored
 > `tsclientlib` checkout `~/.cargo/git/checkouts/tsclientlib-b9d0d0212095a0c5/ee3bc6f`.
 
@@ -176,6 +186,15 @@ known, so it gates Phase 4 entirely.
 
 Fold the transcript's findings back into `screenshare-protocol.md`, promoting
 the *inferred* rows in §4.2 to literal and correcting them where they are wrong.
+
+**Met, for P2P, on 2026-09-07** — see `screenshare-protocol.md` §0 and §9a. The
+answer to §9.1 was not the escaped-JSON-parameter shape everyone assumed: most
+screen-share commands are flat TS3 parameters with no JSON at all, and even
+`notifystreamsignaling` only wraps the WebRTC message, not the SDP offer
+itself. The raw transcript (`../tslib/captures/session-1.{jsonl,log}`) is not
+checked in — it carries a real public IP, LAN/Tailscale addresses and
+myteamspeak account tokens from the capture session. Treat it as sensitive
+local evidence; only the redacted excerpts in §9a belong in git.
 
 ## 9. Explicitly out of scope
 

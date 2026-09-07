@@ -1,10 +1,17 @@
 # TeamSpeak 6 screen sharing — protocol reference
 
-> **Status:** Phase 1 complete (static schema extraction). No traffic captured yet.
-> **Phase 1 date:** 2026-09-07
+> **Status:** Phase 2 complete for **P2P mode**. A real session was captured
+> end to end with `../tslib/examples/stream-capture` against a live TS6 server
+> (`virtualserver_capability_extensions=FILETIME,STREAM_P2P`). SFU mode is
+> still unconfirmed — §9.5 and §9.6 need a server with
+> `virtualserver_sfu_endpoint` configured.
+> **Phase 1 date:** 2026-09-07. **Phase 2 date:** 2026-09-07.
 > **Sources:** the three files listed in
-> [screenshare-research-plan.md](screenshare-research-plan.md) §0, re-verified by
-> MD5 on this date — unchanged since the reconnaissance pass.
+> [screenshare-research-plan.md](screenshare-research-plan.md) §0 (Phase 1,
+> static analysis) plus the live transcript from Phase 2 (§9a). Raw captures
+> stay local to `../tslib/captures/` — they carry real IPs and account tokens
+> and are not part of this repository; only redacted, structural excerpts are
+> reproduced below.
 > **Companion document:** the research plan holds the rationale and the roadmap;
 > this document holds the schemas.
 
@@ -13,6 +20,33 @@ Every identifier reproduced below is **literal** unless a line explicitly says
 string table of `TeamSpeak`.
 
 ---
+
+## 0. What Phase 2 changed
+
+The single biggest surprise: **screen-share notifications are not JSON at
+all.** Every command actually observed except `notifystreamsignaling` is an
+ordinary flat TS3 `key=value` command, indistinguishable in shape from
+`notifycliententerview` or any other stock notification. The layering
+model in §2 undersold this — `snake_case` is not just the wire *spelling*,
+it is the wire *encoding*: no nested object, no JSON, one command, flat
+arguments.
+
+`notifystreamsignaling` is the one exception, and even there JSON is scoped
+tightly: the whole message sits in a single parameter, `json=`, escaped like
+any other TS3 string value. Its shape is `{"cmd":"<discriminator>","args":{...}}`
+— `cmd` a sibling of `args`, not nested inside it. Confirmed value: `iceCandidate`.
+The SDP **offer** does not travel through `streamsignaling` in P2P mode at
+all — it rides as a plain `offer=` parameter directly on
+`notifyrespondjoinstreamrequest` (§4.3, §9a). Full detail and evidence: §9a.
+
+A second finding, orthogonal to screen sharing: `client_is_streaming` already
+flows over the wire on `InitServer`, `ClientEnterView` and `ClientUpdated` —
+`tsclientlib` logs `Unknown argument ... "client_is_streaming"` and drops just
+that field, not the whole command, because those three are already
+*recognized* commands. Unlike `notifystreamstarted` and friends (unrecognized
+**commands**, dropped whole per §1 below), this one only needs the field added
+to `ts-bookkeeping`'s argument declarations — no `tsproto`-level hook required.
+This confirms it as the cheap first increment AGENTS.md already calls out.
 
 ## 1. What Phase 1 changed
 
@@ -421,26 +455,129 @@ parsers" constraint.
 
 ## 9. What Phase 1 could not determine
 
-Static analysis has been taken as far as it goes. These are the open questions,
-and each is a direct input to Phase 2:
+Static analysis has been taken as far as it goes. These were the open
+questions Phase 2 had to answer; status after the capture in §9a:
 
-1. **How the JSON body attaches to a TS3 command.** TS3 commands are
-   `command key=value key=value`; the bodies here are JSON objects. Whether the
-   JSON is one escaped parameter, and under which key, is not recoverable from
-   strings. *This is the single most important unknown* — nothing can be parsed
-   without it.
-2. **The signaling discriminator field.** §4.4: the four subtypes are known, the
-   field that carries them is not.
-3. **Exact wire spelling of every field.** §2 gives the rule and seven confirmed
-   pairs; the rest is projection.
-4. **`notifystreamattendees` shape.** The command is literal, the payload is not
-   consumed anywhere legible in `main.js`.
-5. **Whether TURN relaying is available** (§6).
-6. **Whether the SFU payloads are stock mediasoup** or carry TeamSpeak
-   extensions (§5).
+1. **How the JSON body attaches to a TS3 command.** ✅ **Resolved — the premise
+   was wrong.** There is no JSON body for most commands; see §0 and §9a.1.
+2. **The signaling discriminator field.** ✅ **Resolved for P2P.** It's `cmd`,
+   a sibling of `args`. See §9a.2.
+3. **Exact wire spelling of every field.** ✅ **Resolved for every command this
+   session exercised** (§9a.3). Still open for `setupstream`, `updatestream`,
+   `stopstream`, `removeclientfromstream`, and anything SFU-only
+   (`requestsfuaccessinfo`) — none were exercised.
+4. **`notifystreamattendees` shape.** ❌ **Still open** — not triggered in the
+   captured session (no command sends a viewer-list request on its own; the
+   trigger is undetermined).
+5. **Whether TURN relaying is available.** ❌ **Still open** — needs a client
+   behind symmetric NAT, or a Phase 3 packet capture of the actual relay.
+6. **Whether the SFU payloads are stock mediasoup.** ❌ **Still open** — needs
+   a server with `virtualserver_sfu_endpoint` configured; the captured server
+   was P2P-only (`virtualserver_capability_extensions=FILETIME,STREAM_P2P`).
 
-None of these blocks Phase 2 — they are its checklist. A single captured session
-should close 1 through 4 at once.
+## 9a. Phase 2 evidence
+
+Captured 2026-09-07 against a live TS6 server (P2P mode only), using
+`../tslib/examples/stream-capture`. One client shared a window twice
+(`type=3`, a Wayland window source) and a second client joined as a viewer.
+Values below are redacted/replaced with placeholders where the original
+carried a real IP address, UUID or account token — the structure is
+otherwise verbatim from the transcript.
+
+### 9a.1 The JSON question, resolved
+
+Every screen-share notification **except `notifystreamsignaling`** is a flat
+TS3 command — same shape as any other notify, no envelope:
+
+```
+notifystreamstarted clid=1 id=<uuid> name=Wayland\sSource type=3 access=1 mode=1 bitrate=33920 viewer_limit=0 audio=0
+notifystreaminfo clid=1 id=<uuid> name=Wayland\sSource type=3 accessibility=1 mode=1 viewer=1 bitrate=33920 viewer_limit=0 audio=0
+notifystreamclientjoined clid=10 id=<uuid>
+notifystreamstopped clid=1 id=<uuid> reason=1
+```
+
+Two things the JS-derived schema in §4.1 got wrong:
+
+- **`id` is a flat UUID** (`f2f7de30-8488-...`), not the structured
+  `streamIdentifier` object (`{scHandlerId, serverSessionId, clientId}`).
+  That structure is Layer B (client-local) bookkeeping only; the wire
+  identifies a stream by `clid` + this one UUID field, nothing else.
+- **`notifystreaminfo` is not the `{info: [...], clientIds: [...]}` envelope**
+  the bridge code implied. It is one flat command per stream, structurally
+  close to (but not identical to — see next point) `notifystreamstarted`.
+
+A **real inconsistency**, not a transcription error: `notifystreamstarted`
+names the accessibility field `access`; `notifystreaminfo` names the same
+concept `accessibility`. `notifystreaminfo` also adds a `viewer` field (a
+live viewer count) that `notifystreamstarted` doesn't carry. Any parser must
+treat these as two distinct field sets, not one `Stream_Config` reused
+verbatim.
+
+`joinstreamrequest` (client → server) is flat too, and `msg` is a **required**
+parameter even when empty — omitting it produces `error id=1542 msg=missing
+required parameter` with no indication of which field is missing:
+
+```
+joinstreamrequest id=<uuid> clid=1 is_remove=0 msg=
+```
+
+The response confirms the JSON-free pattern extends to the SDP offer itself —
+it is **not** delivered via `notifystreamsignaling` at all, but as a plain,
+TS3-escaped parameter on the join response:
+
+```
+notifyrespondjoinstreamrequest clid=1 id=<uuid> msg decision=1 offer=v=0\r\no=-\s...(full SDP, \r\n escaped as \s)...
+```
+
+So of the six commands actually exercised, only one — `notifystreamsignaling`
+— carries JSON. Whether `setupstream`/`updatestream` (session creation and
+edits, never exercised) also stay flat, or whether the fuller `Stream_Config`
+shape from §4.1 needs JSON because it doesn't fit flat parameters, is still
+open.
+
+### 9a.2 The signaling discriminator, resolved
+
+`notifystreamsignaling` is flat at the top level, with the WebRTC payload
+packed into one parameter, `json=`:
+
+```
+notifystreamsignaling clid=1 id=<uuid> json={"args":{"mLine":0,"mid":"0","sdp":"candidate:...typ\shost..."},"cmd":"iceCandidate"}
+```
+
+`cmd` is the discriminator — a sibling of `args`, confirmed value
+`"iceCandidate"` (matches the literal string-table token from Phase 1, not
+the C++ enum name `kICECandidate`). `args` for an ICE candidate is
+`{mLine: int, mid: string, sdp: string}` — `mLine`/`mid` are the WebRTC
+`sdpMLineIndex`/`sdpMid`, and `sdp` here is the candidate line itself
+(`candidate:... typ host ...`), not the full session description, despite the
+name being shared with the outer SDP concept.
+
+`offer`, `answer` and `reconnect` values were **not** observed — the offer
+took the separate path above, and this session never reached a renegotiation.
+Whether those three values exist under `cmd` here, or whether `answer` also
+rides on some other command the way `offer` does, is still open.
+
+### 9a.3 Confirmed wire spellings
+
+| Command | Direction | Confirmed fields |
+|---|---|---|
+| `notifystreamstarted` | S→C | `clid`, `id`, `name`, `type`, `access`, `mode`, `bitrate`, `viewer_limit`, `audio` |
+| `notifystreaminfo` | S→C | `clid`, `id`, `name`, `type`, `accessibility`, `mode`, `viewer`, `bitrate`, `viewer_limit`, `audio` |
+| `notifystreamclientjoined` | S→C | `clid`, `id` |
+| `notifystreamstopped` | S→C | `clid`, `id`, `reason` |
+| `joinstreamrequest` | C→S | `id`, `clid`, `is_remove`, `msg` (required, may be empty) |
+| `notifyrespondjoinstreamrequest` | S→C | `clid`, `id`, `msg`, `decision`, `offer` (raw SDP, not JSON) |
+| `notifystreamsignaling` | S→C | `clid`, `id`, `json` (`{cmd, args}}`, §9a.2) |
+
+`requeststreaminfo` (C→S) was exercised bare — `id=<uuid> clid=1`, no other
+required fields observed. `notifystreamclientleft` was **not** observed even
+though a viewer disconnected mid-session (a full server disconnect, not an
+`is_remove` leave) — whether it fires only for the explicit leave/kick path
+is unconfirmed.
+
+Also confirmed, from the handshake log rather than the listener:
+`virtualserver_capability_extensions` is a literal comma-separated list —
+this server sent `FILETIME,STREAM_P2P`.
 
 ---
 

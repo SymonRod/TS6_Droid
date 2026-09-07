@@ -75,7 +75,9 @@ Dependencies are declared through the version catalog in
 
 ### TeamSpeak 6 screen sharing
 
-Two documents, read in this order:
+Start with **[docs/screenshare-handoff.md](docs/screenshare-handoff.md)** if
+you're picking this up in a new session — status, what Phase 2 found, and the
+recipe for re-running the capture tool. Then, in order:
 
 - **[docs/screenshare-protocol.md](docs/screenshare-protocol.md)** — the schema
   reference (Phase 1 output). Start here for anything concrete.
@@ -102,15 +104,22 @@ Summary of what static analysis of the desktop client established:
 - Viewing someone else's screen needs **no `MediaProjection` permission**; that
   is only required to share the phone's own screen.
 
-Status: exploratory, Phase 1 done. **Do not add screen sharing code to the app
-yet** — the next step is Phase 2, capturing a real session with
-`../tslib/examples/stream-capture`, planned in `screenshare-phase2-plan.md` with
-the open questions in `screenshare-protocol.md` §9 as its checklist. The tool is
-written and builds; running it needs a TS6 server with a live sharer. The
-largest unknown is how a JSON body attaches to a TS3 command; nothing can be
-parsed until that is answered. Note that `tsclientlib` drops these commands *and
-their arguments* before `tslib` ever sees them, so the capture hooks `tsproto`'s
-packet event listener instead of listening in `tslib-core`.
+Status: exploratory, Phase 1 **and Phase 2 (P2P mode)** done. **Do not add
+screen sharing code to the app yet** — Phase 2 closed the biggest unknown, and
+the answer overturns the working assumption: screen-share notifications are
+**not** JSON-wrapped. They are ordinary flat TS3 `key=value` commands, same
+shape as any other notify (`notifystreamstarted`, `notifystreaminfo`,
+`notifystreamclientjoined`, `notifystreamstopped`, `joinstreamrequest`). Only
+`notifystreamsignaling` carries JSON, in a single `json=` parameter shaped
+`{"cmd":"iceCandidate","args":{mLine,mid,sdp}}` — and even the SDP **offer**
+skips that command, riding instead as a plain `offer=` parameter on
+`notifyrespondjoinstreamrequest`. Full evidence:
+`screenshare-protocol.md` §0 and §9a. SFU mode (TURN relaying, mediasoup
+payload shape) is still unconfirmed — needs a server with
+`virtualserver_sfu_endpoint`, same tool and procedure in `screenshare-phase2-plan.md`.
+Note that `tsclientlib` drops genuinely unknown *commands* — arguments and all
+— before `tslib` ever sees them, so the capture hooks `tsproto`'s packet event
+listener instead of listening in `tslib-core`.
 
 The cheapest useful increment meanwhile is the `client_is_streaming` client
 property: it lets the UI show *who* is sharing before any stream can be decoded.
