@@ -45,6 +45,13 @@
   --example stream-registry -- god.serod.tech:9988 Salotto 90` from `../tslib`.
   See the phase-4 plan for details. Binding payloads/accessors, Kotlin, and
   WebRTC remain the next increments; no video is received yet.
+- **Phase 4, step 3: the streams cross JNI (2026-09-07).** `tslib-core` sends
+  join, leave, signaling and info as typed commands and raises
+  `Event::StreamJoinResponse` (with the SDP offer) and `Event::StreamSignaling`.
+  `tslib-jni` carries all of it to `dev.tslib.Stream` and four new native calls,
+  and `TsClient` exposes a `streams` StateFlow plus join-response and signaling
+  SharedFlows. 69 core tests, `cargo check --workspace` and `assembleDebug`
+  pass; nothing joins a stream yet, so this is untested against a live sharer.
 - **Phase 4, step 5: the network question is answered (2026-09-07).** The
   hardcoded ICE servers reflect but do not relay — `turn.teamspeak.com` ignores
   a TURN Allocate, `turn2` answers nothing at all — so a failed ICE run has no
@@ -57,24 +64,24 @@
 
 ## How far from video on the phone
 
-Two increments, and neither is blocked on an unknown. Everything the viewer
-needs from the protocol is captured, declared, parsed, and — as of step 5 —
-known to be reachable over a real mobile network.
+One increment left, and it is not blocked on an unknown. Everything the viewer
+needs from the protocol is captured, declared, parsed, carried to Kotlin, and —
+as of step 5 — known to be reachable over a real mobile network.
 
 **What already works end to end:** the app connects, and a sharer's green
 screen icon appears in `UserItem` from `client_is_streaming`. In `../tslib`,
 the registry tracks who is sharing what, with metadata, verified against a
 live desktop sharer.
 
-**Step 3 — carry the streams across JNI.** Today `tslib-jni` knows the event
-only by name (`types.rs:189` maps `Event::StreamsChanged` to a string) with no
-payload. Needed: a stream payload and accessors mirroring how users and
-channels already cross the boundary, a `dev.tslib` data carrier, plus the four
-signaling calls — `joinstreamrequest` and `streamsignaling` outbound,
-`notifyrespondjoinstreamrequest` and `notifystreamsignaling` inbound. This is
-mechanical, follows patterns already in the file, and is the smaller half.
+**Step 3 — carry the streams across JNI — done (2026-09-07).** The snapshot
+reaches Kotlin as `dev.tslib.Stream[]`, and all four signaling calls are wired:
+`joinstreamrequest` and `streamsignaling` outbound through
+`TsClient.joinStream` / `leaveStream` / `sendStreamSignaling`,
+`notifyrespondjoinstreamrequest` and `notifystreamsignaling` inbound as the
+`streamJoinResponses` and `streamSignaling` flows. The offer arrives as a real
+SDP — `tsproto` already unescaped it, so do not unescape it again.
 
-**Step 4 — WebRTC in Kotlin.** The app has *no* `org.webrtc` dependency yet
+**Step 4 — WebRTC in Kotlin, the only step left.** The app has *no* `org.webrtc` dependency yet
 (nothing in any Gradle file), so this starts with adding one. Then a
 `PeerConnection` per stream: set the remote offer, answer through
 `streamsignaling`, trickle candidates both ways, render into a
@@ -100,10 +107,12 @@ larger half and the first place the whole chain is exercised at once.
 4. **A join can simply never be answered** — the sharer's client decides, so
    the UI needs a pending state and a timeout, not just success and failure.
 
-Honest estimate: step 3 is a focused session; step 4 is the real work, and the
-first video frame most plausibly arrives at the end of it. The one thing that
-could stretch it is ICE failing in practice — that is where the missing relay
-would hurt, and it cannot be ruled out until step 4 actually runs.
+Honest estimate: step 4 is the real work, and the first video frame most
+plausibly arrives at the end of it. The one thing that could stretch it is ICE
+failing in practice — that is where the missing relay would hurt, and it cannot
+be ruled out until step 4 actually runs. Note that the whole signaling path is
+still untested against a live sharer: step 3 compiles and is unit-tested, but
+the first join request will be sent from step 4's code.
 
 ## The one-paragraph version of what Phase 2 found
 
@@ -184,7 +193,7 @@ spelling that `notifystreamstarted` itself uses (§9b.1).
 
 ## Next steps, in order of value
 
-1. **Phase 4, steps 3 and 4** — the only work left before video appears; the
+1. **Phase 4, step 4** — the only work left before video appears; the
    breakdown is in "How far from video on the phone" above. Planned in
    [screenshare-phase4-plan.md](screenshare-phase4-plan.md). The signaling
    contract is complete for the viewer

@@ -7,6 +7,7 @@ import dev.tslib.ConnectionState
 import dev.tslib.Event
 import dev.tslib.Identity
 import dev.tslib.ServerInfo
+import dev.tslib.Stream
 import dev.tslib.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -23,6 +24,28 @@ import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.coroutineContext
+
+/**
+ * A sharer's answer to a join request. `decision` is 1 for accepted, 0 for
+ * refused; only an accepted answer carries the WebRTC [offer]. A request can
+ * also go unanswered, so callers need their own timeout.
+ */
+data class TsStreamJoinResponse(
+    val ownerId: Int,
+    val streamId: String,
+    val decision: Int,
+    val message: String?,
+    val offer: String?,
+) {
+    val accepted: Boolean get() = decision == 1
+}
+
+/** A WebRTC signaling message relayed from a sharer, unparsed. */
+data class TsStreamSignaling(
+    val ownerId: Int,
+    val streamId: String,
+    val json: String,
+)
 
 data class TsFileEntry(
     val name: String,
@@ -55,6 +78,15 @@ class TsClient {
 
     private val _serverInfo = MutableStateFlow<ServerInfo?>(null)
     val serverInfo: StateFlow<ServerInfo?> = _serverInfo.asStateFlow()
+
+    private val _streams = MutableStateFlow<List<Stream>>(emptyList())
+    val streams: StateFlow<List<Stream>> = _streams.asStateFlow()
+
+    private val _streamJoinResponses = MutableSharedFlow<TsStreamJoinResponse>(extraBufferCapacity = 16)
+    val streamJoinResponses: SharedFlow<TsStreamJoinResponse> = _streamJoinResponses.asSharedFlow()
+
+    private val _streamSignaling = MutableSharedFlow<TsStreamSignaling>(extraBufferCapacity = 64)
+    val streamSignaling: SharedFlow<TsStreamSignaling> = _streamSignaling.asSharedFlow()
 
     private val _commandErrors = MutableSharedFlow<String>(extraBufferCapacity = 16)
     val commandErrors: SharedFlow<String> = _commandErrors.asSharedFlow()
@@ -162,6 +194,34 @@ class TsClient {
                 Log.d(TAG, "File list received: channel=$channelId path=$path entries=${entries.size}")
                 fileListCallbacks.remove("$channelId:$path")?.complete(entries)
             }
+            "streams_changed" -> {
+                @Suppress("UNCHECKED_CAST")
+                val streams = (event.data["streams"] as? Array<Stream>)?.filterNotNull()
+                    ?: emptyList()
+                Log.d(TAG, "Streams changed: ${streams.size} available")
+                _streams.value = streams
+            }
+            "stream_join_response" -> {
+                val ownerId = (event.data["owner_id"] as? Number)?.toInt() ?: return
+                val streamId = event.data["stream_id"] as? String ?: return
+                val decision = (event.data["decision"] as? Number)?.toInt() ?: return
+                // The offer is an SDP: forwarded to the WebRTC layer, never logged.
+                val response = TsStreamJoinResponse(
+                    ownerId = ownerId,
+                    streamId = streamId,
+                    decision = decision,
+                    message = event.data["message"] as? String,
+                    offer = event.data["offer"] as? String,
+                )
+                Log.i(TAG, "Join response from $ownerId: decision=$decision, offer=${response.offer != null}")
+                _streamJoinResponses.tryEmit(response)
+            }
+            "stream_signaling" -> {
+                val ownerId = (event.data["owner_id"] as? Number)?.toInt() ?: return
+                val streamId = event.data["stream_id"] as? String ?: return
+                val json = event.data["json"] as? String ?: return
+                _streamSignaling.tryEmit(TsStreamSignaling(ownerId, streamId, json))
+            }
             "command_error" -> {
                 val message = event.data["message"] as? String ?: return
                 Log.w(TAG, "Command error: $message")
@@ -190,6 +250,7 @@ class TsClient {
                 }
             }
             _users.value = filteredUsers
+            _streams.value = c.streams?.filterNotNull() ?: emptyList()
             _serverInfo.value = c.serverInfo
             val st = c.state
             if (_state.value != st) _state.value = st
@@ -208,6 +269,36 @@ class TsClient {
 
     fun sendPrivateMessage(userId: Int, msg: String) {
         client?.sendPrivateMessage(userId, msg)
+    }
+
+    /**
+     * Ask a sharer to let us view one of its streams; the answer arrives on
+     * [streamJoinResponses], or never — time it out.
+     */
+    fun joinStream(ownerId: Int, streamId: String) {
+        runCatching { client?.joinStream(ownerId, streamId) }
+            .onFailure { Log.w(TAG, "joinStream failed", it) }
+    }
+
+    /** Stop viewing a stream. No answer is expected. */
+    fun leaveStream(ownerId: Int, streamId: String) {
+        runCatching { client?.leaveStream(ownerId, streamId) }
+            .onFailure { Log.w(TAG, "leaveStream failed", it) }
+    }
+
+    /**
+     * Relay a WebRTC signaling message to a sharer, verbatim. Pace trickled
+     * candidates: a burst trips the server's flood protection.
+     */
+    fun sendStreamSignaling(ownerId: Int, streamId: String, json: String) {
+        runCatching { client?.sendStreamSignaling(ownerId, streamId, json) }
+            .onFailure { Log.w(TAG, "sendStreamSignaling failed", it) }
+    }
+
+    /** Ask for a sharer's stream metadata; the answer updates [streams]. */
+    fun requestStreamInfo(ownerId: Int) {
+        runCatching { client?.requestStreamInfo(ownerId) }
+            .onFailure { Log.w(TAG, "requestStreamInfo failed", it) }
     }
 
     fun moveToChannel(channelId: Long) {
@@ -342,6 +433,7 @@ class TsClient {
         _state.value = ConnectionState.DISCONNECTED
         _channels.value = emptyList()
         _users.value = emptyList()
+        _streams.value = emptyList()
         _serverInfo.value = null
 
         // 4. Now safe to call disconnect on the native client (no concurrent access)

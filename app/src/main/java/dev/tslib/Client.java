@@ -138,6 +138,67 @@ public class Client implements AutoCloseable {
     }
 
     /**
+     * Get the screen sharing streams advertised on the server.
+     *
+     * @return array of streams, empty when nobody is sharing
+     */
+    public Stream[] getStreams() {
+        checkNotClosed();
+        return nativeGetStreams(nativePtr);
+    }
+
+    /**
+     * Ask a sharer to let us view one of its streams.
+     *
+     * <p>The sharer's client decides and may never answer: the reply arrives
+     * as a {@code stream_join_response} event, so callers need a timeout.
+     *
+     * @param ownerId  client ID of the sharer
+     * @param streamId stream UUID
+     */
+    public void joinStream(int ownerId, String streamId) {
+        checkNotClosed();
+        nativeJoinStream(nativePtr, ownerId, streamId);
+    }
+
+    /**
+     * Stop viewing a stream. No reply is expected.
+     *
+     * @param ownerId  client ID of the sharer
+     * @param streamId stream UUID
+     */
+    public void leaveStream(int ownerId, String streamId) {
+        checkNotClosed();
+        nativeLeaveStream(nativePtr, ownerId, streamId);
+    }
+
+    /**
+     * Relay a WebRTC signaling message to a sharer, verbatim.
+     *
+     * <p>The server does not inspect the payload. Pace trickled candidates:
+     * a burst trips the server's flood protection.
+     *
+     * @param ownerId  client ID of the sharer
+     * @param streamId stream UUID
+     * @param json     signaling payload, {@code {"cmd":…,"args":…}}
+     */
+    public void sendStreamSignaling(int ownerId, String streamId, String json) {
+        checkNotClosed();
+        nativeSendStreamSignaling(nativePtr, ownerId, streamId, json);
+    }
+
+    /**
+     * Request metadata for a client's streams; the answer arrives as a
+     * {@code streams_changed} event.
+     *
+     * @param ownerId client ID of the sharer
+     */
+    public void requestStreamInfo(int ownerId) {
+        checkNotClosed();
+        nativeRequestStreamInfo(nativePtr, ownerId);
+    }
+
+    /**
      * Get a specific channel by ID.
      *
      * @param id channel ID
@@ -365,6 +426,11 @@ public class Client implements AutoCloseable {
     private static native Channel nativeGetChannel(long ptr, long id);
     private static native User nativeGetUser(long ptr, int id);
     private static native ServerInfo nativeGetServerInfo(long ptr);
+    private static native Stream[] nativeGetStreams(long ptr);
+    private static native void nativeJoinStream(long ptr, int ownerId, String streamId);
+    private static native void nativeLeaveStream(long ptr, int ownerId, String streamId);
+    private static native void nativeSendStreamSignaling(long ptr, int ownerId, String streamId, String json);
+    private static native void nativeRequestStreamInfo(long ptr, int ownerId);
     private static native void nativeSendServerMessage(long ptr, String msg);
     private static native void nativeSendChannelMessage(long ptr, String msg);
     private static native void nativeSendPrivateMessage(long ptr, int userId, String msg);

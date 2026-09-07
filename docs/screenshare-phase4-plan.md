@@ -87,9 +87,35 @@ Still to verify live:
 The generated parser inherits omitted fields from the first list entry. Keep
 this in mind for registry merge tests. Update access spelling beyond captured
 name-only patches remains unconfirmed; both `access` and `accessibility` are
-optional in the declaration. Next implementation increment: step 3, JNI and
-Kotlin exposure. The step 5 network test is done (see "The §9.5 answer"); WebRTC
-and the Android UI remain undone.
+optional in the declaration.
+
+Step 3 implementation (2026-09-07):
+
+- `tslib-core` now sends the viewer's three commands — `Client::join_stream`,
+  `leave_stream`, `send_stream_signaling` and `request_stream_info`, all typed
+  (`c2s::Out*Part`), with the required empty `msg` on join and leave.
+- Two new events carry the inbound half: `Event::StreamJoinResponse`
+  (decision, optional message, optional SDP offer) and `Event::StreamSignaling`
+  (the `json` payload, unparsed). Both broadcast like every other event.
+- `tslib-jni`: `dev.tslib.Stream` carrier plus `nativeGetStreams`,
+  `nativeJoinStream`, `nativeLeaveStream`, `nativeSendStreamSignaling` and
+  `nativeRequestStreamInfo`. `streams_changed` now carries the snapshot as a
+  `Stream[]` in its data map; the two new events carry their fields.
+- App side: `Client.java` wrappers and, in `TsClient`, a `streams` StateFlow
+  plus `streamJoinResponses` and `streamSignaling` SharedFlows for the WebRTC
+  layer to consume. `refreshState` reads `getStreams()` alongside users and
+  channels, so a snapshot survives a missed notification.
+- Unknown metadata stays `null` on the Java side rather than defaulting to
+  zero: a stream is announced before its details are known.
+- SDP and ICE payloads are forwarded but never logged, at any layer.
+
+Validation: 69 `tslib-core` tests (four new: offer delivery, refusal without an
+offer, opaque signaling JSON, and the four commands refusing without a
+connection) plus the doctest; `cargo check --workspace`; `./gradlew
+assembleDebug`. No live run yet — nothing calls join from the UI until step 4.
+
+The step 5 network test is done (see "The §9.5 answer"); WebRTC and the Android
+UI remain undone, and they are now the only thing between here and video.
 
 ## Order of work
 
