@@ -180,6 +180,10 @@ class ServerViewModel(application: Application) : AndroidViewModel(application) 
     // Track which channels we've already queried permissions for
     private val queriedPermChannels = mutableSetOf<Long>()
 
+    // Sharers we already asked for stream metadata, so one ask per sharer
+    private val queriedStreamOwners = mutableSetOf<Int>()
+    private var silentSharerJob: Job? = null
+
     // Track chat visibility to avoid incrementing unread for visible tab
     var isChatOpen = false
     var activeChatTab = 0
@@ -227,6 +231,28 @@ class ServerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    /**
+     * `notifystreamstarted` only fires while we are connected, so a share that
+     * began before we joined leaves the registry empty even though the user
+     * carries the streaming flag. Ask each such sharer once for its metadata.
+     */
+    private fun observeSilentSharers() {
+        silentSharerJob?.cancel()
+        silentSharerJob = viewModelScope.launch {
+            combine(_users, _streams) { users, streams -> users to streams }
+                .collect { (users, streams) ->
+                    val sharing = users.filter { it.isStreaming }.map { it.id }.toSet()
+                    queriedStreamOwners.retainAll(sharing)
+                    for (ownerId in sharing) {
+                        if (streams.none { it.ownerId == ownerId } && queriedStreamOwners.add(ownerId)) {
+                            Log.i(TAG, "Client $ownerId is sharing but has no stream; asking for info")
+                            tsClient?.requestStreamInfo(ownerId)
+                        }
+                    }
+                }
+        }
+    }
+
     fun bindToService() {
         if (bound) return
         val context = getApplication<Application>()
@@ -271,6 +297,8 @@ class ServerViewModel(application: Application) : AndroidViewModel(application) 
                 viewModelScope.launch {
                     binder.tsClient.streams.collect { _streams.value = it }
                 }
+                queriedStreamOwners.clear()
+                observeSilentSharers()
                 if (_streamViewer.value == null) {
                     _streamViewer.value = StreamViewer(
                         getApplication(),
