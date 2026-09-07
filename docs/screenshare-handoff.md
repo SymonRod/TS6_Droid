@@ -28,6 +28,15 @@
   `tslib-core` → JNI → `User.isStreaming`, and shows as a green screen icon in
   `UserItem`. Everything else stays out of the app until the protocol is
   confirmed. Background: screenshare-protocol.md §0, second finding.
+- **Phase 4, step 1: declarations published (2026-09-07).** The
+  tsclientlib fork and its declarations submodule now have the viewer's eight
+  incoming and three outgoing commands plus offline tests. Tests and a local
+  dependency-override check of `tslib-core`/`stream-capture` pass. Published on
+  `ts6-client-is-streaming`: declarations `9ed2a74`, tsclientlib `298e431`.
+  Existing Cargo lockfiles may need a dependency refresh. Live
+  typed-message delivery and bare empty `msg` server acceptance still need
+  verification. See the phase-4 plan's implementation status for paths and
+  integration steps. The registry, JNI, and WebRTC remain unimplemented.
 
 ## The one-paragraph version of what Phase 2 found
 

@@ -31,6 +31,42 @@ the same path `ChannelListFinished` and friends already take. No book entry:
 a stream is not a book object, and the book's add/update/remove machinery
 would fight the fact that a client can own several streams at once.
 
+## Implementation status (2026-09-07)
+
+Step 1 is published and verified offline, but not tested against a live sharer.
+Both forks retain the `ts6-client-is-streaming` branch: declarations `9ed2a74`,
+tsclientlib `298e431` (including the updated submodule pointer). Files:
+
+- `../tsclientlib/utils/tsproto-structs/declarations/Messages.toml`: all eight
+  incoming notifications and three outgoing viewer commands, without book rules.
+- `../tsclientlib/tsclientlib/src/tests.rs`: seven stream tests covering every
+  notification, multi-entry info, partial updates, refusal without an offer,
+  SDP/JSON escaping, and outbound join/leave/signaling/info serialization.
+
+Validation: `cargo test --offline -p tsclientlib --lib` passed all 35 tests;
+`cargo test -p ts-bookkeeping -p tsproto-structs -p tsproto-packets` passed
+all eight tests. `tslib-core` and `stream-capture` also passed `cargo check`
+with command-line Cargo patches pointing the four fork dependencies at the
+local checkout. No persistent path dependency was added. That check updates
+the untracked `../tslib/Cargo.lock`; an ordinary Cargo invocation resolves the
+published dependencies again.
+
+Before treating step 1 as integrated:
+
+- Refresh existing `tslib` Cargo lockfiles to resolve the published fork update.
+- Verify typed notification delivery against a desktop sharer. The existing
+  `process_message_event` fallback logs command names, not parsed fields; no
+  diagnostic arms or registry were added yet. Avoid logging raw SDP/ICE.
+- Verify empty outbound messages on the server: the existing serializer emits
+  a bare `msg` key rather than literal `msg=`. Offline tests establish presence
+  and empty-value round-trip, not server acceptance.
+
+The generated parser inherits omitted fields from the first list entry. Keep
+this in mind for registry merge tests. Update access spelling beyond captured
+name-only patches remains unconfirmed; both `access` and `accessibility` are
+optional in the declaration. Next implementation increment: step 2, the stream
+registry. JNI, WebRTC, Android UI, and the mobile-network ICE test remain undone.
+
 ## Order of work
 
 Each step is a commit that builds and does something observable.
