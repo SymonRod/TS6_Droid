@@ -19,9 +19,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TSDroid">
 
+        <!-- The stream player forces landscape; handling the config change
+             here keeps the WebRTC surface alive instead of recreating the
+             activity. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
             android:theme="@style/Theme.TSDroid">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

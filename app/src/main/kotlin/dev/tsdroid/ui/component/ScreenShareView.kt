@@ -1,5 +1,8 @@
 package dev.tsdroid.ui.component
 
+import android.app.Activity
+import android.content.pm.ActivityInfo
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,22 +33,33 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import dev.tsdroid.R
 import dev.tsdroid.bridge.StreamEgl
 import dev.tsdroid.bridge.StreamViewPhase
 import dev.tsdroid.bridge.StreamViewerState
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import dev.tsdroid.R
 import dev.tslib.Stream
 import dev.tslib.User
+import kotlinx.coroutines.delay
 import org.webrtc.RendererCommon
 import org.webrtc.SurfaceViewRenderer
+import org.webrtc.VideoFrame
+import org.webrtc.VideoSink
 
 /** The streams on offer; picking one asks its owner for permission. */
 @Composable
@@ -114,13 +128,23 @@ fun StreamViewerOverlay(
     state: StreamViewerState,
     onClose: () -> Unit,
 ) {
+    // The overlay covers the server screen, so the system back has to reach it
+    // first — otherwise it navigates the screen hidden underneath.
+    BackHandler { onClose() }
+    KeepAwakeAndLandscape()
+    var stats by remember { mutableStateOf<String?>(null) }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color.Black,
     ) {
         Box(Modifier.fillMaxSize()) {
             when (state.phase) {
-                StreamViewPhase.PLAYING -> VideoSurface(state, Modifier.fillMaxSize())
+                StreamViewPhase.PLAYING -> VideoSurface(
+                    state = state,
+                    onStats = { stats = it },
+                    modifier = Modifier.fillMaxSize(),
+                )
                 StreamViewPhase.FAILED -> CenteredStatus(failureText(state.message), onClose)
                 StreamViewPhase.REQUESTING ->
                     CenteredStatus(stringResource(R.string.screen_share_requesting), onClose, spinner = true)
@@ -143,6 +167,14 @@ fun StreamViewerOverlay(
                     color = Color.White,
                     style = MaterialTheme.typography.titleSmall,
                 )
+                stats?.let { line ->
+                    Text(
+                        line,
+                        modifier = Modifier.padding(end = 8.dp),
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
                 IconButton(onClick = onClose) {
                     Icon(
                         Icons.Default.Close,
@@ -155,23 +187,98 @@ fun StreamViewerOverlay(
     }
 }
 
+/**
+ * While the player is up: no screen timeout, landscape (a desktop stream in
+ * portrait wastes two thirds of the screen) and no system bars. Everything is
+ * put back on dispose, so leaving the player restores the app's own chrome.
+ */
 @Composable
-private fun VideoSurface(state: StreamViewerState, modifier: Modifier = Modifier) {
+private fun KeepAwakeAndLandscape() {
+    val view = LocalView.current
+    val activity = LocalContext.current as? Activity
+
+    DisposableEffect(view) {
+        view.keepScreenOn = true
+        onDispose { view.keepScreenOn = false }
+    }
+    DisposableEffect(activity) {
+        val previous = activity?.requestedOrientation
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        onDispose {
+            activity?.requestedOrientation = previous ?: ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
+    DisposableEffect(view) {
+        val window = activity?.window
+        val insets = window?.let { WindowInsetsControllerCompat(it, view) }
+        insets?.apply {
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(WindowInsetsCompat.Type.systemBars())
+        }
+        onDispose { insets?.show(WindowInsetsCompat.Type.systemBars()) }
+    }
+}
+
+@Composable
+private fun VideoSurface(
+    state: StreamViewerState,
+    onStats: (String?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val track = state.track ?: return
     val context = LocalContext.current
+    var frameWidth by remember { mutableIntStateOf(0) }
+    var frameHeight by remember { mutableIntStateOf(0) }
+    val frames = remember { java.util.concurrent.atomic.AtomicInteger() }
+
     val renderer = remember {
         SurfaceViewRenderer(context).apply {
-            init(StreamEgl.context, null)
+            init(
+                StreamEgl.context,
+                object : RendererCommon.RendererEvents {
+                    override fun onFirstFrameRendered() = Unit
+                    override fun onFrameResolutionChanged(width: Int, height: Int, rotation: Int) {
+                        // Called on the render thread; the swap follows the frame's rotation.
+                        val portrait = rotation == 90 || rotation == 270
+                        frameWidth = if (portrait) height else width
+                        frameHeight = if (portrait) width else height
+                    }
+                },
+            )
             setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
             setEnableHardwareScaler(true)
         }
     }
-    DisposableEffect(renderer, track) {
-        track.addSink(renderer)
-        onDispose { runCatching { track.removeSink(renderer) } }
+    // Count frames on the way to the renderer — that is the only place the
+    // real frame rate shows up, decoder side.
+    val sink = remember(renderer) {
+        VideoSink { frame: VideoFrame ->
+            frames.incrementAndGet()
+            renderer.onFrame(frame)
+        }
+    }
+    DisposableEffect(sink, track) {
+        track.addSink(sink)
+        onDispose { runCatching { track.removeSink(sink) } }
     }
     DisposableEffect(renderer) {
         onDispose { renderer.release() }
+    }
+    LaunchedEffect(sink) {
+        while (true) {
+            delay(1_000)
+            val fps = frames.getAndSet(0)
+            onStats(
+                if (frameWidth > 0) {
+                    context.getString(R.string.screen_share_stats, frameWidth, frameHeight, fps)
+                } else {
+                    null
+                },
+            )
+        }
+    }
+    DisposableEffect(Unit) {
+        onDispose { onStats(null) }
     }
     AndroidView(factory = { renderer }, modifier = modifier)
 }
