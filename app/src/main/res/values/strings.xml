@@ -115,4 +115,6 @@
     <string name="screen_share_ended">The stream has ended</string>
     <string name="screen_share_failed">Could not connect to the stream</string>
     <string name="screen_share_stats">%1$d×%2$d · %3$d fps</string>
+    <string name="screen_share_fit">Fit the whole frame</string>
+    <string name="screen_share_fill">Fill the screen</string>
 </resources>

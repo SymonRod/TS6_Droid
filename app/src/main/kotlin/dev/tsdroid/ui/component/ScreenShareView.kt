@@ -5,11 +5,14 @@ import android.content.pm.ActivityInfo
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,6 +26,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ScreenShare
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -35,24 +40,29 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import dev.tsdroid.bridge.StreamEgl
-import dev.tsdroid.bridge.StreamViewPhase
-import dev.tsdroid.bridge.StreamViewerState
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import dev.tsdroid.R
+import dev.tsdroid.bridge.StreamEgl
+import dev.tsdroid.bridge.StreamViewPhase
+import dev.tsdroid.bridge.StreamViewerState
 import dev.tslib.Stream
 import dev.tslib.User
 import kotlinx.coroutines.delay
@@ -131,8 +141,10 @@ fun StreamViewerOverlay(
     // The overlay covers the server screen, so the system back has to reach it
     // first — otherwise it navigates the screen hidden underneath.
     BackHandler { onClose() }
-    KeepAwakeAndLandscape()
     var stats by remember { mutableStateOf<String?>(null) }
+    // Fit letterboxes the whole frame; fill crops it to the screen edges.
+    var fillScreen by remember { mutableStateOf(false) }
+    KeepAwakeAndOriented()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -142,6 +154,7 @@ fun StreamViewerOverlay(
             when (state.phase) {
                 StreamViewPhase.PLAYING -> VideoSurface(
                     state = state,
+                    fillScreen = fillScreen,
                     onStats = { stats = it },
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -175,6 +188,17 @@ fun StreamViewerOverlay(
                         style = MaterialTheme.typography.labelSmall,
                     )
                 }
+                if (state.phase == StreamViewPhase.PLAYING) {
+                    IconButton(onClick = { fillScreen = !fillScreen }) {
+                        Icon(
+                            if (fillScreen) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
+                            contentDescription = stringResource(
+                                if (fillScreen) R.string.screen_share_fit else R.string.screen_share_fill,
+                            ),
+                            tint = Color.White,
+                        )
+                    }
+                }
                 IconButton(onClick = onClose) {
                     Icon(
                         Icons.Default.Close,
@@ -188,12 +212,17 @@ fun StreamViewerOverlay(
 }
 
 /**
- * While the player is up: no screen timeout, landscape (a desktop stream in
- * portrait wastes two thirds of the screen) and no system bars. Everything is
- * put back on dispose, so leaving the player restores the app's own chrome.
+ * While the player is up: no screen timeout, no system bars, and both
+ * orientations. The player does not pick one — a desktop stream is easier to
+ * read in landscape, but holding the phone upright has to keep working, and a
+ * phone sharing its own screen is portrait to begin with. `FULL_SENSOR` also
+ * ignores the system rotation lock, which would otherwise pin a full-screen
+ * player to whichever way the phone happens to be locked.
+ * Everything is put back on dispose, so leaving the player restores the app's
+ * own chrome.
  */
 @Composable
-private fun KeepAwakeAndLandscape() {
+private fun KeepAwakeAndOriented() {
     val view = LocalView.current
     val activity = LocalContext.current as? Activity
 
@@ -201,12 +230,14 @@ private fun KeepAwakeAndLandscape() {
         view.keepScreenOn = true
         onDispose { view.keepScreenOn = false }
     }
+    // Captured once: re-reading it after we have set an orientation would
+    // restore our own value instead of the screen's.
+    val previousOrientation = remember(activity) {
+        activity?.requestedOrientation ?: ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+    }
     DisposableEffect(activity) {
-        val previous = activity?.requestedOrientation
-        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-        onDispose {
-            activity?.requestedOrientation = previous ?: ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        }
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
+        onDispose { activity?.requestedOrientation = previousOrientation }
     }
     DisposableEffect(view) {
         val window = activity?.window
@@ -219,9 +250,14 @@ private fun KeepAwakeAndLandscape() {
     }
 }
 
+/** Zoom bounds; past 5× a desktop stream is a handful of pixels. */
+private const val MIN_ZOOM = 1f
+private const val MAX_ZOOM = 5f
+
 @Composable
 private fun VideoSurface(
     state: StreamViewerState,
+    fillScreen: Boolean,
     onStats: (String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -280,7 +316,77 @@ private fun VideoSurface(
     DisposableEffect(Unit) {
         onDispose { onStats(null) }
     }
-    AndroidView(factory = { renderer }, modifier = modifier)
+    var zoom by remember { mutableFloatStateOf(MIN_ZOOM) }
+    var pan by remember { mutableStateOf(Offset.Zero) }
+    var videoSize by remember { mutableStateOf(IntSize.Zero) }
+    // A new aspect ratio or a fit/fill switch invalidates where we were looking.
+    LaunchedEffect(fillScreen, frameWidth, frameHeight) {
+        zoom = MIN_ZOOM
+        pan = Offset.Zero
+    }
+
+    /** Keep the panned frame covering the view: no dragging past its edges. */
+    fun clamp(offset: Offset, scale: Float): Offset {
+        val maxX = videoSize.width * (scale - 1f) / 2f
+        val maxY = videoSize.height * (scale - 1f) / 2f
+        return Offset(offset.x.coerceIn(-maxX, maxX), offset.y.coerceIn(-maxY, maxY))
+    }
+
+    val aspect = if (frameWidth > 0 && frameHeight > 0) {
+        frameWidth.toFloat() / frameHeight.toFloat()
+    } else {
+        0f
+    }
+    // Until the resolution is known the renderer fills the box; afterwards it
+    // is laid out at the frame's own aspect ratio. That matters: the renderer
+    // crops whatever it needs to fill its layout, so a full-screen view of a
+    // 16:9 stream on a 20:9 phone would lose the top and bottom of the frame.
+    val sizing = if (aspect > 0f && !fillScreen) {
+        Modifier.aspectRatio(aspect)
+    } else {
+        Modifier.fillMaxSize()
+    }
+
+    Box(
+        modifier = modifier
+            .pointerInput(Unit) {
+                detectTransformGestures { _, gesturePan, gestureZoom, _ ->
+                    val scaled = (zoom * gestureZoom).coerceIn(MIN_ZOOM, MAX_ZOOM)
+                    // Pan in view pixels, then re-clamp: a pinch back to 1×
+                    // has to let go of an offset that is no longer reachable.
+                    zoom = scaled
+                    pan = clamp(pan + gesturePan, scaled)
+                }
+            }
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    // Zoomed in, a double tap is "back out"; otherwise it is
+                    // the usual fit/fill flip players do.
+                    onDoubleTap = {
+                        if (zoom > MIN_ZOOM) {
+                            zoom = MIN_ZOOM
+                            pan = Offset.Zero
+                        } else {
+                            zoom = MAX_ZOOM / 2f
+                        }
+                    },
+                )
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        AndroidView(
+            factory = { renderer },
+            // SurfaceView follows the View's own scale and translation; a
+            // Compose graphicsLayer would leave the surface behind.
+            update = {
+                it.scaleX = zoom
+                it.scaleY = zoom
+                it.translationX = pan.x
+                it.translationY = pan.y
+            },
+            modifier = sizing.onSizeChanged { videoSize = it },
+        )
+    }
 }
 
 @Composable
