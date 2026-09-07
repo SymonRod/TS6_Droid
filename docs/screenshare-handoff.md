@@ -46,6 +46,15 @@
   --example stream-registry -- god.serod.tech:9988 Salotto 90` from `../tslib`.
   See the phase-4 plan for details. Binding payloads/accessors, Kotlin, and
   WebRTC remain the next increments; no video is received yet.
+- **Phase 4, step 5: the network question is answered (2026-09-07).** The
+  hardcoded ICE servers reflect but do not relay — `turn.teamspeak.com` ignores
+  a TURN Allocate, `turn2` answers nothing at all — so a failed ICE run has no
+  fallback. But mobile data is not the blocker it might have been: on Fastweb
+  LTE the NAT maps one socket to a single reflexive address across three
+  servers, so hole punching should work. P2P stays viable and steps 2-4 stand.
+  Re-check with `cargo run -p tslib-core --example ice-probe` from `../tslib`;
+  the plan's "The §9.5 answer" carries the numbers, the caveats, and the
+  cross-compile recipe for running it on the phone.
 
 ## The one-paragraph version of what Phase 2 found
 

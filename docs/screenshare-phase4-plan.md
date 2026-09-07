@@ -88,7 +88,8 @@ The generated parser inherits omitted fields from the first list entry. Keep
 this in mind for registry merge tests. Update access spelling beyond captured
 name-only patches remains unconfirmed; both `access` and `accessibility` are
 optional in the declaration. Next implementation increment: step 3, JNI and
-Kotlin exposure. WebRTC, Android UI, and the mobile-network ICE test remain undone.
+Kotlin exposure. The step 5 network test is done (see "The §9.5 answer"); WebRTC
+and the Android UI remain undone.
 
 ## Order of work
 
@@ -116,12 +117,55 @@ Each step is a commit that builds and does something observable.
    `streamsignaling`, trickle candidates both ways, render into a
    `SurfaceViewRenderer`. Keep it on the Kotlin side — Rust does signaling
    transport only.
-5. **§9.5, TURN — do this early, not last.** Run the viewer on mobile data
-   (symmetric NAT) against a sharer elsewhere and see whether ICE completes.
-   If it does not, P2P is unusable from mobile and the whole feature waits on
-   the SFU. It is a one-evening test that can invalidate steps 2–4, so run it
-   as soon as step 4 produces any ICE at all — or even before, with a
-   throwaway harness.
+5. **§9.5, TURN — answered ahead of step 4 (2026-09-07).** The risk that P2P
+   is unusable from mobile did not materialise: see "The §9.5 answer" below.
+   Steps 2–4 are not invalidated, so this no longer gates the work. A full
+   end-to-end ICE run still belongs to step 4.
+
+## The §9.5 answer: STUN only, but the NAT cooperates (2026-09-07)
+
+Measured with `cargo run -p tslib-core --example ice-probe`, a dependency-free
+STUN and TURN prober. It cross-compiles for the phone with the NDK linker and
+runs from `adb shell`; an optional Android network handle (from `dumpsys
+connectivity`) pins it to one network. It sends no credentials and no media.
+
+```
+cargo build --release --example ice-probe            # desktop
+CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$NDK/aarch64-linux-android24-clang \
+  cargo build --release --example ice-probe --target aarch64-linux-android
+adb push target/aarch64-linux-android/release/ice-probe /data/local/tmp/
+adb shell /data/local/tmp/ice-probe [<net_handle>]
+```
+
+**The ICE servers do not relay.** `turn.teamspeak.com` answers STUN bindings as
+`Coturn-4.6.3 'Gorst'` but ignores an Allocate entirely, where a TURN server is
+required to refuse an unauthenticated one with `401` plus a realm and a nonce.
+`turn2.teamspeak.com` resolves but answers nothing, on 3478, 3479 or 5349.
+Neither host has an AAAA record. Consistent across desktop and phone, ten runs.
+So there is no relay to fall back on: **if ICE fails, it fails.**
+
+**The mobile NAT is not symmetric, which is what saves it.** On Fastweb LTE
+(`apn.fastweb.it`), with Wi-Fi off so mobile data is the default network, one
+socket got the same reflexive address from three different servers, four runs
+in a row — endpoint-independent mapping, the kind hole punching handles.
+
+| Network | Reflexive address | Mapping |
+| --- | --- | --- |
+| Home LAN (desktop and phone) | `82.54.4.201:<source port>` | endpoint-independent, port preserved |
+| Fastweb LTE | `93.35.9.234:22540…22550` | endpoint-independent, port rewritten |
+
+Caveats worth carrying into step 4:
+
+- Mapping was measured, not filtering. Endpoint-independent mapping is what
+  rules out the fatal case; ICE still has to punch through the filter.
+- One carrier on one day. Another operator, or CGNAT under load, can still be
+  symmetric — and with no relay available that connection simply fails.
+- The mobile internet APN was IPv4-only behind CGNAT (`10.130.127.251/29`),
+  while the home network has no global IPv6 (ULA only). IPv6, which would sidestep
+  NAT entirely, is not a path between these two endpoints.
+- The probe reads the ICE servers from §6, not from a live session. If step 4
+  sees ICE fail, re-capture what the desktop client actually offers before
+  concluding the network is at fault.
 
 ## The viewer handshake, end to end
 
@@ -164,7 +208,8 @@ never be answered — the UI needs a pending state and a timeout.
   the plausible way a real client trips it; batch or pace trickled candidates.
 - **ICE servers are hardcoded in the desktop client**:
   `stun:turn.teamspeak.com:3478` and `stun:turn2.teamspeak.com:3478` (§6).
-  Whether they also relay (TURN, not just STUN) is exactly the §9.5 unknown.
+  They reflect but do not relay, and only the first one answers at all — see
+  "The §9.5 answer" below. Plan on STUN alone.
 
 ## How to test
 
