@@ -20,9 +20,8 @@
   nothing on a self-hosted server, there is no SFU binary to install and no
   setup documentation. §9.4 (`notifystreamattendees`) is almost certainly part
   of that same SFU path, since a full broadcaster lifecycle never triggered it.
-- **Still open and testable:** §9.5, whether TURN relaying is available — it
-  needs a client behind symmetric NAT (a phone on mobile data will do), not a
-  different server.
+- **§9.5 is answered** (2026-09-07) — see the phase-4 step 5 entry below.
+  Nothing in the viewer path is still blocked on an open protocol question.
 - **Application code: only `client_is_streaming`.** Done — the field is
   declared in the tsclientlib fork (see AGENTS.md), flows through
   `tslib-core` → JNI → `User.isStreaming`, and shows as a green screen icon in
@@ -55,6 +54,56 @@
   Re-check with `cargo run -p tslib-core --example ice-probe` from `../tslib`;
   the plan's "The §9.5 answer" carries the numbers, the caveats, and the
   cross-compile recipe for running it on the phone.
+
+## How far from video on the phone
+
+Two increments, and neither is blocked on an unknown. Everything the viewer
+needs from the protocol is captured, declared, parsed, and — as of step 5 —
+known to be reachable over a real mobile network.
+
+**What already works end to end:** the app connects, and a sharer's green
+screen icon appears in `UserItem` from `client_is_streaming`. In `../tslib`,
+the registry tracks who is sharing what, with metadata, verified against a
+live desktop sharer.
+
+**Step 3 — carry the streams across JNI.** Today `tslib-jni` knows the event
+only by name (`types.rs:189` maps `Event::StreamsChanged` to a string) with no
+payload. Needed: a stream payload and accessors mirroring how users and
+channels already cross the boundary, a `dev.tslib` data carrier, plus the four
+signaling calls — `joinstreamrequest` and `streamsignaling` outbound,
+`notifyrespondjoinstreamrequest` and `notifystreamsignaling` inbound. This is
+mechanical, follows patterns already in the file, and is the smaller half.
+
+**Step 4 — WebRTC in Kotlin.** The app has *no* `org.webrtc` dependency yet
+(nothing in any Gradle file), so this starts with adding one. Then a
+`PeerConnection` per stream: set the remote offer, answer through
+`streamsignaling`, trickle candidates both ways, render into a
+`SurfaceViewRenderer`, and a UI to list streams and open one. This is the
+larger half and the first place the whole chain is exercised at once.
+
+**Why the risk is lower than it looks:**
+
+- The offer is plain libwebrtc — VP8, VP9, H.264, AV1, opus (§9a.1). No
+  proprietary codec, and VP8/H.264 have hardware decoders on the test device.
+- The signaling contract is fully captured for the viewer role (§9a.3, §9b).
+- ICE has a plausible path from mobile data (step 5).
+
+**What can still bite, in rough order:**
+
+1. **No TURN fallback.** ICE either punches through or the join fails; there
+   is nothing to fall back on, and only mapping — not filtering — was measured.
+2. **Flood protection** (`error id=524`) on a trickled-candidate burst. Pace
+   or batch them from the first attempt rather than after being locked out.
+3. **The bare empty `msg`** on `joinstreamrequest` is still unverified against
+   the server; the serializer emits a bare `msg` key, not literal `msg=`. It
+   is the first thing to check if a join is refused with `error id=1542`.
+4. **A join can simply never be answered** — the sharer's client decides, so
+   the UI needs a pending state and a timeout, not just success and failure.
+
+Honest estimate: step 3 is a focused session; step 4 is the real work, and the
+first video frame most plausibly arrives at the end of it. The one thing that
+could stretch it is ICE failing in practice — that is where the missing relay
+would hurt, and it cannot be ruled out until step 4 actually runs.
 
 ## The one-paragraph version of what Phase 2 found
 
@@ -135,7 +184,8 @@ spelling that `notifystreamstarted` itself uses (§9b.1).
 
 ## Next steps, in order of value
 
-1. **Phase 4, P2P viewer** — planned in
+1. **Phase 4, steps 3 and 4** — the only work left before video appears; the
+   breakdown is in "How far from video on the phone" above. Planned in
    [screenshare-phase4-plan.md](screenshare-phase4-plan.md). The signaling
    contract is complete for the viewer
    role (§9a.3, §9b) and nothing still open blocks it. Order: `tslib-core`
@@ -143,10 +193,6 @@ spelling that `notifystreamstarted` itself uses (§9b.1).
    `org.webrtc`. The first increment, `client_is_streaming`, is already done
    (§0) — unlike the `notifystream*` family it needed no `tsproto` hook, only
    an argument declaration in the tsclientlib fork (see AGENTS.md).
-2. **§9.5, TURN.** Answerable without a new server: run the viewer from a phone
-   on mobile data (symmetric NAT) against a sharer elsewhere and see whether
-   ICE completes. This decides whether P2P is usable at all from mobile, so it
-   is worth answering early in Phase 4 rather than after.
-3. **§9.4 / §9.6 — wait for TeamSpeak.** Neither is reachable until the SFU
+2. **§9.4 / §9.6 — wait for TeamSpeak.** Neither is reachable until the SFU
    ships. Re-check the community thread linked in §9.6 rather than spending
    effort on them.

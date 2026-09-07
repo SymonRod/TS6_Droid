@@ -545,6 +545,20 @@ TS3-escaped parameter on the join response:
 notifyrespondjoinstreamrequest clid=1 id=<uuid> msg decision=1 offer=v=0\r\no=-\s...(full SDP, \r\n escaped as \s)...
 ```
 
+The offer itself is an ordinary libwebrtc one. The captured `m=video` section
+advertises **VP8 (96), VP9 (98), H.264 (103, 107) and AV1 (39)** with matching
+`rtx` payload types plus `red`/`ulpfec`, and audio is **opus (111)**. Nothing
+proprietary and no exotic profile, so an Android `org.webrtc` build negotiates
+this without special handling — VP8 and H.264 both have hardware decoders on
+the target device. Re-read the codec list from a capture with:
+
+```bash
+find captures -maxdepth 1 -type f -exec grep -ohE "rtpmap:[0-9]+.{0,12}" {} +
+```
+
+`-type f` matters: `captures/` holds a FIFO from the session-2 recipe, and a
+plain `grep captures/*` blocks on it forever.
+
 So of the six commands actually exercised, only one — `notifystreamsignaling`
 — carries JSON. Whether `setupstream`/`updatestream` (session creation and
 edits, never exercised) also stay flat, or whether the fuller `Stream_Config`
