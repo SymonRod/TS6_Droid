@@ -1,24 +1,24 @@
 # TS6 Droid
 
-Client libre et léger TeamSpeak 3/6 pour Android, construit avec [tslib](https://github.com/flamme-demon/tslib_multi) (bibliothèque Rust) et Jetpack Compose.
+Free and lightweight TeamSpeak 3/6 client for Android, built with [tslib](https://github.com/flamme-demon/tslib_multi) (Rust library) and Jetpack Compose.
 
-## Fonctionnalités
+## Features
 
-- **Connexion** aux serveurs TeamSpeak 3 et 6
-- **Favoris** avec nom du serveur et icône (récupérés automatiquement)
-- **Reconnexion automatique** au dernier serveur
-- **Chat** channel et messages privés avec historique persistant
-- **Push-to-Talk** avec codec Opus (48 kHz, mono)
-- **Arborescence des channels** avec liste des utilisateurs
-- **Gestionnaire de fichiers** — navigation, upload, download, création de dossiers
-- **Parcours des channels** avant connexion (sélecteur de channel)
-- **BBCode** dans les messages
+- **Connection** to TeamSpeak 3 and 6 servers
+- **Bookmarks** with server name and icon (fetched automatically)
+- **Automatic reconnection** to the last server
+- **Chat** channel and private messages with persistent history
+- **Push-to-Talk** with Opus codec (48 kHz, mono)
+- **Channel tree** with user list
+- **File manager** — browsing, upload, download, folder creation
+- **Channel browsing** before connecting (channel picker)
+- **BBCode** in messages
 
 ## Architecture
 
 ```
 app/src/main/
-├── java/dev/tslib/          # Classes JNI (pont vers la lib Rust)
+├── java/dev/tslib/          # JNI classes (bridge to the Rust lib)
 ├── kotlin/dev/tsdroid/
 │   ├── bridge/              # TsClient (coroutines + StateFlow)
 │   ├── data/                # BookmarkStore, ServerBookmark, MessageStore
@@ -27,22 +27,22 @@ app/src/main/
 │   └── ui/
 │       ├── screen/          # ConnectionScreen, ServerScreen
 │       └── component/       # ChannelTree, ChatView, MessageBubble, ...
-└── res/                     # Ressources Android
+└── res/                     # Android resources
 ```
 
-La bibliothèque native `tslib` (Rust) gère le protocole TeamSpeak via JNI. Le service Android `TsConnectionService` maintient la connexion en arrière-plan avec une notification persistante.
+The native `tslib` library (Rust) handles the TeamSpeak protocol via JNI. The Android `TsConnectionService` keeps the connection alive in the background with a persistent notification.
 
-## Prérequis
+## Requirements
 
-- **Android Studio** (ou Gradle 8.14+)
+- **Android Studio** (or Gradle 8.14+)
 - **JDK 17**
-- **Rust** avec [cargo-ndk](https://github.com/nickelc/cargo-ndk)
+- **Rust** with [cargo-ndk](https://github.com/nickelc/cargo-ndk)
 - **Android NDK** 27.x (via SDK Manager)
-- **tslib** cloné à côté du projet (`../tslib`)
+- **tslib** cloned next to the project (`../tslib`)
 
 ## Build
 
-### 1. Compiler la bibliothèque native
+### 1. Build the native library
 
 ```bash
 cd ../tslib
@@ -54,21 +54,21 @@ cargo ndk -t arm64-v8a \
   build --release -p tslib-jni --features vendored-openssl
 ```
 
-Ou via la tâche Gradle intégrée :
+Or via the built-in Gradle task:
 
 ```bash
 ./gradlew buildRustLibs
 ```
 
-### 2. Compiler l'APK
+### 2. Build the APK
 
 ```bash
 ./gradlew assembleDebug
 ```
 
-L'APK se trouve dans `app/build/outputs/apk/debug/`.
+The APK is located at `app/build/outputs/apk/debug/`.
 
-### 3. Installer sur un appareil
+### 3. Install on a device
 
 ```bash
 adb install -r app/build/outputs/apk/debug/app-debug.apk
@@ -76,13 +76,13 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## Configuration
 
-| Paramètre | Valeur |
+| Setting | Value |
 |-----------|--------|
 | `minSdk` | 29 (Android 10) |
 | `targetSdk` | 35 |
 | `compileSdk` | 35 |
-| Audio | Opus, 48 kHz, mono, frames 20 ms |
+| Audio | Opus, 48 kHz, mono, 20 ms frames |
 
-## Licence
+## License
 
-Ce projet est un logiciel libre. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+This project is free software. See the [LICENSE](LICENSE) file for more details.
