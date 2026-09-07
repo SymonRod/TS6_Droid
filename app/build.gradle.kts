@@ -58,23 +58,82 @@ android {
     }
 }
 
-// Task to build Rust native libraries via cargo-ndk
-tasks.register<Exec>("buildRustLibs") {
-    workingDir = file("${rootDir}/../tslib")
-    environment("ANDROID_NDK_HOME", System.getenv("ANDROID_NDK_HOME")
-        ?: "${System.getProperty("user.home")}/Android/Sdk/ndk/27.2.12479018")
-    environment("ANDROID_NDK", System.getenv("ANDROID_NDK_HOME")
-        ?: "${System.getProperty("user.home")}/Android/Sdk/ndk/27.2.12479018")
+// Build the Rust JNI library automatically before Android packages native libraries.
+val rustProjectDir = rootDir.resolve("../tslib")
+val androidSdkDir = providers.environmentVariable("ANDROID_HOME")
+    .orElse(providers.environmentVariable("ANDROID_SDK_ROOT"))
+    .map(::file)
+    .orElse(file("${System.getProperty("user.home")}/Android/Sdk"))
+val configuredNdkDir = providers.environmentVariable("ANDROID_NDK_HOME")
+    .orElse(providers.environmentVariable("ANDROID_NDK"))
+    .map(::file)
+val installedNdkDir = providers.provider {
+    androidSdkDir.get().resolve("ndk").listFiles()
+        ?.filter { it.isDirectory }
+        ?.maxByOrNull { it.name }
+}
+val cargoExecutable = providers.provider {
+    val cargoHome = System.getenv("CARGO_HOME")?.let(::file)
+        ?: file("${System.getProperty("user.home")}/.cargo")
+    cargoHome.resolve("bin/cargo").takeIf { it.isFile }?.absolutePath ?: "cargo"
+}
+
+val buildRustLibs by tasks.registering(Exec::class) {
+    val ndkDir = configuredNdkDir.orElse(installedNdkDir)
+    val outputDir = projectDir.resolve("src/main/jniLibs")
+
+    workingDir = rustProjectDir
+    inputs.dir(rustProjectDir.resolve("crates"))
+    inputs.file(rustProjectDir.resolve("Cargo.toml"))
+    outputs.dir(outputDir)
+
+    doFirst {
+        require(rustProjectDir.isDirectory) {
+            "Missing tslib repository at ${rustProjectDir.absolutePath}"
+        }
+        require(ndkDir.isPresent && ndkDir.get().isDirectory) {
+            "Android NDK not found. Install it with SDK Manager or set ANDROID_NDK_HOME."
+        }
+        environment("ANDROID_NDK_HOME", ndkDir.get().absolutePath)
+        environment("ANDROID_NDK", ndkDir.get().absolutePath)
+    }
+
     environment("CMAKE_POLICY_VERSION_MINIMUM", "3.5")
     commandLine(
-        "cargo", "ndk",
+        cargoExecutable.get(), "ndk",
         "-t", "arm64-v8a",
         "-t", "x86_64",
-        "-o", "${projectDir}/src/main/jniLibs",
+        "-o", outputDir.absolutePath,
         "build", "--release", "-p", "tslib-jni",
         "--features", "vendored-openssl",
         "-j10"
     )
+
+    doLast {
+        // The release profile keeps symbols so that native crashes can be
+        // symbolized (see tslib/Cargo.toml). Stash an unstripped copy for
+        // ndk-stack, and strip the libraries that get packaged into the APK.
+        val symbolsDir = rustProjectDir.resolve("symbols")
+        val stripTool = ndkDir.get().resolve("toolchains/llvm/prebuilt")
+            .walkTopDown().firstOrNull { it.name == "llvm-strip" && it.canExecute() }
+        outputDir.walkTopDown().filter { it.extension == "so" }.forEach { so ->
+            val abiDir = symbolsDir.resolve(so.parentFile.name).apply { mkdirs() }
+            so.copyTo(abiDir.resolve(so.name), overwrite = true)
+            if (stripTool != null) {
+                providers.exec {
+                    commandLine(stripTool.absolutePath, "--strip-unneeded", so.absolutePath)
+                }.result.get()
+            } else {
+                logger.warn("llvm-strip not found in NDK; packaging unstripped ${so.name}")
+            }
+        }
+    }
+}
+
+tasks.configureEach {
+    if (name == "mergeDebugJniLibFolders" || name == "mergeReleaseJniLibFolders") {
+        dependsOn(buildRustLibs)
+    }
 }
 
 dependencies {

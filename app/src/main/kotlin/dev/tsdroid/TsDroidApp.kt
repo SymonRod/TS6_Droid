@@ -16,6 +16,8 @@ class TsDroidApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // Required by the native layer (DNS resolution, audio) before connecting
+        dev.tslib.Client.initAndroidContext(this)
         createNotificationChannels()
     }
 

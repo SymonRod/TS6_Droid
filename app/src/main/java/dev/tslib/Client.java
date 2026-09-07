@@ -327,6 +327,20 @@ public class Client implements AutoCloseable {
         }
     }
 
+    /**
+     * Publishes the Android application {@code Context} to the native layer.
+     *
+     * <p>Must be called once, before any connection is created: the native
+     * crates used for DNS resolution and audio read the JavaVM and the
+     * application context from a global that is otherwise never initialized,
+     * and abort the process when it is missing.
+     *
+     * @param context the application context
+     */
+    public static void initAndroidContext(Object context) {
+        nativeInitAndroidContext(context);
+    }
+
     private void checkNotClosed() {
         if (nativePtr == 0) {
             throw new IllegalStateException("Client has been closed");
@@ -334,6 +348,7 @@ public class Client implements AutoCloseable {
     }
 
     // Native methods
+    private static native void nativeInitAndroidContext(Object context);
     private static native long nativeCreate(String address, long identityPtr,
                                              String nickname, String password,
                                              String channel);
