@@ -75,7 +75,15 @@ Dependencies are declared through the version catalog in
 
 ### TeamSpeak 6 screen sharing
 
-Full findings and plan: **[docs/screenshare-research-plan.md](docs/screenshare-research-plan.md)**.
+Two documents, read in this order:
+
+- **[docs/screenshare-protocol.md](docs/screenshare-protocol.md)** — the schema
+  reference (Phase 1 output). Start here for anything concrete.
+- **[docs/screenshare-research-plan.md](docs/screenshare-research-plan.md)** —
+  rationale and roadmap. The protocol document supersedes it where they differ.
+- **[docs/screenshare-phase2-plan.md](docs/screenshare-phase2-plan.md)** — the
+  working plan for the next step, including where to hook `tsproto` and why the
+  obvious hook does not work. Read this before touching `../tslib`.
 
 Summary of what static analysis of the desktop client established:
 
@@ -88,12 +96,21 @@ Summary of what static analysis of the desktop client established:
 - The media plane is **standard WebRTC** (libwebrtc, OpenH264, VP8/VP9,
   simulcast), in either `STREAM_P2P` or `STREAM_SFU` mode, advertised through
   `virtualserver_capability_extensions`.
+- In `STREAM_SFU` mode the SFU is **mediasoup** (`libmediasoupclient` over a
+  WebSocket) — a public, documented protocol with an Android client, so the
+  viewer is an integration job rather than a reverse-engineering one.
 - Viewing someone else's screen needs **no `MediaProjection` permission**; that
   is only required to share the phone's own screen.
 
-Status: exploratory. **Do not add screen sharing code to the app yet** — the
-next step is Phase 1 of that document (extracting the JSON schemas), followed by
-Phase 2 (an instrumented `tsclientlib` client capturing a real session).
+Status: exploratory, Phase 1 done. **Do not add screen sharing code to the app
+yet** — the next step is Phase 2, capturing a real session with
+`../tslib/examples/stream-capture`, planned in `screenshare-phase2-plan.md` with
+the open questions in `screenshare-protocol.md` §9 as its checklist. The tool is
+written and builds; running it needs a TS6 server with a live sharer. The
+largest unknown is how a JSON body attaches to a TS3 command; nothing can be
+parsed until that is answered. Note that `tsclientlib` drops these commands *and
+their arguments* before `tslib` ever sees them, so the capture hooks `tsproto`'s
+packet event listener instead of listening in `tslib-core`.
 
 The cheapest useful increment meanwhile is the `client_is_streaming` client
 property: it lets the UI show *who* is sharing before any stream can be decoded.

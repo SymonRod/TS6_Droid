@@ -1,6 +1,9 @@
 # TeamSpeak 6 screen sharing — reconnaissance and implementation plan
 
 > **Status:** exploratory. No change to the app is justified yet.
+> **Phase 1 is complete** — its output is
+> [screenshare-protocol.md](screenshare-protocol.md), which supersedes this
+> document wherever the two disagree (see the corrections noted below).
 > **Recon date:** 2026-09-07
 > **Method:** static analysis (`strings`, `grep`) of the installed desktop client.
 > **No traffic was captured or decrypted in this phase.**
@@ -288,6 +291,12 @@ screenshare were found in the binary. Access control appears to run through the
 **Output:** `docs/screenshare-protocol.md`.
 **Risk:** none. **Estimate:** ~1 day.
 
+**Done (2026-09-07).** `main.js` proved sufficient; no disassembler was needed.
+Phase 1 also corrected three things in this document: the SFU turned out to be
+**mediasoup over WebSocket** (`libmediasoupclient` + IXWebSocket), STUN servers
+**are** hardcoded (§4 below is wrong), and the missing `Stream_Client_Leave`
+command does not exist — leaving reuses `joinstreamrequest` with `is_remove`.
+
 ### Phase 2 — Instrumented Rust client (the decisive step)
 
 **Goal:** capture real payloads, already decrypted.
@@ -356,4 +365,6 @@ Windows/Linux desktop client as the source.
 
 ## 5. Next step
 
-Run Phase 1 and produce `docs/screenshare-protocol.md`.
+Phase 1 is done. Run **Phase 2** — the instrumented `tsclientlib` client — using
+the open-questions checklist in
+[screenshare-protocol.md](screenshare-protocol.md) §9 as its objectives.
