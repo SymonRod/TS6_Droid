@@ -178,7 +178,11 @@ Still open after step 4:
   on the server is unconfirmed.
 - The refusal, timeout and mid-session stop paths are coded but never exercised
   live.
-- Mobile-data ICE: measured as favourable in §9.5, never actually punched.
+
+**Mobile-data ICE works** (confirmed 2026-09-07): with the phone as the viewer
+on mobile data, STUN-only ICE punched through and the picture arrived, as the
+§9.5 probe predicted. So the CGNAT path needs no relay after all — one less
+reason to want TURN.
 
 ## Order of work
 
