@@ -145,11 +145,40 @@ Step 4 implementation (2026-09-07):
   `stream_ended`, `ice_failed`, …) and are localized in en/fr/it; a sharer's
   own refusal text is shown verbatim. SDP and ICE are still never logged.
 
-Validation: `./gradlew assembleDebug`, no warnings in the new files, and the
-APK carries exactly the two expected ABIs. Installed on the test device.
-**Not yet verified live**: no end-to-end ICE run against a desktop sharer has
-been done, so the answer/candidate exchange and the decoder path are untested
-on the wire. That run is what remains of step 4.
+**Verified live on 2026-09-07**, desktop sharer → phone on home Wi-Fi:
+`ICE state: CHECKING` → `CONNECTED` in ~80 ms, then
+`AndroidVideoDecoder: ctor name: c2.qti.av1.decoder type: AV1`, and
+`SurfaceEglRenderer: Reporting frame resolution changed to 2560x1440`. So the
+sharer streams **AV1**, hardware-decoded here, and the picture arrives. Frame
+rate follows the content — 5 fps on a still desktop, no drops. STUN-only ICE
+punched through on the first try, as §9.5 predicted.
+
+Two bugs the first live run exposed:
+
+- **`ACCESS_NETWORK_STATE` was missing.** WebRTC's `NetworkMonitor` asks
+  `ConnectivityService` for the active network as soon as a
+  `PeerConnectionFactory` is built; a denied query is a fatal `RTC_CHECK`
+  (`sdk/android/src/jni/jvm.cc`, `Check failed: false`), not an exception it
+  recovers from. The process aborted on the network thread. tslib never needed
+  the permission, so the manifest did not carry it.
+- **A share already running when the app joins was invisible.**
+  `notifystreamstarted` only fires while connected, so the registry stayed
+  empty even though the user carried the streaming flag, and the viewer button
+  never appeared — the share had to be restarted from the desktop.
+  `ServerViewModel` now asks each flagged sharer once with `requeststreaminfo`,
+  and forgets it when it stops sharing.
+
+Also validated: `./gradlew assembleDebug`, no warnings in the new files, and
+the APK carries exactly the two expected ABIs.
+
+Still open after step 4:
+
+- Streams outside our own channel: only same-channel shares have been seen, so
+  whether the notifications (or `requeststreaminfo`) reach a viewer elsewhere
+  on the server is unconfirmed.
+- The refusal, timeout and mid-session stop paths are coded but never exercised
+  live.
+- Mobile-data ICE: measured as favourable in §9.5, never actually punched.
 
 ## Order of work
 
