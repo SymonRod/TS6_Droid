@@ -18,7 +18,8 @@
   (EncryptedSharedPreferences/MasterKey), `androidx.browser` (only if capture
   shows an OAuth/authorize URL; else skip).
 - `protobuf-java` (or `protobuf-kotlin-lite`) — version must match the
-  `protoc` used to generate from reconstructed `.proto` files.
+  `protoc` used to generate from the recovered `.proto` files
+  (`docs/proto/`, done 2026-09-22).
 
 **Hygiene (same milestone):**
 
@@ -30,7 +31,7 @@
    nicknames/passwords — unacceptable for untrusted import input). Keep the
    DataStore keys (`bookmarks_json`, `auto_reconnect`,
    `last_bookmark_address` at `:18-20`) unchanged.
-3. Add `docs/proto/` with the reconstructed `.proto` + a
+3. Add `docs/proto/` with the recovered `.proto` (done 2026-09-22) + a
    `protoc --decode_raw` golden test for one captured bookmark payload
    (redacted).
 
@@ -75,6 +76,8 @@ logout wipes tokens; no token in logcat/plaintext backup.
 **Mapping** (`sync-protocol.md` §5): `Bookmark_Data{name,address,nickname,
 server_password,default_channel,server_uid,…}` → `ServerBookmark`
 (`data/ServerBookmark.kt:3`): name/address/nickname/password/channel.
+`port` (field 3) is separate on the wire — join it into `address` as
+`host:port` unless it is 0 or the default 9987.
 Profiles (`capture/playback/hotkey/sound_pack`), `server_icon` (vs local
 `iconId` enrichment via `updateServerInfo`), `phonetic_nickname`,
 `resolved_server_nickname` → dropped + documented in import summary.

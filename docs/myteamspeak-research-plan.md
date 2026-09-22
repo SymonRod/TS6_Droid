@@ -26,7 +26,7 @@ Pinned 2026-09-09: `TeamSpeak` 66365272 B md5 `8234f961015da34f1387fa735a7443b0`
 `main.js` 10080350 B md5 `ab4fd33a8e1fa31561bafa11f5401ba1`.
 `pbtk` not installed; `protoc` 36.1 available (via-1 blocked, via-2 ready).
 
-## 1. Phase 1 — static analysis (70% done 2026-09-09, finish it)
+## 1. Phase 1 — static analysis (done 2026-09-22 except 1D)
 
 All commands are read-only. Prefer `strings -n 6/8 … | grep -a … | sort -u`.
 
@@ -47,7 +47,7 @@ Expected (20 unique): `api.teamspeak.com/lookup`,
 beyond `authentication`/`session`/`synchronization` (+ `user` for
 `UserAccountData`). Answer in Phase 2 by observing call order.
 
-### 1.2 Sync schema (done at field-blob level — promote to .proto)
+### 1.2 Sync schema (done 2026-09-22 — recovered into `docs/proto/`)
 
 ```bash
 strings -n 6 /opt/teamspeak/TeamSpeak | grep -a "com.teamspeak.sync.proto" | sort -u
@@ -63,7 +63,10 @@ Known payloads (12 classes): `Bookmark_Data`, `Identity_Data`, `Contact`,
 `item_room_category` (name from version uuid only — no `sync.proto` message
 string seen; likely server-side or inside `Item_Data`).
 
-**Remaining task 1A — reconstruct field numbers/types.** The descriptor blobs
+**Task 1A — done 2026-09-22.** The descriptors are serialized
+`FileDescriptorProto`s, so they carry numbers, types and labels too —
+`docs/proto/extract_descriptors.py` does route 1 below without `pbtk` and
+verifies a protoc round trip. Original plan kept for the record: The descriptor blobs
 give names in field order but not numbers. Two routes, try in order:
 
 1. `pbtk` extractors on the binary (protobuf reflection metadata is present —
@@ -74,14 +77,15 @@ give names in field order but not numbers. Two routes, try in order:
    iterating on tag mismatches. The blobs give field *order*, which usually
    matches tag order for these generated files.
 
-**Remaining task 1B — enum `Item_Type`/`Item_Class`.** No string labels found
+**Task 1B — done 2026-09-22:** `Item_Class` values are in
+`synchronization_common.proto` (`BOOKMARK=0` … `CONTACTS=8`). Original note: No string labels found
 (values travel as ints; `static_cast<sync::Item_Type>(…)`, assert
 `type != Item_Type::unknown`). Inventory via the 10 per-class version uuids in
 `Account_Data` (`class_{bookmark,identity,add_on,config,hotkey_profile,
 whisper_list,item_folder,item_room_category,group_chats,contact}_version_uuid`).
 Map int→class in Phase 2 by requesting one class at a time.
 
-### 1.3 Auth/session schema (message names done — same promotion)
+### 1.3 Auth/session schema (done 2026-09-22 — recovered into `docs/proto/`)
 
 ```bash
 strings -n 6 /opt/teamspeak/TeamSpeak \
@@ -100,7 +104,11 @@ AlternativeLoginInformation{renewal_token,otp_renewal_token,device_id}}`,
 `…session.*` sub-package — auth/session are top-level messages. Do not go
 looking for them.
 
-**Remaining task 1C — RPC method table.** Known sync verbs (static 2026-09-09):
+**Task 1C — done 2026-09-22:** the service descriptors give every RPC with
+its service (`LoginService`, `SynchronizationService`,
+`UserAccountService`, …; `getKey` is admin-only `UserManagementService`),
+and the request framing (`u8 len + method name + protobuf`) was
+disassembled from `teamprotobufrpc` — see sync-protocol §0. Original note: Known sync verbs (static 2026-09-09):
 **`requestServerItems` AND `synchronizeItems`** (both `Method …() not
 implemented.` stubs) + `Closure<Sync_Request_ItemClasses,
 Sync_Reply_ItemClasses>` + `Sync_Client_Lib_Impl::{m_sync_start, m_sync_items,
@@ -148,7 +156,11 @@ Known fragments:
   (UserLogin→BackupKeyData)`, UI `BackupKey` / 44-char check /
   `confirmed_recovery_key` ×18.
 
-**Remaining task 1D — key derivation.** Look for KDF markers near the sync
+**Remaining task 1D — key derivation (the only open Phase-1 item).**
+Known inputs now have field numbers (sync-protocol §7). Strings are
+exhausted; the next step is disassembling `Encryption_Impl_V2` and
+`Item_Manager` (anchor: the `!salt.empty()` / `plain_hash.size()` assert
+strings) — or let capture Q4 show first whether `item_blob` is opaque. Look for KDF markers near the sync
 symbols before capturing:
 
 ```bash
