@@ -9,6 +9,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "bookmarks")
 
@@ -18,6 +20,33 @@ class BookmarkStore(private val context: Context) {
         private val KEY_BOOKMARKS = stringPreferencesKey("bookmarks_json")
         private val KEY_AUTO_RECONNECT = booleanPreferencesKey("auto_reconnect")
         private val KEY_LAST_BOOKMARK_ADDRESS = stringPreferencesKey("last_bookmark_address")
+
+        private val bookmarkJson = Json {
+            ignoreUnknownKeys = true
+            coerceInputValues = true
+            explicitNulls = false
+        }
+
+        internal fun parseBookmarks(json: String): List<ServerBookmark> {
+            return try {
+                bookmarkJson.decodeFromString(ListSerializer(ServerBookmark.serializer()), json)
+                    .map { bookmark ->
+                        // The legacy hand-rolled serializer wrote nulls as the
+                        // literal string "null"; read those back as null.
+                        bookmark.copy(
+                            password = bookmark.password.takeUnless { it == "null" },
+                            channel = bookmark.channel.takeUnless { it == "null" },
+                            serverName = bookmark.serverName.takeUnless { it == "null" },
+                        )
+                    }
+            } catch (_: Exception) {
+                emptyList()
+            }
+        }
+
+        internal fun serializeBookmarks(bookmarks: List<ServerBookmark>): String {
+            return bookmarkJson.encodeToString(ListSerializer(ServerBookmark.serializer()), bookmarks)
+        }
     }
 
     val bookmarks: Flow<List<ServerBookmark>> = context.dataStore.data.map { prefs ->
@@ -93,38 +122,4 @@ class BookmarkStore(private val context: Context) {
             prefs[KEY_BOOKMARKS] = serializeBookmarks(updated)
         }
     }
-
-    private fun parseBookmarks(json: String): List<ServerBookmark> {
-        if (json == "[]") return emptyList()
-        return try {
-            val entries = json.removeSurrounding("[", "]").split("},{")
-            entries.map { entry ->
-                val clean = entry.removePrefix("{").removeSuffix("}")
-                val fields = mutableMapOf<String, String>()
-                for (pair in clean.split("\",\"")) {
-                    val kv = pair.replace("\"", "").split(":", limit = 2)
-                    if (kv.size == 2) fields[kv[0]] = kv[1]
-                }
-                ServerBookmark(
-                    name = fields["name"] ?: "",
-                    address = fields["address"] ?: "",
-                    nickname = fields["nickname"] ?: "",
-                    password = fields["password"]?.takeIf { it != "null" },
-                    channel = fields["channel"]?.takeIf { it != "null" },
-                    serverName = fields["serverName"]?.takeIf { it != "null" },
-                    iconId = fields["iconId"]?.toLongOrNull() ?: 0,
-                )
-            }
-        } catch (_: Exception) {
-            emptyList()
-        }
-    }
-
-    private fun serializeBookmarks(bookmarks: List<ServerBookmark>): String {
-        return bookmarks.joinToString(",", "[", "]") { b ->
-            """{"name":"${escape(b.name)}","address":"${escape(b.address)}","nickname":"${escape(b.nickname)}","password":"${b.password ?: "null"}","channel":"${b.channel ?: "null"}","serverName":"${b.serverName ?: "null"}","iconId":"${b.iconId}"}"""
-        }
-    }
-
-    private fun escape(s: String): String = s.replace("\"", "\\\"")
 }
