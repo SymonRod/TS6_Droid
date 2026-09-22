@@ -22,18 +22,18 @@
   of that same SFU path, since a full broadcaster lifecycle never triggered it.
 - **§9.5 is answered** (2026-09-07) — see the phase-4 step 5 entry below.
   Nothing in the viewer path is still blocked on an open protocol question.
-- **Application code: only `client_is_streaming`.** Done — the field is
-  declared in the tsclientlib fork (see AGENTS.md), flows through
-  `tslib-core` → JNI → `User.isStreaming`, and shows as a green screen icon in
-  `UserItem`. Everything else stays out of the app until the protocol is
-  confirmed. Background: screenshare-protocol.md §0, second finding.
+- **Application code: full P2P viewer in the app.** `client_is_streaming`
+  (see AGENTS.md) flows through `tslib-core` → JNI → `User.isStreaming` into
+  the green screen icon in `UserItem`, and on top of it `StreamViewer.kt` +
+  `StreamListDialog` / `StreamViewerOverlay` implement viewing.
+  Background: screenshare-protocol.md §0, second finding.
 - **Phase 4, step 1: declarations published (2026-09-07).** The
   tsclientlib fork and its declarations submodule now have the viewer's eight
   incoming and three outgoing commands plus offline tests. Tests and a local
   dependency-override check of `tslib-core`/`stream-capture` pass. Published on
   `ts6-client-is-streaming`: declarations `9ed2a74`, tsclientlib `298e431`.
-  The `tslib` lockfile now resolves this published revision. Bare empty `msg`
-  server acceptance still needs verification.
+  The `tslib` lockfile now resolves this published revision. The bare empty
+  `msg` serialization has since been exercised live by real joins.
 - **Phase 4, step 2: Rust stream registry implemented (2026-09-07).**
   `Client::streams()` and `Event::StreamsChanged` expose metadata snapshots;
   partial updates preserve absent fields, and stops, owner departures, and
@@ -61,12 +61,21 @@
   Re-check with `cargo run -p tslib-core --example ice-probe` from `../tslib`;
   the plan's "The §9.5 answer" carries the numbers, the caveats, and the
   cross-compile recipe for running it on the phone.
+- **Phase 4, step 4: WebRTC viewer done and verified live (2026-09-07).**
+  `bridge/StreamViewer.kt` (`org.webrtc`, STUN-only, paced candidates) with
+  `StreamListDialog` / `StreamViewerOverlay`, fed by `TsClient.streams`,
+  `streamJoinResponses` and `streamSignaling`. Desktop sharer → phone on Wi-Fi
+  and on mobile data (AV1 2560x1440 hardware-decoded). Join timeout,
+  mid-session stop and cross-channel shares exercised live; only the `refused`
+  path still needs a manual `respondjoinstreamrequest decision=0` from a fake
+  sharer (the desktop client in private mode ignores the request instead of
+  refusing it). Full record in the phase-4 plan.
 
-## How far from video on the phone
+## Video is on the phone
 
-One increment left, and it is not blocked on an unknown. Everything the viewer
-needs from the protocol is captured, declared, parsed, carried to Kotlin, and —
-as of step 5 — known to be reachable over a real mobile network.
+Nothing left for the P2P viewer. Everything the viewer needs from the protocol
+is captured, declared, parsed, carried to Kotlin, rendered — and known to be
+reachable over a real mobile network.
 
 **What already works end to end:** the app connects, and a sharer's green
 screen icon appears in `UserItem` from `client_is_streaming`. In `../tslib`,
@@ -81,12 +90,11 @@ reaches Kotlin as `dev.tslib.Stream[]`, and all four signaling calls are wired:
 `streamJoinResponses` and `streamSignaling` flows. The offer arrives as a real
 SDP — `tsproto` already unescaped it, so do not unescape it again.
 
-**Step 4 — WebRTC in Kotlin, the only step left.** The app has *no* `org.webrtc` dependency yet
-(nothing in any Gradle file), so this starts with adding one. Then a
-`PeerConnection` per stream: set the remote offer, answer through
-`streamsignaling`, trickle candidates both ways, render into a
-`SurfaceViewRenderer`, and a UI to list streams and open one. This is the
-larger half and the first place the whole chain is exercised at once.
+**Step 4 — WebRTC in Kotlin — done (2026-09-07).** `PeerConnection` per
+stream: remote offer applied, answer through `streamsignaling`, trickled
+candidates both ways, `SurfaceViewRenderer` overlay with stream list dialog.
+First live run needed `ACCESS_NETWORK_STATE` in the manifest and a
+`requeststreaminfo` ask for shares already running at join time; both fixed.
 
 **Why the risk is lower than it looks:**
 
@@ -107,12 +115,10 @@ larger half and the first place the whole chain is exercised at once.
 4. **A join can simply never be answered** — the sharer's client decides, so
    the UI needs a pending state and a timeout, not just success and failure.
 
-Honest estimate: step 4 is the real work, and the first video frame most
-plausibly arrives at the end of it. The one thing that could stretch it is ICE
-failing in practice — that is where the missing relay would hurt, and it cannot
-be ruled out until step 4 actually runs. Note that the whole signaling path is
-still untested against a live sharer: step 3 compiles and is unit-tested, but
-the first join request will be sent from step 4's code.
+Honest state: video arrives, on Wi-Fi and on mobile data. The whole signaling
+path has now been exercised live. What is still manual-only is the `refused`
+path — the desktop client ignores rather than refuses, so it needs a fake
+sharer sending `respondjoinstreamrequest decision=0` by hand.
 
 ## The one-paragraph version of what Phase 2 found
 
@@ -193,15 +199,10 @@ spelling that `notifystreamstarted` itself uses (§9b.1).
 
 ## Next steps, in order of value
 
-1. **Phase 4, step 4** — the only work left before video appears; the
-   breakdown is in "How far from video on the phone" above. Planned in
-   [screenshare-phase4-plan.md](screenshare-phase4-plan.md). The signaling
-   contract is complete for the viewer
-   role (§9a.3, §9b) and nothing still open blocks it. Order: `tslib-core`
-   parses the `notifystream*` family → `tslib-jni` forwards it → Kotlin drives
-   `org.webrtc`. The first increment, `client_is_streaming`, is already done
-   (§0) — unlike the `notifystream*` family it needed no `tsproto` hook, only
-   an argument declaration in the tsclientlib fork (see AGENTS.md).
+1. **Phase 4, `refused` path** — the only viewer path never exercised live.
+   Drive it with a fake sharer (`stream-capture` publishing, manual
+   `respondjoinstreamrequest decision=0`) rather than the desktop client,
+   which ignores the request instead of refusing it.
 2. **§9.4 / §9.6 — wait for TeamSpeak.** Neither is reachable until the SFU
    ships. Re-check the community thread linked in §9.6 rather than spending
    effort on them.

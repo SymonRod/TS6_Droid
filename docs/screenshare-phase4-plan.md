@@ -173,11 +173,10 @@ the APK carries exactly the two expected ABIs.
 
 Still open after step 4:
 
-- Streams outside our own channel: only same-channel shares have been seen, so
-  whether the notifications (or `requeststreaminfo`) reach a viewer elsewhere
-  on the server is unconfirmed.
-- The refusal, timeout and mid-session stop paths are coded but never exercised
-  live.
+- Cross-channel shares, join timeout and mid-session stop have since been
+  exercised live. Only the refusal path is still manual-only: the desktop
+  client in private mode ignores the request instead of refusing it, so it
+  needs a fake sharer sending `respondjoinstreamrequest decision=0` by hand.
 
 **Mobile-data ICE works** (confirmed 2026-09-07): with the phone as the viewer
 on mobile data, STUN-only ICE punched through and the picture arrived, as the

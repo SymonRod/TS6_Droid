@@ -9,13 +9,13 @@ TeamSpeak 3/6 client for Android.
 app/src/main/
 ├── java/dev/tslib/          # JNI classes (bridge to the Rust library)
 ├── kotlin/dev/tsdroid/
-│   ├── bridge/              # TsClient (coroutines + StateFlow), Audio/Avatar/File/Icon caches
+│   ├── bridge/              # TsClient (coroutines + StateFlow), Audio/Avatar/File/Icon caches, StreamViewer (WebRTC)
 │   ├── data/                # BookmarkStore, ServerBookmark, MessageStore, SettingsStore
 │   ├── service/             # TsConnectionService (foreground service)
 │   ├── viewmodel/           # ConnectionViewModel, ServerViewModel
 │   └── ui/
 │       ├── screen/          # AppNavigation, ConnectionScreen, ServerScreen
-│       ├── component/       # ChannelTree, ChatView, FileManagerDialog, MessageBubble, UserItem
+│       ├── component/       # ChannelTree, ChatView, FileManagerDialog, MessageBubble, UserItem, ScreenShareView
 │       └── theme/
 └── res/                     # values (en), values-fr, values-it, xml/locales_config.xml
 docs/                        # protocol research and design notes
@@ -29,8 +29,11 @@ The native library `tslib` (Rust) handles the TeamSpeak protocol over JNI and
 
 `tslib` depends on a **fork**,
 [SymonRod/tsclientlib](https://github.com/SymonRod/tsclientlib) (branch
-`ts6-client-is-streaming`), whose only change is declaring TeamSpeak 6
-arguments upstream does not know — currently just `client_is_streaming`. The
+`ts6-client-is-streaming`), which declares the TeamSpeak 6
+arguments/commands upstream does not know — `client_is_streaming` plus the
+P2P viewer commands (eight incoming `notifystream*`/`notifyrespondjoinstreamrequest`
+notifications, three outgoing `joinstreamrequest`/`streamsignaling`/`requeststreaminfo`
+commands). The
 declarations live in a submodule, forked as
 [SymonRod/tsdeclarations](https://github.com/SymonRod/tsdeclarations) on the
 same branch; cargo checks it out on its own, so no `git submodule` step is
@@ -108,8 +111,10 @@ Summary of what static analysis of the desktop client established:
   command channel** (`setupstream`, `joinstreamrequest`, `streamsignaling`,
   `notifystreamstarted`, `notifystreamsignaling`, …), so `tsclientlib` already
   carries them — no new transport, no crypto work.
-- Command bodies are **JSON** (`nlohmann::json`), handled by
-  `com::teamspeak::video::ScreenshareManager`.
+- Command bodies are flat TS3 `key=value` commands, not JSON-wrapped
+  (Phase 2 overturned the early assumption based on
+  `com::teamspeak::video::ScreenshareManager` / `nlohmann::json` symbols).
+  Only `notifystreamsignaling` carries JSON, in a single `json=` parameter.
 - The media plane is **standard WebRTC** (libwebrtc, OpenH264, VP8/VP9,
   simulcast), in either `STREAM_P2P` or `STREAM_SFU` mode, advertised through
   `virtualserver_capability_extensions`.
@@ -119,9 +124,17 @@ Summary of what static analysis of the desktop client established:
 - Viewing someone else's screen needs **no `MediaProjection` permission**; that
   is only required to share the phone's own screen.
 
-Status: exploratory, Phase 1 **and Phase 2 (P2P mode, both roles)** done. **Do
-not add screen sharing code to the app yet** — Phase 2 closed the biggest unknown, and
-the answer overturns the working assumption: screen-share notifications are
+Status: Phase 1 **and Phase 2 (P2P mode, both roles)** done, **and the
+Phase 4 P2P viewer is implemented and verified live** (desktop sharer →
+phone on Wi-Fi and on mobile data, AV1 2560x1440 hardware-decoded; join
+timeout, mid-session stop and cross-channel shares exercised live — only the
+`refused` path still needs a manual `respondjoinstreamrequest decision=0`
+from a fake sharer, since the desktop client in private mode ignores the
+request instead of refusing it). The viewer lives in `bridge/StreamViewer.kt`
+(`org.webrtc`, STUN-only with the two hardcoded TeamSpeak servers, paced
+candidates) with `StreamListDialog` / `StreamViewerOverlay` in
+`ui/component/ScreenShareView.kt`, fed by `TsClient.streams`,
+`streamJoinResponses` and `streamSignaling`. Screen-share notifications are
 **not** JSON-wrapped. They are ordinary flat TS3 `key=value` commands, same
 shape as any other notify (`notifystreamstarted`, `notifystreaminfo`,
 `notifystreamclientjoined`, `notifystreamstopped`, `joinstreamrequest`). Only
@@ -134,14 +147,14 @@ every client → server command now has a confirmed wire spelling, and note that
 `setupstream` requires `accessibility` where `notifystreamstarted` says
 `access`). SFU mode is **blocked upstream**: TeamSpeak has not released the
 SFU, so `virtualserver_sfu_endpoint` is inert on self-hosted servers and
-§9.4/§9.6 cannot be tested. §9.5 (TURN relaying) stays open but needs only a
-client behind symmetric NAT.
+§9.4/§9.6 cannot be tested. §9.5 (TURN relaying) is **answered**: the
+TeamSpeak ICE servers reflect but do not relay, while the mobile NAT measured
+so far is endpoint-independent — hole punching works, confirmed live on mobile
+data with no relay.
 Note that `tsclientlib` drops genuinely unknown *commands* — arguments and all
-— before `tslib` ever sees them, so the capture hooks `tsproto`'s packet event
-listener instead of listening in `tslib-core`.
+— before `tslib` ever sees them, which is why the stream commands are declared
+in the fork above; the capture tool hooks `tsproto`'s packet event listener
+instead of listening in `tslib-core`.
 
-The one piece already **in** the app is `client_is_streaming`, the client
-property that says *who* is sharing — it needs no signaling, only the argument
-declaration in the tsclientlib fork described above. It reaches the UI as
-`User.isStreaming` and shows as a green screen icon in `UserItem`. Everything
-else stays out of the app until the protocol is confirmed.
+`client_is_streaming`, the client property that says *who* is sharing, reaches
+the UI as `User.isStreaming` and shows as a green screen icon in `UserItem`.
