@@ -64,7 +64,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -1059501206;
+  int get rustContentHash => 1297849788;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -76,6 +76,13 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
+  Future<void> crateApiTsClientAcceptStreamViewer({
+    required TsClient that,
+    required int viewerId,
+    required String streamId,
+    required String offer,
+  });
+
   Future<TsClient> crateApiTsClientConnect({
     required String address,
     required TsIdentity identity,
@@ -117,6 +124,18 @@ abstract class RustLibApi extends BaseApi {
     required String password,
   });
 
+  Future<void> crateApiTsClientRefuseStreamViewer({
+    required TsClient that,
+    required int viewerId,
+    required String streamId,
+  });
+
+  Future<void> crateApiTsClientRemoveStreamViewer({
+    required TsClient that,
+    required int viewerId,
+    required String streamId,
+  });
+
   Future<void> crateApiTsClientRequestStreamInfo({
     required TsClient that,
     required int ownerId,
@@ -155,7 +174,18 @@ abstract class RustLibApi extends BaseApi {
     required bool muted,
   });
 
+  Future<void> crateApiTsClientSetupStream({
+    required TsClient that,
+    required String name,
+    required int bitrate,
+  });
+
   TsSnapshot crateApiTsClientSnapshot({required TsClient that});
+
+  Future<void> crateApiTsClientStopStream({
+    required TsClient that,
+    required String streamId,
+  });
 
   Future<void> crateApiTsClientWaitConnected({required TsClient that});
 
@@ -195,6 +225,48 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
+  Future<void> crateApiTsClientAcceptStreamViewer({
+    required TsClient that,
+    required int viewerId,
+    required String streamId,
+    required String offer,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
+            that,
+            serializer,
+          );
+          sse_encode_u_16(viewerId, serializer);
+          sse_encode_String(streamId, serializer);
+          sse_encode_String(offer, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 1,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiTsClientAcceptStreamViewerConstMeta,
+        argValues: [that, viewerId, streamId, offer],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiTsClientAcceptStreamViewerConstMeta =>
+      const TaskConstMeta(
+        debugName: "TsClient_accept_stream_viewer",
+        argNames: ["that", "viewerId", "streamId", "offer"],
+      );
+
+  @override
   Future<TsClient> crateApiTsClientConnect({
     required String address,
     required TsIdentity identity,
@@ -217,7 +289,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 1,
+            funcId: 2,
             port: port_,
           );
         },
@@ -251,7 +323,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 2,
+            funcId: 3,
             port: port_,
           );
         },
@@ -288,7 +360,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 3,
+            funcId: 4,
             port: port_,
           );
         },
@@ -325,7 +397,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 4,
+              funcId: 5,
               port: port_,
             );
           },
@@ -366,7 +438,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 6,
             port: port_,
           );
         },
@@ -405,7 +477,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 7,
             port: port_,
           );
         },
@@ -443,7 +515,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 8,
             port: port_,
           );
         },
@@ -483,7 +555,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 8,
+            funcId: 9,
             port: port_,
           );
         },
@@ -505,6 +577,86 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateApiTsClientRefuseStreamViewer({
+    required TsClient that,
+    required int viewerId,
+    required String streamId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
+            that,
+            serializer,
+          );
+          sse_encode_u_16(viewerId, serializer);
+          sse_encode_String(streamId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 10,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiTsClientRefuseStreamViewerConstMeta,
+        argValues: [that, viewerId, streamId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiTsClientRefuseStreamViewerConstMeta =>
+      const TaskConstMeta(
+        debugName: "TsClient_refuse_stream_viewer",
+        argNames: ["that", "viewerId", "streamId"],
+      );
+
+  @override
+  Future<void> crateApiTsClientRemoveStreamViewer({
+    required TsClient that,
+    required int viewerId,
+    required String streamId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
+            that,
+            serializer,
+          );
+          sse_encode_u_16(viewerId, serializer);
+          sse_encode_String(streamId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 11,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiTsClientRemoveStreamViewerConstMeta,
+        argValues: [that, viewerId, streamId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiTsClientRemoveStreamViewerConstMeta =>
+      const TaskConstMeta(
+        debugName: "TsClient_remove_stream_viewer",
+        argNames: ["that", "viewerId", "streamId"],
+      );
+
+  @override
   Future<void> crateApiTsClientRequestStreamInfo({
     required TsClient that,
     required int ownerId,
@@ -521,7 +673,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 9,
+            funcId: 12,
             port: port_,
           );
         },
@@ -559,7 +711,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 10,
+            funcId: 13,
             port: port_,
           );
         },
@@ -599,7 +751,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 11,
+            funcId: 14,
             port: port_,
           );
         },
@@ -637,7 +789,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 15,
             port: port_,
           );
         },
@@ -679,7 +831,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 13,
+            funcId: 16,
             port: port_,
           );
         },
@@ -717,7 +869,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 14,
+            funcId: 17,
             port: port_,
           );
         },
@@ -755,7 +907,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 15,
+            funcId: 18,
             port: port_,
           );
         },
@@ -777,6 +929,46 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateApiTsClientSetupStream({
+    required TsClient that,
+    required String name,
+    required int bitrate,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
+            that,
+            serializer,
+          );
+          sse_encode_String(name, serializer);
+          sse_encode_u_32(bitrate, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 19,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiTsClientSetupStreamConstMeta,
+        argValues: [that, name, bitrate],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiTsClientSetupStreamConstMeta =>
+      const TaskConstMeta(
+        debugName: "TsClient_setup_stream",
+        argNames: ["that", "name", "bitrate"],
+      );
+
+  @override
   TsSnapshot crateApiTsClientSnapshot({required TsClient that}) {
     return handler.executeSync(
       SyncTask(
@@ -786,7 +978,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 16)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 20)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_ts_snapshot,
@@ -803,6 +995,43 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "TsClient_snapshot", argNames: ["that"]);
 
   @override
+  Future<void> crateApiTsClientStopStream({
+    required TsClient that,
+    required String streamId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
+            that,
+            serializer,
+          );
+          sse_encode_String(streamId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 21,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiTsClientStopStreamConstMeta,
+        argValues: [that, streamId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiTsClientStopStreamConstMeta => const TaskConstMeta(
+    debugName: "TsClient_stop_stream",
+    argNames: ["that", "streamId"],
+  );
+
+  @override
   Future<void> crateApiTsClientWaitConnected({required TsClient that}) {
     return handler.executeNormal(
       NormalTask(
@@ -815,7 +1044,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 17,
+            funcId: 22,
             port: port_,
           );
         },
@@ -845,7 +1074,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 18,
+            funcId: 23,
             port: port_,
           );
         },
@@ -874,7 +1103,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 19)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 24)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -903,7 +1132,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 20,
+            funcId: 25,
             port: port_,
           );
         },
@@ -935,7 +1164,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 21)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 26)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_u_8,
@@ -964,7 +1193,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 22)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 27)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -1327,12 +1556,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           json: dco_decode_String(raw[3]),
         );
       case 24:
+        return TsEvent_StreamJoinRequest(
+          viewerId: dco_decode_u_16(raw[1]),
+          streamId: dco_decode_String(raw[2]),
+          isRemove: dco_decode_bool(raw[3]),
+        );
+      case 25:
         return TsEvent_FileDownloaded(
           channelId: dco_decode_i_64(raw[1]),
           path: dco_decode_String(raw[2]),
           data: dco_decode_list_prim_u_8_strict(raw[3]),
         );
-      case 25:
+      case 26:
         return TsEvent_FileTransferFailed(
           path: dco_decode_String(raw[1]),
           error: dco_decode_String(raw[2]),
@@ -1924,6 +2159,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           json: var_json,
         );
       case 24:
+        var var_viewerId = sse_decode_u_16(deserializer);
+        var var_streamId = sse_decode_String(deserializer);
+        var var_isRemove = sse_decode_bool(deserializer);
+        return TsEvent_StreamJoinRequest(
+          viewerId: var_viewerId,
+          streamId: var_streamId,
+          isRemove: var_isRemove,
+        );
+      case 25:
         var var_channelId = sse_decode_i_64(deserializer);
         var var_path = sse_decode_String(deserializer);
         var var_data = sse_decode_list_prim_u_8_strict(deserializer);
@@ -1932,7 +2176,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           path: var_path,
           data: var_data,
         );
-      case 25:
+      case 26:
         var var_path = sse_decode_String(deserializer);
         var var_error = sse_decode_String(deserializer);
         return TsEvent_FileTransferFailed(path: var_path, error: var_error);
@@ -2558,17 +2802,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_u_16(ownerId, serializer);
         sse_encode_String(streamId, serializer);
         sse_encode_String(json, serializer);
+      case TsEvent_StreamJoinRequest(
+        viewerId: final viewerId,
+        streamId: final streamId,
+        isRemove: final isRemove,
+      ):
+        sse_encode_i_32(24, serializer);
+        sse_encode_u_16(viewerId, serializer);
+        sse_encode_String(streamId, serializer);
+        sse_encode_bool(isRemove, serializer);
       case TsEvent_FileDownloaded(
         channelId: final channelId,
         path: final path,
         data: final data,
       ):
-        sse_encode_i_32(24, serializer);
+        sse_encode_i_32(25, serializer);
         sse_encode_i_64(channelId, serializer);
         sse_encode_String(path, serializer);
         sse_encode_list_prim_u_8_strict(data, serializer);
       case TsEvent_FileTransferFailed(path: final path, error: final error):
-        sse_encode_i_32(25, serializer);
+        sse_encode_i_32(26, serializer);
         sse_encode_String(path, serializer);
         sse_encode_String(error, serializer);
     }
@@ -2707,6 +2960,17 @@ class TsClientImpl extends RustOpaque implements TsClient {
         RustLib.instance.api.rust_arc_decrement_strong_count_TsClientPtr,
   );
 
+  Future<void> acceptStreamViewer({
+    required int viewerId,
+    required String streamId,
+    required String offer,
+  }) => RustLib.instance.api.crateApiTsClientAcceptStreamViewer(
+    that: this,
+    viewerId: viewerId,
+    streamId: streamId,
+    offer: offer,
+  );
+
   /// Send the disconnect packet and keep driving the connection briefly so
   /// it actually leaves the socket (same as `TsClient.kt`).
   Future<void> disconnect() =>
@@ -2755,6 +3019,24 @@ class TsClientImpl extends RustOpaque implements TsClient {
     password: password,
   );
 
+  Future<void> refuseStreamViewer({
+    required int viewerId,
+    required String streamId,
+  }) => RustLib.instance.api.crateApiTsClientRefuseStreamViewer(
+    that: this,
+    viewerId: viewerId,
+    streamId: streamId,
+  );
+
+  Future<void> removeStreamViewer({
+    required int viewerId,
+    required String streamId,
+  }) => RustLib.instance.api.crateApiTsClientRemoveStreamViewer(
+    that: this,
+    viewerId: viewerId,
+    streamId: streamId,
+  );
+
   Future<void> requestStreamInfo({required int ownerId}) => RustLib.instance.api
       .crateApiTsClientRequestStreamInfo(that: this, ownerId: ownerId);
 
@@ -2788,8 +3070,20 @@ class TsClientImpl extends RustOpaque implements TsClient {
   Future<void> setOutputMuted({required bool muted}) => RustLib.instance.api
       .crateApiTsClientSetOutputMuted(that: this, muted: muted);
 
+  /// Publishes a P2P screen share (video only). The server assigns the id; it
+  /// arrives with `StreamsChanged` as a stream owned by us.
+  Future<void> setupStream({required String name, required int bitrate}) =>
+      RustLib.instance.api.crateApiTsClientSetupStream(
+        that: this,
+        name: name,
+        bitrate: bitrate,
+      );
+
   TsSnapshot snapshot() =>
       RustLib.instance.api.crateApiTsClientSnapshot(that: this);
+
+  Future<void> stopStream({required String streamId}) => RustLib.instance.api
+      .crateApiTsClientStopStream(that: this, streamId: streamId);
 
   /// Blocks until the initial state sync is done.
   Future<void> waitConnected() =>

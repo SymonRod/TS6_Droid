@@ -45,5 +45,13 @@
   "pttSetting": "Modalità premi per parlare",
   "deafen": "Disattiva audio",
   "undeafen": "Riattiva audio",
-  "disconnectConfirm": "Vuoi disconnetterti?"
+  "disconnectConfirm": "Vuoi disconnetterti?",
+  "shareScreen": "Condividi schermo",
+  "stopShare": "Interrompi",
+  "audioOutput": "Uscita audio",
+  "audioAuto": "Automatico",
+  "audioSpeaker": "Altoparlante",
+  "audioEarpiece": "Auricolare",
+  "audioDeviceFallback": "Dispositivo audio",
+  "more": "Altro"
 }

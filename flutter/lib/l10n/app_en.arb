@@ -52,5 +52,13 @@
   "pttSetting": "Push-to-talk mode",
   "deafen": "Deafen",
   "undeafen": "Undeafen",
-  "disconnectConfirm": "Disconnect from the server?"
+  "disconnectConfirm": "Disconnect from the server?",
+  "shareScreen": "Share screen",
+  "stopShare": "Stop sharing",
+  "audioOutput": "Audio output",
+  "audioAuto": "Automatic",
+  "audioSpeaker": "Speaker",
+  "audioEarpiece": "Earpiece",
+  "audioDeviceFallback": "Audio device",
+  "more": "More"
 }

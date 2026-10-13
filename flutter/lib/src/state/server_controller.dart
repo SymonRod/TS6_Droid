@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' show Locale, PlatformDispatcher;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
@@ -13,6 +14,7 @@ import '../data/server_bookmark.dart';
 import '../data/stores.dart';
 import '../rust/api.dart';
 import '../util/errors.dart';
+import 'stream_broadcaster.dart';
 import 'stream_viewer.dart';
 
 /// Platform channel to the Kotlin foreground service / audio engine (phases 3-4).
@@ -64,6 +66,40 @@ class ChatMessage {
 
 enum ConnStatus { idle, connecting, connected }
 
+/// One entry of the Android audio route list (speaker, earpiece, wired, Bluetooth...).
+class AudioDevice {
+  final int id;
+  final int type; // android.media.AudioDeviceInfo.TYPE_*
+  final String name; // 'speaker' / 'earpiece' for built-ins, else the product name
+  const AudioDevice(this.id, this.type, this.name);
+
+  bool get isBluetooth => const {7, 8, 26, 27, 30}.contains(type); // SCO, A2DP, BLE headset/speaker/broadcast
+  bool get isWired => const {3, 4, 11, 22}.contains(type); // headset, headphones, usb device, usb headset
+}
+
+class AudioRoute {
+  final List<AudioDevice> devices;
+  final int? active;
+  final bool auto;
+  const AudioRoute({this.devices = const [], this.active, this.auto = true});
+
+  factory AudioRoute.fromMap(Map<dynamic, dynamic> m) => AudioRoute(
+        devices: [
+          for (final d in (m['devices'] as List? ?? const []))
+            AudioDevice(d['id'] as int, d['type'] as int, d['name'] as String? ?? ''),
+        ],
+        active: m['active'] as int?,
+        auto: m['auto'] as bool? ?? true,
+      );
+
+  AudioDevice? get current {
+    for (final d in devices) {
+      if (d.id == active) return d;
+    }
+    return null;
+  }
+}
+
 class ServerState {
   final ConnStatus status;
   final String? error;
@@ -74,6 +110,9 @@ class ServerState {
   final bool ptt;
   final bool deafened;
   final int imageRev;
+  final AudioRoute route;
+  final ShareState share;
+  final int shareViewers;
 
   const ServerState({
     this.status = ConnStatus.idle,
@@ -85,6 +124,9 @@ class ServerState {
     this.ptt = false,
     this.deafened = false,
     this.imageRev = 0,
+    this.route = const AudioRoute(),
+    this.share = ShareState.idle,
+    this.shareViewers = 0,
   });
 
   ServerState copyWith({
@@ -98,6 +140,9 @@ class ServerState {
     bool? ptt,
     bool? deafened,
     int? imageRev,
+    AudioRoute? route,
+    ShareState? share,
+    int? shareViewers,
   }) =>
       ServerState(
         status: status ?? this.status,
@@ -109,6 +154,9 @@ class ServerState {
         ptt: ptt ?? this.ptt,
         deafened: deafened ?? this.deafened,
         imageRev: imageRev ?? this.imageRev,
+        route: route ?? this.route,
+        share: share ?? this.share,
+        shareViewers: shareViewers ?? this.shareViewers,
       );
 }
 
@@ -121,6 +169,7 @@ class ServerController extends Notifier<ServerState> {
   Timer? _periodic;
   Timer? _saveTimer;
   StreamViewer? viewer;
+  StreamBroadcaster? broadcaster;
   String? _address;
   final _queriedOwners = <int>{};
 
@@ -142,6 +191,10 @@ class ServerController extends Notifier<ServerState> {
         case 'voiceActivity': // capture-thread level detector (visual only)
           _voice = call.arguments == true;
           _syncLocalTalking();
+        case 'audioRoute': // device added/removed or route changed
+          if (state.status == ConnStatus.connected) {
+            state = state.copyWith(route: AudioRoute.fromMap(call.arguments as Map));
+          }
       }
     });
     ref.read(settingsStoreProvider).pushToTalk().then((v) {
@@ -166,6 +219,7 @@ class ServerController extends Notifier<ServerState> {
       _client = client;
       _address = b.address;
       viewer = StreamViewer(client);
+      broadcaster = StreamBroadcaster(client)..addListener(_onBroadcaster);
       final ptt = await ref.read(settingsStoreProvider).pushToTalk();
       final saved = await ref.read(messageStoreProvider).load(b.address);
       await client.waitConnected();
@@ -184,6 +238,8 @@ class ServerController extends Notifier<ServerState> {
         });
         await _audioChannel.invokeMethod('setMuted', {'muted': true});
         await client.setInputMuted(muted: true);
+        final r = await _audioChannel.invokeMethod('getAudioRoute');
+        if (r is Map) state = state.copyWith(route: AudioRoute.fromMap(r));
       } catch (e) {
         state = state.copyWith(error: 'audio: ${cleanError(e)}');
       }
@@ -231,6 +287,7 @@ class ServerController extends Notifier<ServerState> {
 
   void _onEvent(TsEvent e) {
     viewer?.onEvent(e);
+    broadcaster?.onEvent(e);
     switch (e) {
       case TsEvent_TextMessage():
         final me = state.snapshot?.clientId;
@@ -251,6 +308,7 @@ class ServerController extends Notifier<ServerState> {
         state = ServerState(error: cleanError(reason), messages: state.messages, ptt: state.ptt);
         return;
       case TsEvent_CommandError():
+        debugPrint('server error ${e.errorId}: ${e.message}');
         state = state.copyWith(error: cleanError(e.message));
       case TsEvent_Poked():
         _addMessage(ChatMessage(e.pokerName, '[poke] ${e.message}', TsMessageTarget.private,
@@ -485,6 +543,36 @@ class ServerController extends Notifier<ServerState> {
   /// Push-to-talk button: down opens the mic, up closes it.
   Future<void> pttHold(bool down) => _applyMuted(!down);
 
+  /// null = automatic routing.
+  Future<void> setAudioDevice(int? id) async {
+    try {
+      await _audioChannel.invokeMethod('setAudioDevice', {'id': id});
+    } catch (e) {
+      state = state.copyWith(error: cleanError(e));
+    }
+  }
+
+  Future<void> toggleScreenShare() async {
+    final b = broadcaster, snap = state.snapshot;
+    if (b == null || snap == null) return;
+    if (b.active) return b.stop();
+    final me = snap.clientId;
+    if (me == null) return;
+    final nick = snap.users.where((u) => u.id == me).map((u) => u.nickname).firstOrNull ?? 'Screen';
+    await b.start(nick, me, snap.streams);
+  }
+
+  void _onBroadcaster() {
+    final b = broadcaster;
+    if (b == null) return;
+    state = state.copyWith(share: b.state, shareViewers: b.viewers);
+    final err = b.error;
+    if (err != null) {
+      b.error = null;
+      state = state.copyWith(error: cleanError(err));
+    }
+  }
+
   void requestStreamInfo(int ownerId) => _client?.requestStreamInfo(ownerId: ownerId).catchError((_) {});
 
   void clearError() => state = state.copyWith(clearError: true);
@@ -507,6 +595,8 @@ class ServerController extends Notifier<ServerState> {
   void _teardown() {
     viewer?.dispose();
     viewer = null;
+    broadcaster?.dispose();
+    broadcaster = null;
     _queriedOwners.clear();
     _sub?.cancel();
     _sub = null;

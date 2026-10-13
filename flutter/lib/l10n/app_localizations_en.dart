@@ -147,4 +147,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get disconnectConfirm => 'Disconnect from the server?';
+
+  @override
+  String get shareScreen => 'Share screen';
+
+  @override
+  String get stopShare => 'Stop sharing';
+
+  @override
+  String get audioOutput => 'Audio output';
+
+  @override
+  String get audioAuto => 'Automatic';
+
+  @override
+  String get audioSpeaker => 'Speaker';
+
+  @override
+  String get audioEarpiece => 'Earpiece';
+
+  @override
+  String get audioDeviceFallback => 'Audio device';
+
+  @override
+  String get more => 'More';
 }

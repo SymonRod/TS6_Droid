@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../rust/api.dart';
 import '../state/server_controller.dart';
+import '../state/stream_broadcaster.dart' show ShareState;
 import '../util/errors.dart';
 import 'bbcode.dart';
 import 'theme.dart';
@@ -277,13 +278,109 @@ class _ControlBar extends ConsumerWidget {
             btn(s.deafened ? Icons.headset_off : Icons.headset, s.deafened ? l.undeafen : l.deafen,
                 ctrl.toggleDeafen,
                 bg: s.deafened ? tc.muted.withValues(alpha: 0.22) : null, fg: s.deafened ? tc.muted : null),
-            btn(Icons.touch_app, 'PTT',
-                () => ctrl.setPushToTalk(!s.ptt),
-                bg: s.ptt ? cs.primaryContainer : null, fg: s.ptt ? cs.onPrimaryContainer : null),
-            btn(Icons.call_end, l.disconnect, () => _confirmDisconnect(context, ctrl, l), bg: tc.muted, fg: Colors.white),
+            btn(_routeIcon(s.route.current), l.audioOutput, () => _pickAudio(context, ref, l),
+                bg: s.route.current?.isBluetooth == true ? cs.primaryContainer : null,
+                fg: s.route.current?.isBluetooth == true ? cs.onPrimaryContainer : null),
+            btn(Icons.more_horiz, l.more, () => _more(context, ref, l),
+                bg: s.share != ShareState.idle || s.ptt ? cs.primaryContainer : null,
+                fg: s.share != ShareState.idle || s.ptt ? cs.onPrimaryContainer : null),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Tooltip(
+                message: l.disconnect,
+                child: Material(
+                  color: tc.muted,
+                  borderRadius: BorderRadius.circular(22),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(22),
+                    onTap: () => _confirmDisconnect(context, ctrl, l),
+                    child: const SizedBox(
+                        width: 56, height: double.infinity, child: Icon(Icons.call_end, color: Colors.white)),
+                  ),
+                ),
+              ),
+            ),
           ]),
         ),
       ),
+    );
+  }
+
+  static IconData _routeIcon(AudioDevice? d) {
+    if (d == null) return Icons.volume_up;
+    if (d.isBluetooth) return Icons.bluetooth_audio;
+    if (d.isWired) return Icons.headphones;
+    return d.type == 1 ? Icons.phone_in_talk : Icons.volume_up;
+  }
+
+  String _deviceName(AudioDevice d, AppLocalizations l) => switch (d.name) {
+        'speaker' => l.audioSpeaker,
+        'earpiece' => l.audioEarpiece,
+        'device' => l.audioDeviceFallback,
+        final n => n,
+      };
+
+  void _more(BuildContext context, WidgetRef ref, AppLocalizations l) {
+    final ctrl = ref.read(serverProvider.notifier);
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => Consumer(builder: (ctx, ref, _) {
+        final s = ref.watch(serverProvider);
+        final sharing = s.share != ShareState.idle;
+        return SafeArea(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            ListTile(
+              leading: Icon(sharing ? Icons.stop_screen_share : Icons.screen_share),
+              title: Text(sharing ? l.stopShare : l.shareScreen),
+              onTap: () {
+                ctrl.toggleScreenShare();
+                Navigator.pop(ctx);
+              },
+            ),
+            SwitchListTile(
+              secondary: const Icon(Icons.touch_app),
+              title: Text(l.pttSetting),
+              value: s.ptt,
+              onChanged: ctrl.setPushToTalk,
+            ),
+          ]),
+        );
+      }),
+    );
+  }
+
+  void _pickAudio(BuildContext context, WidgetRef ref, AppLocalizations l) {
+    final ctrl = ref.read(serverProvider.notifier);
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => Consumer(builder: (ctx, ref, _) {
+        final r = ref.watch(serverProvider.select((s) => s.route));
+        return SafeArea(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            ListTile(
+              leading: const Icon(Icons.auto_awesome),
+              title: Text(l.audioAuto),
+              trailing: r.auto ? const Icon(Icons.check) : null,
+              onTap: () {
+                ctrl.setAudioDevice(null);
+                Navigator.pop(ctx);
+              },
+            ),
+            for (final d in r.devices)
+              ListTile(
+                leading: Icon(_routeIcon(d)),
+                title: Text(_deviceName(d, l)),
+                trailing: !r.auto && d.id == r.active ? const Icon(Icons.check) : null,
+                onTap: () {
+                  ctrl.setAudioDevice(d.id);
+                  Navigator.pop(ctx);
+                },
+              ),
+          ]),
+        );
+      }),
     );
   }
 

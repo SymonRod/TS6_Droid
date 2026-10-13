@@ -28,12 +28,14 @@ class AudioEngine(private val context: Context) {
     private var track: AudioTrack? = null
     private var playThread: Thread? = null
     private var capThread: Thread? = null
+    val route = AudioRoute(context)
 
     fun start(withCapture: Boolean) {
         if (running) return
         NativeInit.init(context)
         NativeAudio.initAudio()
         running = true
+        route.start()
         startPlayback()
         if (withCapture) startCapture()
     }
@@ -84,7 +86,7 @@ class AudioEngine(private val context: Context) {
             SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
         val t = AudioTrack.Builder()
             .setAudioAttributes(AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_GAME)
+                .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
             .setAudioFormat(AudioFormat.Builder()
                 .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
@@ -111,6 +113,7 @@ class AudioEngine(private val context: Context) {
         playThread?.join(500); playThread = null
         record?.let { try { it.stop() } catch (_: Exception) {}; it.release() }; record = null
         track?.let { try { it.stop() } catch (_: Exception) {}; it.release() }; track = null
+        route.stop()
         NativeAudio.releaseAudio()
     }
 }

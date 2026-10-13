@@ -375,6 +375,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Disconnect from the server?'**
   String get disconnectConfirm;
+
+  /// No description provided for @shareScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Share screen'**
+  String get shareScreen;
+
+  /// No description provided for @stopShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop sharing'**
+  String get stopShare;
+
+  /// No description provided for @audioOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio output'**
+  String get audioOutput;
+
+  /// No description provided for @audioAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get audioAuto;
+
+  /// No description provided for @audioSpeaker.
+  ///
+  /// In en, this message translates to:
+  /// **'Speaker'**
+  String get audioSpeaker;
+
+  /// No description provided for @audioEarpiece.
+  ///
+  /// In en, this message translates to:
+  /// **'Earpiece'**
+  String get audioEarpiece;
+
+  /// No description provided for @audioDeviceFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio device'**
+  String get audioDeviceFallback;
+
+  /// No description provided for @more.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get more;
 }
 
 class _AppLocalizationsDelegate

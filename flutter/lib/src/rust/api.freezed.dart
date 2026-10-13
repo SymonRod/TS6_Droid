@@ -55,7 +55,7 @@ extension TsEventPatterns on TsEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( TsEvent_ConnectionStateChanged value)?  connectionStateChanged,TResult Function( TsEvent_Connected value)?  connected,TResult Function( TsEvent_Disconnected value)?  disconnected,TResult Function( TsEvent_ConnectionLost value)?  connectionLost,TResult Function( TsEvent_ChannelCreated value)?  channelCreated,TResult Function( TsEvent_ChannelDeleted value)?  channelDeleted,TResult Function( TsEvent_ChannelEdited value)?  channelEdited,TResult Function( TsEvent_ChannelJoined value)?  channelJoined,TResult Function( TsEvent_UserJoined value)?  userJoined,TResult Function( TsEvent_UserLeft value)?  userLeft,TResult Function( TsEvent_UserMoved value)?  userMoved,TResult Function( TsEvent_UserKickedFromChannel value)?  userKickedFromChannel,TResult Function( TsEvent_UserKickedFromServer value)?  userKickedFromServer,TResult Function( TsEvent_UserBanned value)?  userBanned,TResult Function( TsEvent_UserUpdated value)?  userUpdated,TResult Function( TsEvent_TalkStatusStart value)?  talkStatusStart,TResult Function( TsEvent_TalkStatusStop value)?  talkStatusStop,TResult Function( TsEvent_TextMessage value)?  textMessage,TResult Function( TsEvent_Poked value)?  poked,TResult Function( TsEvent_CommandError value)?  commandError,TResult Function( TsEvent_ChannelPermissionsUpdated value)?  channelPermissionsUpdated,TResult Function( TsEvent_StreamsChanged value)?  streamsChanged,TResult Function( TsEvent_StreamJoinResponse value)?  streamJoinResponse,TResult Function( TsEvent_StreamSignaling value)?  streamSignaling,TResult Function( TsEvent_FileDownloaded value)?  fileDownloaded,TResult Function( TsEvent_FileTransferFailed value)?  fileTransferFailed,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( TsEvent_ConnectionStateChanged value)?  connectionStateChanged,TResult Function( TsEvent_Connected value)?  connected,TResult Function( TsEvent_Disconnected value)?  disconnected,TResult Function( TsEvent_ConnectionLost value)?  connectionLost,TResult Function( TsEvent_ChannelCreated value)?  channelCreated,TResult Function( TsEvent_ChannelDeleted value)?  channelDeleted,TResult Function( TsEvent_ChannelEdited value)?  channelEdited,TResult Function( TsEvent_ChannelJoined value)?  channelJoined,TResult Function( TsEvent_UserJoined value)?  userJoined,TResult Function( TsEvent_UserLeft value)?  userLeft,TResult Function( TsEvent_UserMoved value)?  userMoved,TResult Function( TsEvent_UserKickedFromChannel value)?  userKickedFromChannel,TResult Function( TsEvent_UserKickedFromServer value)?  userKickedFromServer,TResult Function( TsEvent_UserBanned value)?  userBanned,TResult Function( TsEvent_UserUpdated value)?  userUpdated,TResult Function( TsEvent_TalkStatusStart value)?  talkStatusStart,TResult Function( TsEvent_TalkStatusStop value)?  talkStatusStop,TResult Function( TsEvent_TextMessage value)?  textMessage,TResult Function( TsEvent_Poked value)?  poked,TResult Function( TsEvent_CommandError value)?  commandError,TResult Function( TsEvent_ChannelPermissionsUpdated value)?  channelPermissionsUpdated,TResult Function( TsEvent_StreamsChanged value)?  streamsChanged,TResult Function( TsEvent_StreamJoinResponse value)?  streamJoinResponse,TResult Function( TsEvent_StreamSignaling value)?  streamSignaling,TResult Function( TsEvent_StreamJoinRequest value)?  streamJoinRequest,TResult Function( TsEvent_FileDownloaded value)?  fileDownloaded,TResult Function( TsEvent_FileTransferFailed value)?  fileTransferFailed,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case TsEvent_ConnectionStateChanged() when connectionStateChanged != null:
@@ -82,7 +82,8 @@ return commandError(_that);case TsEvent_ChannelPermissionsUpdated() when channel
 return channelPermissionsUpdated(_that);case TsEvent_StreamsChanged() when streamsChanged != null:
 return streamsChanged(_that);case TsEvent_StreamJoinResponse() when streamJoinResponse != null:
 return streamJoinResponse(_that);case TsEvent_StreamSignaling() when streamSignaling != null:
-return streamSignaling(_that);case TsEvent_FileDownloaded() when fileDownloaded != null:
+return streamSignaling(_that);case TsEvent_StreamJoinRequest() when streamJoinRequest != null:
+return streamJoinRequest(_that);case TsEvent_FileDownloaded() when fileDownloaded != null:
 return fileDownloaded(_that);case TsEvent_FileTransferFailed() when fileTransferFailed != null:
 return fileTransferFailed(_that);case _:
   return orElse();
@@ -102,7 +103,7 @@ return fileTransferFailed(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( TsEvent_ConnectionStateChanged value)  connectionStateChanged,required TResult Function( TsEvent_Connected value)  connected,required TResult Function( TsEvent_Disconnected value)  disconnected,required TResult Function( TsEvent_ConnectionLost value)  connectionLost,required TResult Function( TsEvent_ChannelCreated value)  channelCreated,required TResult Function( TsEvent_ChannelDeleted value)  channelDeleted,required TResult Function( TsEvent_ChannelEdited value)  channelEdited,required TResult Function( TsEvent_ChannelJoined value)  channelJoined,required TResult Function( TsEvent_UserJoined value)  userJoined,required TResult Function( TsEvent_UserLeft value)  userLeft,required TResult Function( TsEvent_UserMoved value)  userMoved,required TResult Function( TsEvent_UserKickedFromChannel value)  userKickedFromChannel,required TResult Function( TsEvent_UserKickedFromServer value)  userKickedFromServer,required TResult Function( TsEvent_UserBanned value)  userBanned,required TResult Function( TsEvent_UserUpdated value)  userUpdated,required TResult Function( TsEvent_TalkStatusStart value)  talkStatusStart,required TResult Function( TsEvent_TalkStatusStop value)  talkStatusStop,required TResult Function( TsEvent_TextMessage value)  textMessage,required TResult Function( TsEvent_Poked value)  poked,required TResult Function( TsEvent_CommandError value)  commandError,required TResult Function( TsEvent_ChannelPermissionsUpdated value)  channelPermissionsUpdated,required TResult Function( TsEvent_StreamsChanged value)  streamsChanged,required TResult Function( TsEvent_StreamJoinResponse value)  streamJoinResponse,required TResult Function( TsEvent_StreamSignaling value)  streamSignaling,required TResult Function( TsEvent_FileDownloaded value)  fileDownloaded,required TResult Function( TsEvent_FileTransferFailed value)  fileTransferFailed,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( TsEvent_ConnectionStateChanged value)  connectionStateChanged,required TResult Function( TsEvent_Connected value)  connected,required TResult Function( TsEvent_Disconnected value)  disconnected,required TResult Function( TsEvent_ConnectionLost value)  connectionLost,required TResult Function( TsEvent_ChannelCreated value)  channelCreated,required TResult Function( TsEvent_ChannelDeleted value)  channelDeleted,required TResult Function( TsEvent_ChannelEdited value)  channelEdited,required TResult Function( TsEvent_ChannelJoined value)  channelJoined,required TResult Function( TsEvent_UserJoined value)  userJoined,required TResult Function( TsEvent_UserLeft value)  userLeft,required TResult Function( TsEvent_UserMoved value)  userMoved,required TResult Function( TsEvent_UserKickedFromChannel value)  userKickedFromChannel,required TResult Function( TsEvent_UserKickedFromServer value)  userKickedFromServer,required TResult Function( TsEvent_UserBanned value)  userBanned,required TResult Function( TsEvent_UserUpdated value)  userUpdated,required TResult Function( TsEvent_TalkStatusStart value)  talkStatusStart,required TResult Function( TsEvent_TalkStatusStop value)  talkStatusStop,required TResult Function( TsEvent_TextMessage value)  textMessage,required TResult Function( TsEvent_Poked value)  poked,required TResult Function( TsEvent_CommandError value)  commandError,required TResult Function( TsEvent_ChannelPermissionsUpdated value)  channelPermissionsUpdated,required TResult Function( TsEvent_StreamsChanged value)  streamsChanged,required TResult Function( TsEvent_StreamJoinResponse value)  streamJoinResponse,required TResult Function( TsEvent_StreamSignaling value)  streamSignaling,required TResult Function( TsEvent_StreamJoinRequest value)  streamJoinRequest,required TResult Function( TsEvent_FileDownloaded value)  fileDownloaded,required TResult Function( TsEvent_FileTransferFailed value)  fileTransferFailed,}){
 final _that = this;
 switch (_that) {
 case TsEvent_ConnectionStateChanged():
@@ -129,7 +130,8 @@ return commandError(_that);case TsEvent_ChannelPermissionsUpdated():
 return channelPermissionsUpdated(_that);case TsEvent_StreamsChanged():
 return streamsChanged(_that);case TsEvent_StreamJoinResponse():
 return streamJoinResponse(_that);case TsEvent_StreamSignaling():
-return streamSignaling(_that);case TsEvent_FileDownloaded():
+return streamSignaling(_that);case TsEvent_StreamJoinRequest():
+return streamJoinRequest(_that);case TsEvent_FileDownloaded():
 return fileDownloaded(_that);case TsEvent_FileTransferFailed():
 return fileTransferFailed(_that);}
 }
@@ -145,7 +147,7 @@ return fileTransferFailed(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( TsEvent_ConnectionStateChanged value)?  connectionStateChanged,TResult? Function( TsEvent_Connected value)?  connected,TResult? Function( TsEvent_Disconnected value)?  disconnected,TResult? Function( TsEvent_ConnectionLost value)?  connectionLost,TResult? Function( TsEvent_ChannelCreated value)?  channelCreated,TResult? Function( TsEvent_ChannelDeleted value)?  channelDeleted,TResult? Function( TsEvent_ChannelEdited value)?  channelEdited,TResult? Function( TsEvent_ChannelJoined value)?  channelJoined,TResult? Function( TsEvent_UserJoined value)?  userJoined,TResult? Function( TsEvent_UserLeft value)?  userLeft,TResult? Function( TsEvent_UserMoved value)?  userMoved,TResult? Function( TsEvent_UserKickedFromChannel value)?  userKickedFromChannel,TResult? Function( TsEvent_UserKickedFromServer value)?  userKickedFromServer,TResult? Function( TsEvent_UserBanned value)?  userBanned,TResult? Function( TsEvent_UserUpdated value)?  userUpdated,TResult? Function( TsEvent_TalkStatusStart value)?  talkStatusStart,TResult? Function( TsEvent_TalkStatusStop value)?  talkStatusStop,TResult? Function( TsEvent_TextMessage value)?  textMessage,TResult? Function( TsEvent_Poked value)?  poked,TResult? Function( TsEvent_CommandError value)?  commandError,TResult? Function( TsEvent_ChannelPermissionsUpdated value)?  channelPermissionsUpdated,TResult? Function( TsEvent_StreamsChanged value)?  streamsChanged,TResult? Function( TsEvent_StreamJoinResponse value)?  streamJoinResponse,TResult? Function( TsEvent_StreamSignaling value)?  streamSignaling,TResult? Function( TsEvent_FileDownloaded value)?  fileDownloaded,TResult? Function( TsEvent_FileTransferFailed value)?  fileTransferFailed,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( TsEvent_ConnectionStateChanged value)?  connectionStateChanged,TResult? Function( TsEvent_Connected value)?  connected,TResult? Function( TsEvent_Disconnected value)?  disconnected,TResult? Function( TsEvent_ConnectionLost value)?  connectionLost,TResult? Function( TsEvent_ChannelCreated value)?  channelCreated,TResult? Function( TsEvent_ChannelDeleted value)?  channelDeleted,TResult? Function( TsEvent_ChannelEdited value)?  channelEdited,TResult? Function( TsEvent_ChannelJoined value)?  channelJoined,TResult? Function( TsEvent_UserJoined value)?  userJoined,TResult? Function( TsEvent_UserLeft value)?  userLeft,TResult? Function( TsEvent_UserMoved value)?  userMoved,TResult? Function( TsEvent_UserKickedFromChannel value)?  userKickedFromChannel,TResult? Function( TsEvent_UserKickedFromServer value)?  userKickedFromServer,TResult? Function( TsEvent_UserBanned value)?  userBanned,TResult? Function( TsEvent_UserUpdated value)?  userUpdated,TResult? Function( TsEvent_TalkStatusStart value)?  talkStatusStart,TResult? Function( TsEvent_TalkStatusStop value)?  talkStatusStop,TResult? Function( TsEvent_TextMessage value)?  textMessage,TResult? Function( TsEvent_Poked value)?  poked,TResult? Function( TsEvent_CommandError value)?  commandError,TResult? Function( TsEvent_ChannelPermissionsUpdated value)?  channelPermissionsUpdated,TResult? Function( TsEvent_StreamsChanged value)?  streamsChanged,TResult? Function( TsEvent_StreamJoinResponse value)?  streamJoinResponse,TResult? Function( TsEvent_StreamSignaling value)?  streamSignaling,TResult? Function( TsEvent_StreamJoinRequest value)?  streamJoinRequest,TResult? Function( TsEvent_FileDownloaded value)?  fileDownloaded,TResult? Function( TsEvent_FileTransferFailed value)?  fileTransferFailed,}){
 final _that = this;
 switch (_that) {
 case TsEvent_ConnectionStateChanged() when connectionStateChanged != null:
@@ -172,7 +174,8 @@ return commandError(_that);case TsEvent_ChannelPermissionsUpdated() when channel
 return channelPermissionsUpdated(_that);case TsEvent_StreamsChanged() when streamsChanged != null:
 return streamsChanged(_that);case TsEvent_StreamJoinResponse() when streamJoinResponse != null:
 return streamJoinResponse(_that);case TsEvent_StreamSignaling() when streamSignaling != null:
-return streamSignaling(_that);case TsEvent_FileDownloaded() when fileDownloaded != null:
+return streamSignaling(_that);case TsEvent_StreamJoinRequest() when streamJoinRequest != null:
+return streamJoinRequest(_that);case TsEvent_FileDownloaded() when fileDownloaded != null:
 return fileDownloaded(_that);case TsEvent_FileTransferFailed() when fileTransferFailed != null:
 return fileTransferFailed(_that);case _:
   return null;
@@ -191,7 +194,7 @@ return fileTransferFailed(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( TsConnectionState newState)?  connectionStateChanged,TResult Function( String serverName,  String? welcomeMessage)?  connected,TResult Function( String reason)?  disconnected,TResult Function( String reason)?  connectionLost,TResult Function( PlatformInt64 channelId,  String name)?  channelCreated,TResult Function( PlatformInt64 channelId)?  channelDeleted,TResult Function( PlatformInt64 channelId,  String name)?  channelEdited,TResult Function( PlatformInt64 channelId,  String name)?  channelJoined,TResult Function( int userId,  String nickname,  PlatformInt64 channelId)?  userJoined,TResult Function( int userId,  String nickname,  String reason)?  userLeft,TResult Function( int userId,  String nickname,  PlatformInt64 fromChannel,  PlatformInt64 toChannel)?  userMoved,TResult Function( int userId,  int kickerId,  String reason)?  userKickedFromChannel,TResult Function( int userId,  int kickerId,  String reason)?  userKickedFromServer,TResult Function( int userId,  int bannerId,  String reason)?  userBanned,TResult Function( int userId,  String nickname)?  userUpdated,TResult Function( int userId)?  talkStatusStart,TResult Function( int userId)?  talkStatusStop,TResult Function( int senderId,  String senderName,  String message,  TsMessageTarget target)?  textMessage,TResult Function( int pokerId,  String pokerName,  String message)?  poked,TResult Function( int errorId,  String message)?  commandError,TResult Function( PlatformInt64 channelId,  PlatformInt64 permissionHints)?  channelPermissionsUpdated,TResult Function( List<TsStream> streams)?  streamsChanged,TResult Function( int ownerId,  String streamId,  bool accepted,  String? message,  String? offer)?  streamJoinResponse,TResult Function( int ownerId,  String streamId,  String json)?  streamSignaling,TResult Function( PlatformInt64 channelId,  String path,  Uint8List data)?  fileDownloaded,TResult Function( String path,  String error)?  fileTransferFailed,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( TsConnectionState newState)?  connectionStateChanged,TResult Function( String serverName,  String? welcomeMessage)?  connected,TResult Function( String reason)?  disconnected,TResult Function( String reason)?  connectionLost,TResult Function( PlatformInt64 channelId,  String name)?  channelCreated,TResult Function( PlatformInt64 channelId)?  channelDeleted,TResult Function( PlatformInt64 channelId,  String name)?  channelEdited,TResult Function( PlatformInt64 channelId,  String name)?  channelJoined,TResult Function( int userId,  String nickname,  PlatformInt64 channelId)?  userJoined,TResult Function( int userId,  String nickname,  String reason)?  userLeft,TResult Function( int userId,  String nickname,  PlatformInt64 fromChannel,  PlatformInt64 toChannel)?  userMoved,TResult Function( int userId,  int kickerId,  String reason)?  userKickedFromChannel,TResult Function( int userId,  int kickerId,  String reason)?  userKickedFromServer,TResult Function( int userId,  int bannerId,  String reason)?  userBanned,TResult Function( int userId,  String nickname)?  userUpdated,TResult Function( int userId)?  talkStatusStart,TResult Function( int userId)?  talkStatusStop,TResult Function( int senderId,  String senderName,  String message,  TsMessageTarget target)?  textMessage,TResult Function( int pokerId,  String pokerName,  String message)?  poked,TResult Function( int errorId,  String message)?  commandError,TResult Function( PlatformInt64 channelId,  PlatformInt64 permissionHints)?  channelPermissionsUpdated,TResult Function( List<TsStream> streams)?  streamsChanged,TResult Function( int ownerId,  String streamId,  bool accepted,  String? message,  String? offer)?  streamJoinResponse,TResult Function( int ownerId,  String streamId,  String json)?  streamSignaling,TResult Function( int viewerId,  String streamId,  bool isRemove)?  streamJoinRequest,TResult Function( PlatformInt64 channelId,  String path,  Uint8List data)?  fileDownloaded,TResult Function( String path,  String error)?  fileTransferFailed,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case TsEvent_ConnectionStateChanged() when connectionStateChanged != null:
 return connectionStateChanged(_that.newState);case TsEvent_Connected() when connected != null:
@@ -217,7 +220,8 @@ return commandError(_that.errorId,_that.message);case TsEvent_ChannelPermissions
 return channelPermissionsUpdated(_that.channelId,_that.permissionHints);case TsEvent_StreamsChanged() when streamsChanged != null:
 return streamsChanged(_that.streams);case TsEvent_StreamJoinResponse() when streamJoinResponse != null:
 return streamJoinResponse(_that.ownerId,_that.streamId,_that.accepted,_that.message,_that.offer);case TsEvent_StreamSignaling() when streamSignaling != null:
-return streamSignaling(_that.ownerId,_that.streamId,_that.json);case TsEvent_FileDownloaded() when fileDownloaded != null:
+return streamSignaling(_that.ownerId,_that.streamId,_that.json);case TsEvent_StreamJoinRequest() when streamJoinRequest != null:
+return streamJoinRequest(_that.viewerId,_that.streamId,_that.isRemove);case TsEvent_FileDownloaded() when fileDownloaded != null:
 return fileDownloaded(_that.channelId,_that.path,_that.data);case TsEvent_FileTransferFailed() when fileTransferFailed != null:
 return fileTransferFailed(_that.path,_that.error);case _:
   return orElse();
@@ -237,7 +241,7 @@ return fileTransferFailed(_that.path,_that.error);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( TsConnectionState newState)  connectionStateChanged,required TResult Function( String serverName,  String? welcomeMessage)  connected,required TResult Function( String reason)  disconnected,required TResult Function( String reason)  connectionLost,required TResult Function( PlatformInt64 channelId,  String name)  channelCreated,required TResult Function( PlatformInt64 channelId)  channelDeleted,required TResult Function( PlatformInt64 channelId,  String name)  channelEdited,required TResult Function( PlatformInt64 channelId,  String name)  channelJoined,required TResult Function( int userId,  String nickname,  PlatformInt64 channelId)  userJoined,required TResult Function( int userId,  String nickname,  String reason)  userLeft,required TResult Function( int userId,  String nickname,  PlatformInt64 fromChannel,  PlatformInt64 toChannel)  userMoved,required TResult Function( int userId,  int kickerId,  String reason)  userKickedFromChannel,required TResult Function( int userId,  int kickerId,  String reason)  userKickedFromServer,required TResult Function( int userId,  int bannerId,  String reason)  userBanned,required TResult Function( int userId,  String nickname)  userUpdated,required TResult Function( int userId)  talkStatusStart,required TResult Function( int userId)  talkStatusStop,required TResult Function( int senderId,  String senderName,  String message,  TsMessageTarget target)  textMessage,required TResult Function( int pokerId,  String pokerName,  String message)  poked,required TResult Function( int errorId,  String message)  commandError,required TResult Function( PlatformInt64 channelId,  PlatformInt64 permissionHints)  channelPermissionsUpdated,required TResult Function( List<TsStream> streams)  streamsChanged,required TResult Function( int ownerId,  String streamId,  bool accepted,  String? message,  String? offer)  streamJoinResponse,required TResult Function( int ownerId,  String streamId,  String json)  streamSignaling,required TResult Function( PlatformInt64 channelId,  String path,  Uint8List data)  fileDownloaded,required TResult Function( String path,  String error)  fileTransferFailed,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( TsConnectionState newState)  connectionStateChanged,required TResult Function( String serverName,  String? welcomeMessage)  connected,required TResult Function( String reason)  disconnected,required TResult Function( String reason)  connectionLost,required TResult Function( PlatformInt64 channelId,  String name)  channelCreated,required TResult Function( PlatformInt64 channelId)  channelDeleted,required TResult Function( PlatformInt64 channelId,  String name)  channelEdited,required TResult Function( PlatformInt64 channelId,  String name)  channelJoined,required TResult Function( int userId,  String nickname,  PlatformInt64 channelId)  userJoined,required TResult Function( int userId,  String nickname,  String reason)  userLeft,required TResult Function( int userId,  String nickname,  PlatformInt64 fromChannel,  PlatformInt64 toChannel)  userMoved,required TResult Function( int userId,  int kickerId,  String reason)  userKickedFromChannel,required TResult Function( int userId,  int kickerId,  String reason)  userKickedFromServer,required TResult Function( int userId,  int bannerId,  String reason)  userBanned,required TResult Function( int userId,  String nickname)  userUpdated,required TResult Function( int userId)  talkStatusStart,required TResult Function( int userId)  talkStatusStop,required TResult Function( int senderId,  String senderName,  String message,  TsMessageTarget target)  textMessage,required TResult Function( int pokerId,  String pokerName,  String message)  poked,required TResult Function( int errorId,  String message)  commandError,required TResult Function( PlatformInt64 channelId,  PlatformInt64 permissionHints)  channelPermissionsUpdated,required TResult Function( List<TsStream> streams)  streamsChanged,required TResult Function( int ownerId,  String streamId,  bool accepted,  String? message,  String? offer)  streamJoinResponse,required TResult Function( int ownerId,  String streamId,  String json)  streamSignaling,required TResult Function( int viewerId,  String streamId,  bool isRemove)  streamJoinRequest,required TResult Function( PlatformInt64 channelId,  String path,  Uint8List data)  fileDownloaded,required TResult Function( String path,  String error)  fileTransferFailed,}) {final _that = this;
 switch (_that) {
 case TsEvent_ConnectionStateChanged():
 return connectionStateChanged(_that.newState);case TsEvent_Connected():
@@ -263,7 +267,8 @@ return commandError(_that.errorId,_that.message);case TsEvent_ChannelPermissions
 return channelPermissionsUpdated(_that.channelId,_that.permissionHints);case TsEvent_StreamsChanged():
 return streamsChanged(_that.streams);case TsEvent_StreamJoinResponse():
 return streamJoinResponse(_that.ownerId,_that.streamId,_that.accepted,_that.message,_that.offer);case TsEvent_StreamSignaling():
-return streamSignaling(_that.ownerId,_that.streamId,_that.json);case TsEvent_FileDownloaded():
+return streamSignaling(_that.ownerId,_that.streamId,_that.json);case TsEvent_StreamJoinRequest():
+return streamJoinRequest(_that.viewerId,_that.streamId,_that.isRemove);case TsEvent_FileDownloaded():
 return fileDownloaded(_that.channelId,_that.path,_that.data);case TsEvent_FileTransferFailed():
 return fileTransferFailed(_that.path,_that.error);}
 }
@@ -279,7 +284,7 @@ return fileTransferFailed(_that.path,_that.error);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( TsConnectionState newState)?  connectionStateChanged,TResult? Function( String serverName,  String? welcomeMessage)?  connected,TResult? Function( String reason)?  disconnected,TResult? Function( String reason)?  connectionLost,TResult? Function( PlatformInt64 channelId,  String name)?  channelCreated,TResult? Function( PlatformInt64 channelId)?  channelDeleted,TResult? Function( PlatformInt64 channelId,  String name)?  channelEdited,TResult? Function( PlatformInt64 channelId,  String name)?  channelJoined,TResult? Function( int userId,  String nickname,  PlatformInt64 channelId)?  userJoined,TResult? Function( int userId,  String nickname,  String reason)?  userLeft,TResult? Function( int userId,  String nickname,  PlatformInt64 fromChannel,  PlatformInt64 toChannel)?  userMoved,TResult? Function( int userId,  int kickerId,  String reason)?  userKickedFromChannel,TResult? Function( int userId,  int kickerId,  String reason)?  userKickedFromServer,TResult? Function( int userId,  int bannerId,  String reason)?  userBanned,TResult? Function( int userId,  String nickname)?  userUpdated,TResult? Function( int userId)?  talkStatusStart,TResult? Function( int userId)?  talkStatusStop,TResult? Function( int senderId,  String senderName,  String message,  TsMessageTarget target)?  textMessage,TResult? Function( int pokerId,  String pokerName,  String message)?  poked,TResult? Function( int errorId,  String message)?  commandError,TResult? Function( PlatformInt64 channelId,  PlatformInt64 permissionHints)?  channelPermissionsUpdated,TResult? Function( List<TsStream> streams)?  streamsChanged,TResult? Function( int ownerId,  String streamId,  bool accepted,  String? message,  String? offer)?  streamJoinResponse,TResult? Function( int ownerId,  String streamId,  String json)?  streamSignaling,TResult? Function( PlatformInt64 channelId,  String path,  Uint8List data)?  fileDownloaded,TResult? Function( String path,  String error)?  fileTransferFailed,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( TsConnectionState newState)?  connectionStateChanged,TResult? Function( String serverName,  String? welcomeMessage)?  connected,TResult? Function( String reason)?  disconnected,TResult? Function( String reason)?  connectionLost,TResult? Function( PlatformInt64 channelId,  String name)?  channelCreated,TResult? Function( PlatformInt64 channelId)?  channelDeleted,TResult? Function( PlatformInt64 channelId,  String name)?  channelEdited,TResult? Function( PlatformInt64 channelId,  String name)?  channelJoined,TResult? Function( int userId,  String nickname,  PlatformInt64 channelId)?  userJoined,TResult? Function( int userId,  String nickname,  String reason)?  userLeft,TResult? Function( int userId,  String nickname,  PlatformInt64 fromChannel,  PlatformInt64 toChannel)?  userMoved,TResult? Function( int userId,  int kickerId,  String reason)?  userKickedFromChannel,TResult? Function( int userId,  int kickerId,  String reason)?  userKickedFromServer,TResult? Function( int userId,  int bannerId,  String reason)?  userBanned,TResult? Function( int userId,  String nickname)?  userUpdated,TResult? Function( int userId)?  talkStatusStart,TResult? Function( int userId)?  talkStatusStop,TResult? Function( int senderId,  String senderName,  String message,  TsMessageTarget target)?  textMessage,TResult? Function( int pokerId,  String pokerName,  String message)?  poked,TResult? Function( int errorId,  String message)?  commandError,TResult? Function( PlatformInt64 channelId,  PlatformInt64 permissionHints)?  channelPermissionsUpdated,TResult? Function( List<TsStream> streams)?  streamsChanged,TResult? Function( int ownerId,  String streamId,  bool accepted,  String? message,  String? offer)?  streamJoinResponse,TResult? Function( int ownerId,  String streamId,  String json)?  streamSignaling,TResult? Function( int viewerId,  String streamId,  bool isRemove)?  streamJoinRequest,TResult? Function( PlatformInt64 channelId,  String path,  Uint8List data)?  fileDownloaded,TResult? Function( String path,  String error)?  fileTransferFailed,}) {final _that = this;
 switch (_that) {
 case TsEvent_ConnectionStateChanged() when connectionStateChanged != null:
 return connectionStateChanged(_that.newState);case TsEvent_Connected() when connected != null:
@@ -305,7 +310,8 @@ return commandError(_that.errorId,_that.message);case TsEvent_ChannelPermissions
 return channelPermissionsUpdated(_that.channelId,_that.permissionHints);case TsEvent_StreamsChanged() when streamsChanged != null:
 return streamsChanged(_that.streams);case TsEvent_StreamJoinResponse() when streamJoinResponse != null:
 return streamJoinResponse(_that.ownerId,_that.streamId,_that.accepted,_that.message,_that.offer);case TsEvent_StreamSignaling() when streamSignaling != null:
-return streamSignaling(_that.ownerId,_that.streamId,_that.json);case TsEvent_FileDownloaded() when fileDownloaded != null:
+return streamSignaling(_that.ownerId,_that.streamId,_that.json);case TsEvent_StreamJoinRequest() when streamJoinRequest != null:
+return streamJoinRequest(_that.viewerId,_that.streamId,_that.isRemove);case TsEvent_FileDownloaded() when fileDownloaded != null:
 return fileDownloaded(_that.channelId,_that.path,_that.data);case TsEvent_FileTransferFailed() when fileTransferFailed != null:
 return fileTransferFailed(_that.path,_that.error);case _:
   return null;
@@ -1961,6 +1967,76 @@ ownerId: null == ownerId ? _self.ownerId : ownerId // ignore: cast_nullable_to_n
 as int,streamId: null == streamId ? _self.streamId : streamId // ignore: cast_nullable_to_non_nullable
 as String,json: null == json ? _self.json : json // ignore: cast_nullable_to_non_nullable
 as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class TsEvent_StreamJoinRequest extends TsEvent {
+  const TsEvent_StreamJoinRequest({required this.viewerId, required this.streamId, required this.isRemove}): super._();
+  
+
+ final  int viewerId;
+ final  String streamId;
+ final  bool isRemove;
+
+/// Create a copy of TsEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$TsEvent_StreamJoinRequestCopyWith<TsEvent_StreamJoinRequest> get copyWith => _$TsEvent_StreamJoinRequestCopyWithImpl<TsEvent_StreamJoinRequest>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TsEvent_StreamJoinRequest&&(identical(other.viewerId, viewerId) || other.viewerId == viewerId)&&(identical(other.streamId, streamId) || other.streamId == streamId)&&(identical(other.isRemove, isRemove) || other.isRemove == isRemove));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,viewerId,streamId,isRemove);
+
+@override
+String toString() {
+  return 'TsEvent.streamJoinRequest(viewerId: $viewerId, streamId: $streamId, isRemove: $isRemove)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $TsEvent_StreamJoinRequestCopyWith<$Res> implements $TsEventCopyWith<$Res> {
+  factory $TsEvent_StreamJoinRequestCopyWith(TsEvent_StreamJoinRequest value, $Res Function(TsEvent_StreamJoinRequest) _then) = _$TsEvent_StreamJoinRequestCopyWithImpl;
+@useResult
+$Res call({
+ int viewerId, String streamId, bool isRemove
+});
+
+
+
+
+}
+/// @nodoc
+class _$TsEvent_StreamJoinRequestCopyWithImpl<$Res>
+    implements $TsEvent_StreamJoinRequestCopyWith<$Res> {
+  _$TsEvent_StreamJoinRequestCopyWithImpl(this._self, this._then);
+
+  final TsEvent_StreamJoinRequest _self;
+  final $Res Function(TsEvent_StreamJoinRequest) _then;
+
+/// Create a copy of TsEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? viewerId = null,Object? streamId = null,Object? isRemove = null,}) {
+  return _then(TsEvent_StreamJoinRequest(
+viewerId: null == viewerId ? _self.viewerId : viewerId // ignore: cast_nullable_to_non_nullable
+as int,streamId: null == streamId ? _self.streamId : streamId // ignore: cast_nullable_to_non_nullable
+as String,isRemove: null == isRemove ? _self.isRemove : isRemove // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

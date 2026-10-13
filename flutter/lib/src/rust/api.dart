@@ -14,6 +14,12 @@ part 'api.freezed.dart';
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TsClient>>
 abstract class TsClient implements RustOpaqueInterface {
+  Future<void> acceptStreamViewer({
+    required int viewerId,
+    required String streamId,
+    required String offer,
+  });
+
   /// Start connecting. Call `wait_connected` next, then `events`.
   static Future<TsClient> connect({
     required String address,
@@ -54,6 +60,16 @@ abstract class TsClient implements RustOpaqueInterface {
     required String password,
   });
 
+  Future<void> refuseStreamViewer({
+    required int viewerId,
+    required String streamId,
+  });
+
+  Future<void> removeStreamViewer({
+    required int viewerId,
+    required String streamId,
+  });
+
   Future<void> requestStreamInfo({required int ownerId});
 
   Future<void> sendChannelMessage({required String msg});
@@ -72,7 +88,13 @@ abstract class TsClient implements RustOpaqueInterface {
 
   Future<void> setOutputMuted({required bool muted});
 
+  /// Publishes a P2P screen share (video only). The server assigns the id; it
+  /// arrives with `StreamsChanged` as a stream owned by us.
+  Future<void> setupStream({required String name, required int bitrate});
+
   TsSnapshot snapshot();
+
+  Future<void> stopStream({required String streamId});
 
   /// Blocks until the initial state sync is done.
   Future<void> waitConnected();
@@ -286,6 +308,13 @@ sealed class TsEvent with _$TsEvent {
     required String streamId,
     required String json,
   }) = TsEvent_StreamSignaling;
+
+  /// A viewer asked to join (or left) one of our own streams.
+  const factory TsEvent.streamJoinRequest({
+    required int viewerId,
+    required String streamId,
+    required bool isRemove,
+  }) = TsEvent_StreamJoinRequest;
   const factory TsEvent.fileDownloaded({
     required PlatformInt64 channelId,
     required String path,

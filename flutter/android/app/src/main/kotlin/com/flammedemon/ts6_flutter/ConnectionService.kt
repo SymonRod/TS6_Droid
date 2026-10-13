@@ -18,6 +18,7 @@ class ConnectionService : Service() {
         private const val NOTIF_ID = 1
         const val ACTION_DISCONNECT = "com.flammedemon.ts6_flutter.DISCONNECT"
         const val ACTION_MUTE = "com.flammedemon.ts6_flutter.MUTE"
+        const val ACTION_PROJECTION = "com.flammedemon.ts6_flutter.PROJECTION"
         @Volatile private var instance: ConnectionService? = null
         val isRunning: Boolean get() = instance != null
         @Volatile var onMuteToggleRequested: (() -> Unit)? = null
@@ -29,6 +30,7 @@ class ConnectionService : Service() {
             instance?.refreshNotification()
         }
         @Volatile var engine: AudioEngine? = null
+        @Volatile var onAudioRoute: ((List<AudioRoute.Dev>, Int?, Boolean) -> Unit)? = null
         @Volatile var onVoiceActivity: ((Boolean) -> Unit)? = null
         /** Set by MainActivity so the notification button can reach Dart. */
         @Volatile var onDisconnectRequested: (() -> Unit)? = null
@@ -39,9 +41,15 @@ class ConnectionService : Service() {
                     .putExtra("text", text).putExtra("disconnect", disconnect)
                     .putExtra("mute", mute).putExtra("unmute", unmute))
         }
+        /** Adds/removes the mediaProjection FGS type; call after the capture consent, before capturing. */
+        fun setProjection(ctx: Context, on: Boolean) {
+            ctx.startForegroundService(
+                Intent(ctx, ConnectionService::class.java).setAction(ACTION_PROJECTION).putExtra("on", on))
+        }
         fun stop(ctx: Context) { ctx.stopService(Intent(ctx, ConnectionService::class.java)) }
     }
 
+    private var projection = false
     private var wakeLock: PowerManager.WakeLock? = null
     private var text = "Connected"
     private var disconnectLabel = "Disconnect"
@@ -59,6 +67,11 @@ class ConnectionService : Service() {
             stopSelf()
             return START_NOT_STICKY
         }
+        if (intent?.action == ACTION_PROJECTION) {
+            projection = intent.getBooleanExtra("on", false)
+            if (instance != null) startForeground(NOTIF_ID, buildNotification(), serviceType())
+            return START_NOT_STICKY
+        }
         if (intent?.action == ACTION_MUTE) {
             onMuteToggleRequested?.invoke()
             return START_NOT_STICKY
@@ -71,19 +84,27 @@ class ConnectionService : Service() {
         val nm = getSystemService(NotificationManager::class.java)
         nm.createNotificationChannel(
             NotificationChannel(CHANNEL, "Connection", NotificationManager.IMPORTANCE_LOW))
-        val hasMic = checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) ==
-            android.content.pm.PackageManager.PERMISSION_GRANTED
-        var type = ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-        if (hasMic) type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
-        startForeground(NOTIF_ID, buildNotification(), type)
+        val hasMic = hasMic()
+        startForeground(NOTIF_ID, buildNotification(), serviceType())
         if (wakeLock == null) {
             wakeLock = getSystemService(PowerManager::class.java)
                 .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ts6:conn").apply { acquire() }
         }
         val e = engine ?: AudioEngine(applicationContext).also { engine = it }
+        e.route.onChanged = { d, a, auto -> onAudioRoute?.invoke(d, a, auto) }
         e.onVoiceActivity = { v -> android.util.Log.d("ts6-voice", "voice=$v"); onVoiceActivity?.invoke(v) }
         e.start(hasMic)
         return START_NOT_STICKY
+    }
+
+    private fun hasMic() = checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) ==
+        android.content.pm.PackageManager.PERMISSION_GRANTED
+
+    private fun serviceType(): Int {
+        var type = ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+        if (hasMic()) type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+        if (projection) type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+        return type
     }
 
     private fun buildNotification(): Notification {
@@ -108,6 +129,15 @@ class ConnectionService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        // Swiped from recents: the Activity may already be gone; leave cleanly, then stop.
+        Thread {
+            try { NativeAudio.disconnectAll() } catch (_: Throwable) {}
+            stopSelf()
+        }.start()
+        super.onTaskRemoved(rootIntent)
+    }
 
     override fun onDestroy() {
         instance = null

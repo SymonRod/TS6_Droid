@@ -147,4 +147,28 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get disconnectConfirm => 'Voulez-vous vous déconnecter ?';
+
+  @override
+  String get shareScreen => 'Partager l’écran';
+
+  @override
+  String get stopShare => 'Arrêter';
+
+  @override
+  String get audioOutput => 'Sortie audio';
+
+  @override
+  String get audioAuto => 'Automatique';
+
+  @override
+  String get audioSpeaker => 'Haut-parleur';
+
+  @override
+  String get audioEarpiece => 'Écouteur';
+
+  @override
+  String get audioDeviceFallback => 'Périphérique audio';
+
+  @override
+  String get more => 'Plus';
 }

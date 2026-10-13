@@ -45,5 +45,13 @@
   "pttSetting": "Mode appuyer pour parler",
   "deafen": "Couper le son",
   "undeafen": "Rétablir le son",
-  "disconnectConfirm": "Voulez-vous vous déconnecter ?"
+  "disconnectConfirm": "Voulez-vous vous déconnecter ?",
+  "shareScreen": "Partager l’écran",
+  "stopShare": "Arrêter",
+  "audioOutput": "Sortie audio",
+  "audioAuto": "Automatique",
+  "audioSpeaker": "Haut-parleur",
+  "audioEarpiece": "Écouteur",
+  "audioDeviceFallback": "Périphérique audio",
+  "more": "Plus"
 }
