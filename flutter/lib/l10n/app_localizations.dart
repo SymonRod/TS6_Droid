@@ -369,6 +369,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Undeafen'**
   String get undeafen;
+
+  /// No description provided for @disconnectConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect from the server?'**
+  String get disconnectConfirm;
 }
 
 class _AppLocalizationsDelegate

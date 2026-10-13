@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:go_router/go_router.dart';
@@ -19,7 +20,10 @@ class ServerScreen extends ConsumerStatefulWidget {
 }
 
 class _ServerScreenState extends ConsumerState<ServerScreen> {
+  static const _channel = MethodChannel('ts6/audio');
   int _tab = 0;
+
+  void _moveToBack() => _channel.invokeMethod('moveTaskToBack').catchError((_) {});
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +40,14 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
     });
 
     final kb = MediaQuery.of(context).viewInsets.bottom > 0;
-    return Scaffold(
+    // Back must not leave the server screen (the router root): send the app to the
+    // background like Home, keeping the connection and UI state intact.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _moveToBack();
+      },
+      child: Scaffold(
       appBar: AppBar(title: Text(snap?.serverInfo.name ?? 'Server')),
       body: snap == null
           ? const Center(child: CircularProgressIndicator())
@@ -55,7 +66,7 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
           ],
         ),
       ]),
-    );
+    ));
   }
 }
 
@@ -176,6 +187,20 @@ class _UserAvatar extends StatelessWidget {
   }
 }
 
+Future<void> _confirmDisconnect(BuildContext context, ServerController ctrl, AppLocalizations l) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(l.disconnectConfirm),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l.cancel)),
+        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l.disconnect)),
+      ],
+    ),
+  );
+  if (ok == true) ctrl.disconnect();
+}
+
 class _ControlBar extends ConsumerWidget {
   const _ControlBar();
 
@@ -255,7 +280,7 @@ class _ControlBar extends ConsumerWidget {
             btn(Icons.touch_app, 'PTT',
                 () => ctrl.setPushToTalk(!s.ptt),
                 bg: s.ptt ? cs.primaryContainer : null, fg: s.ptt ? cs.onPrimaryContainer : null),
-            btn(Icons.call_end, l.disconnect, ctrl.disconnect, bg: tc.muted, fg: Colors.white),
+            btn(Icons.call_end, l.disconnect, () => _confirmDisconnect(context, ctrl, l), bg: tc.muted, fg: Colors.white),
           ]),
         ),
       ),

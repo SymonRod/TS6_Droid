@@ -144,4 +144,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get undeafen => 'Rétablir le son';
+
+  @override
+  String get disconnectConfirm => 'Voulez-vous vous déconnecter ?';
 }

@@ -145,4 +145,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get undeafen => 'Riattiva audio';
+
+  @override
+  String get disconnectConfirm => 'Vuoi disconnetterti?';
 }

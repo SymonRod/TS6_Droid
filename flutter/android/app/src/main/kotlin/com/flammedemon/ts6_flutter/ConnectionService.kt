@@ -19,6 +19,7 @@ class ConnectionService : Service() {
         const val ACTION_DISCONNECT = "com.flammedemon.ts6_flutter.DISCONNECT"
         const val ACTION_MUTE = "com.flammedemon.ts6_flutter.MUTE"
         @Volatile private var instance: ConnectionService? = null
+        val isRunning: Boolean get() = instance != null
         @Volatile var onMuteToggleRequested: (() -> Unit)? = null
         @Volatile private var muted = true
 

@@ -54,6 +54,7 @@ class MainActivity : FlutterActivity() {
                     )
                     result.success(null)
                 }
+                "moveTaskToBack" -> { moveTaskToBack(true); result.success(null) }
                 "stopService" -> { ConnectionService.stop(this); result.success(null) }
                 "setDeafened" -> {
                     ConnectionService.engine?.deafened = call.argument<Boolean>("deafened") ?: false
@@ -69,6 +70,19 @@ class MainActivity : FlutterActivity() {
                 }
                 else -> result.notImplemented()
             }
+        }
+    }
+
+    override fun onDestroy() {
+        val finishing = isFinishing && !isChangingConfigurations
+        super.onDestroy()
+        // The Rust client lives in this process (native lib via FFI), not in the Flutter
+        // engine, so destroying the engine would leave it orphaned while the foreground
+        // service keeps the process alive. If the Activity is really going away with the
+        // service running, stop the service and end the process so the client is released.
+        if (finishing && ConnectionService.isRunning) {
+            ConnectionService.stop(applicationContext)
+            android.os.Process.killProcess(android.os.Process.myPid())
         }
     }
 

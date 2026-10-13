@@ -144,4 +144,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get undeafen => 'Undeafen';
+
+  @override
+  String get disconnectConfirm => 'Disconnect from the server?';
 }

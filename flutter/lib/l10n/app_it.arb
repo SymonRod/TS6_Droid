@@ -44,5 +44,6 @@
   "notifUnmute": "Riattiva",
   "pttSetting": "Modalità premi per parlare",
   "deafen": "Disattiva audio",
-  "undeafen": "Riattiva audio"
+  "undeafen": "Riattiva audio",
+  "disconnectConfirm": "Vuoi disconnetterti?"
 }

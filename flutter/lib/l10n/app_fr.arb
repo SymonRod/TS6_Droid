@@ -44,5 +44,6 @@
   "notifUnmute": "Réactiver",
   "pttSetting": "Mode appuyer pour parler",
   "deafen": "Couper le son",
-  "undeafen": "Rétablir le son"
+  "undeafen": "Rétablir le son",
+  "disconnectConfirm": "Voulez-vous vous déconnecter ?"
 }
