@@ -114,4 +114,30 @@
     <string name="screen_share_stats">%1$d×%2$d · %3$d fps</string>
     <string name="screen_share_fit">Adatta l’intera immagine</string>
     <string name="screen_share_fill">Riempi lo schermo</string>
+
+    <!-- myTeamSpeak -->
+    <string name="myts_title">myTeamSpeak</string>
+    <string name="myts_open">Account myTeamSpeak</string>
+    <string name="myts_back">Indietro</string>
+    <string name="myts_login_intro">Accedi con il tuo account myTeamSpeak. La password viene inviata solo a myTeamSpeak e non viene mai salvata su questo dispositivo.</string>
+    <string name="myts_email">Email</string>
+    <string name="myts_password">Password</string>
+    <string name="myts_otp">Codice a due fattori</string>
+    <string name="myts_login">Accedi</string>
+    <string name="myts_retry">Riprova</string>
+    <string name="myts_logout">Esci</string>
+    <string name="myts_logged_in_as">Accesso effettuato come %1$s</string>
+    <string name="myts_import_later">L\'importazione di segnalibri e contatti arriverà in una versione futura.</string>
+    <string name="myts_error_fields_required">Email e password sono obbligatorie</string>
+    <string name="myts_error_wrong_credentials">Email o password errate</string>
+    <string name="myts_error_email_pending">Conferma il tuo indirizzo email prima di accedere</string>
+    <string name="myts_error_otp_required">Questo account usa l\'autenticazione a due fattori. Inserisci il codice dalla tua app di autenticazione.</string>
+    <string name="myts_error_otp_invalid">Codice a due fattori non valido</string>
+    <string name="myts_error_otp_unavailable">L\'accesso a due fattori non è disponibile per questo dispositivo (errore %1$d)</string>
+    <string name="myts_error_service_unavailable">myTeamSpeak non è disponibile al momento. Riprova più tardi.</string>
+    <string name="myts_error_rejected">myTeamSpeak ha rifiutato la richiesta. Attendi un momento e riprova.</string>
+    <string name="myts_error_transient">myTeamSpeak ha restituito un errore (HTTP %1$d). Spesso è temporaneo: attendi un momento e riprova.</string>
+    <string name="myts_error_network">Impossibile raggiungere myTeamSpeak. Controlla la connessione.</string>
+    <string name="myts_error_protocol">Risposta inattesa da myTeamSpeak</string>
+    <string name="myts_error_unknown">Accesso non riuscito (errore %1$d)</string>
 </resources>

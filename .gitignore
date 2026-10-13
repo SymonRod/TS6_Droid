@@ -24,3 +24,7 @@ Thumbs.db
 captures/
 captures/**/*.mitm
 captures/**/*.bin
+
+# Python
+__pycache__/
+*.pyc

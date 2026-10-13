@@ -1,25 +1,30 @@
 # myTeamSpeak — sync protocol reference (system A)
 
-> **Status:** Phase-1 static analysis complete except the KDF (2026-09-22,
-> client build 2025-07-13). Schemas are **recovered, not inferred**: the
-> binary embeds every `FileDescriptorProto`, extracted and round-trip
-> verified into `docs/proto/` (see its README). Field numbers, types, enum
-> values and RPC names below come from there; `docs/proto/*.proto` is the
-> source of truth when this document and it disagree.
+> **Status:** Phase-1 static analysis complete; Phase-2 capture done for the
+> login/sync/user/tschat closure (run6, 2026-09-22, client build 2025-07-13).
+> Schemas are **recovered, not inferred**: the binary embeds every
+> `FileDescriptorProto`, extracted and round-trip verified into `docs/proto/`
+> (see its README). Field numbers, types, enum values and RPC names below come
+> from there; `docs/proto/*.proto` is the source of truth when this document
+> and it disagree.
 > STATIC = derived from the binary, not yet seen on the wire.
+> CONFIRMED (run6) = observed on the wire by the in-process gdb capture
+> (`tools/myts/gdb_capture.py`, plaintext read before TLS, secrets masked).
 > TBD/HYPOTHESIS = not yet known.
+> **Capture verdict: item payloads are encrypted** (§7, capture Q4) — the KDF
+> (task 1D) is now the critical path, not a schema question.
 
 ## 0. Transport
 
 - Base `https://clientapi.myteamspeak.com`, path-per-service (§1).
 - Every call is one HTTPS `POST`, `Content-Type: application/ts3cloud`
-  (static `std::string` in `teamprotobufrpc`), `User-Agent:
-  cpp-httplib/0.11.1` (forum captures).
-- **Request body (STATIC, disassembled 2026-09-22):**
+  (CONFIRMED run6: the content-type arg is the 20-byte `application/ts3cloud`),
+  `User-Agent: cpp-httplib/0.11.1` (forum captures).
+- **Request body (CONFIRMED run6; disassembled 2026-09-22):**
 
   ```
   u8   n                       method name length (< 128, else the call aborts)
-  n B  method name             simple name, e.g. "login", "requestServerItems"
+  n B  method name             simple name, e.g. "session", "requestServerItems"
   ...  request message         plain protobuf serialization, no length prefix
   ```
 
@@ -29,18 +34,28 @@
   i.e. the simple name, not `full_name`), `IsInitialized()`,
   `AppendToString(request)` (failure → `"Error serializing protocol
   buffer"`). The service is not in the body — it is the URL path.
-- **Response body (STATIC):** on HTTP 200 the whole body goes to
-  `response->ParseFromString()`, no envelope. Non-200 → the controller
-  fails with the status code. Application errors travel inside the reply
-  messages (`ErrorCommon`, `SyncStatus`, `ReturnCode`).
-- Service → path (HYPOTHESIS by name; `/synchronization` confirmed by forum
-  captures): `LoginService` → `/authentication`, `SynchronizationService` →
-  `/synchronization`, `UserAccountService` → `/user`,
-  `UserAddonService` → `/addon`, `IntegrationUserService` → `/integration`,
-  `ChatRequests` → `/tschat`, `MessengerConnectorClientService` →
-  `/messenger`, `UserManagementService` → `/management` (admin/back-office,
-  never called by a normal client — `getKey` lives here, not in the login
-  flow). `/session` has no matching service in the descriptors — TBD.
+  Confirmed on the wire at the cpp-httplib POST call (`0x1dfd82a`,
+  `call [rax+0x18]`): args are `rsi` = URL, **`rcx` = body** (the framed
+  `std::string` above), `r8` = content type. (The earlier handoff note of
+  `rdx`/`r9` for body/response was wrong — `rdx` is empty at that site.)
+- **Response body (CONFIRMED run6):** on HTTP 200 the whole body goes to
+  `response->ParseFromString()` (`0x1dfde0b`, `rsi` = data, `rdx` = length),
+  no envelope. Non-200 → the controller fails with the status code.
+  Application errors travel inside the reply messages (`ErrorCommon`,
+  `SyncStatus`, `ReturnCode`).
+- Service → path (CONFIRMED run6 for the five in **bold**; others HYPOTHESIS
+  by name): **`LoginService` → `/authentication`** (`session`,
+  `deleteSession`), **`SynchronizationService` → `/synchronization`**
+  (`requestServerItems`, `synchronizeItems`), **`UserAccountService` →
+  `/user`** (`getSignedBadges`, `getTwoFactorAuthType`, `requestContactsAvatar`),
+  **`IntegrationUserService` → `/integration`** (`getIntegrationUserStatus`),
+  **`ChatRequests` → `/tschat`** (`getActiveIdentifierList`,
+  `getAllowedIdentifierList`, `getContactList`,
+  `requestSignedAllowedIdentifierList`); `UserAddonService` → `/addon`,
+  `MessengerConnectorClientService` → `/messenger`, `UserManagementService` →
+  `/management` (admin/back-office, never called by a normal client — `getKey`
+  lives here, not in the login flow) not yet observed. `/session` has no
+  matching service in the descriptors — TBD.
 - Sync lib symbols: `Sync_Client_Lib_Impl::{m_sync_start, m_sync_items,
   compare_sync_remote}`, `ICloud_Sync` / `Cloud_Sync_Impl`,
   `Account_Requestor_Cloud_Sync`; per-service `…_Requester_Protobuf_Rpc`.
@@ -126,9 +141,13 @@ The 10 `class_*_version_uuid` fields are per-class sync cursors (§4);
 ## 4. Sync envelope (`synchronization_common.proto`)
 
 `SynchronizationService`: `requestServerItems` and `synchronizeItems`, both
-`Sync_Request_ItemClasses → Sync_Reply_ItemClasses`. Which one a pull uses
-is still a capture question (Q2); by name, `requestServerItems` pulls and
-`synchronizeItems` pushes local changes.
+`Sync_Request_ItemClasses → Sync_Reply_ItemClasses`. **CONFIRMED (run6, Q2):**
+`requestServerItems` **pulls** — its request carries per-class `version` +
+`detail{item_uuid, item_version}` cursors and **no** `item_blob`;
+`synchronizeItems` **pushes** — a local change (renamed bookmark) sent its
+`detail{item_uuid, item_version, item_blob}` and got back
+`status: IN_SYNC` + a fresh `globalversion`. Each push returns a new
+`globalversion` (evidence toward Q7: incremental, per-change versioning).
 
 ```
 Sync_Request_ItemClasses { string session = 1;
@@ -153,13 +172,19 @@ closed; `item_room_category` has a version cursor but no class value).
 OVERLIMIT=304`, errors `ERROR_FE_UNKNOWN_METHOD=100,
 ERROR_FE_UNKNOWN_DATA=101, ERROR_SESSION_EXPIRED=102, ERROR_CRITICAL=103`.
 
-Flow (HYPOTHESIS, confirm in capture Q2/Q3/Q7): request with session +
-`globalversion` + per-class `version` cursors → reply `NOT_IN_SYNC` with
-changed classes whose `detail[]` carry `item_uuid/item_version/item_blob`.
-`item_blob` is `bytes`: either a serialized `Item_Data` (§5) or an
-encrypted one (§7) — capture Q4 decides.
+Flow (CONFIRMED run6, Q2; Q3/Q7 partial): request with session +
+`globalversion` + per-class `version` cursors → reply carries changed classes
+whose `detail[]` carry `item_uuid/item_version/item_blob`. **`item_blob` is
+ENCRYPTED, not a plaintext `Item_Data`** (capture Q4, run6): two pushed blobs
+measured 7.57 and 7.41 bits/byte of entropy and do not parse as `Item_Data`.
+So §5 describes the **decrypted** shape; the KDF/unwrap (§7, task 1D) sits
+between the wire blob and it.
 
 ## 5. Item payloads (`Sync_Serializing.proto`, package `com.teamspeak.sync.proto`)
+
+> This is the **decrypted** payload shape. On the wire `item_blob` is
+> encrypted (§4/§7, capture Q4) — decode as `Item_Data` only after the §7
+> unwrap is reimplemented (task 1D).
 
 Envelope: `Item_Data{item_uuid=2, sync_version_uuid=3, manipulated=4
 (ITEM_ADDED=0, CHANGED=1, DELETED=2, NOT_MANIPULATED=3),
@@ -190,7 +215,14 @@ ts_chat_identifier, note, matrix_id}`, `ContactList`, `ContactRequest(List)`,
 `/tschat` + Matrix homeserver + libolm. The sync `Contact` (§5) carries
 **none** of `matrix_id`/`ts_chat_identifier`/devices/keys. Roster ≠ identity.
 
-## 7. Encryption (TBD — task 1D + capture Q4)
+## 7. Encryption (task 1D — **now the critical path**; capture Q4 answered)
+
+**Capture Q4 answered (run6, 2026-09-22): sync item payloads are encrypted.**
+Two `synchronizeItems` pushes carried `item_blob`s of 458 B (IDENTITY) and
+357 B (CONFIG) at 7.57 / 7.41 bits/byte of entropy that do not parse as
+`Item_Data`. So opaque blobs, not cleartext protobuf → the KDF/unwrap must be
+reimplemented before any item read/write in the app (M2+). The plaintext
+`Item_Data` (§5) is what the client sees *after* decrypting in-process.
 
 Known shape only: `Auth_Token_Package{…, encrypted_encryption_password,
 encryption_tag, iv}`, `!salt.empty()` assert, `decrypted_user_private_key`,
@@ -211,8 +243,11 @@ server → client `LoginSession.key=1` (bytes), `BackupKeyData.backupkey=2`
 client-side KDF / wrap from these to the item key is still unknown —
 next step is decompiling `Encryption_Impl_V2` / `Item_Manager` (the
 `!salt.empty()` assert), not more string grepping.
-Capture decides: cleartext protobuf in `Sync_Reply` → schema task only;
-opaque blobs → KDF reversing becomes the critical path before any M2+ build.
+Capture decided (run6): opaque blobs, so **KDF reversing is the critical
+path** before any M2+ build. A good dynamic follow-up is to break where the
+blob is decrypted (feed the captured `item_blob` back in) rather than static
+decompilation alone — the same in-process gdb approach that read the RPC
+bodies can read the plaintext `Item_Data` and the key/iv at the crypto call.
 
 ## 8. Change log
 
@@ -238,3 +273,15 @@ opaque blobs → KDF reversing becomes the critical path before any M2+ build.
   is `bytes`. Request framing disassembled from `teamprotobufrpc`
   (`u8 len + method name + protobuf`), response is bare protobuf on
   HTTP 200 — STATIC until the first live call. KDF (task 1D) still open.
+- 2026-09-22 (run6): **first live capture.** In-process gdb
+  (`tools/myts/gdb_capture.py`) read RPC bodies as plaintext inside the
+  isolated client, before TLS. Confirmed: request framing
+  `u8 len + method + protobuf` and bare-protobuf reply on the wire; body arg
+  is `rcx` (not `rdx`) at the `0x1dfd82a` POST call. Captured real
+  service→method mapping for `/authentication`, `/synchronization`, `/user`,
+  `/integration`, `/tschat` (§0). **Q2 answered** (`requestServerItems` pulls,
+  `synchronizeItems` pushes). **Q4 answered: item payloads are encrypted**
+  (entropy ~7.5 bits/B, no `Item_Data` parse) → KDF (1D) is the critical path.
+  Q1 partial (session-based auth only; the profile was already logged in, so
+  the full `login` flow was not exercised); Q3 partial (pull-reply item blobs
+  were mis-correlated during the startup burst — see the tool's known limit).

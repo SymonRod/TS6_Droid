@@ -117,4 +117,30 @@
     <string name="screen_share_stats">%1$d×%2$d · %3$d fps</string>
     <string name="screen_share_fit">Fit the whole frame</string>
     <string name="screen_share_fill">Fill the screen</string>
+
+    <!-- myTeamSpeak -->
+    <string name="myts_title">myTeamSpeak</string>
+    <string name="myts_open">myTeamSpeak account</string>
+    <string name="myts_back">Back</string>
+    <string name="myts_login_intro">Log in with your myTeamSpeak account. Your password is sent only to myTeamSpeak and is never stored on this device.</string>
+    <string name="myts_email">Email</string>
+    <string name="myts_password">Password</string>
+    <string name="myts_otp">Two-factor code</string>
+    <string name="myts_login">Log in</string>
+    <string name="myts_retry">Try again</string>
+    <string name="myts_logout">Log out</string>
+    <string name="myts_logged_in_as">Logged in as %1$s</string>
+    <string name="myts_import_later">Importing bookmarks and contacts will come in a later version.</string>
+    <string name="myts_error_fields_required">Email and password are required</string>
+    <string name="myts_error_wrong_credentials">Wrong email or password</string>
+    <string name="myts_error_email_pending">Confirm your email address before logging in</string>
+    <string name="myts_error_otp_required">This account uses two-factor authentication. Enter the code from your authenticator app.</string>
+    <string name="myts_error_otp_invalid">Invalid two-factor code</string>
+    <string name="myts_error_otp_unavailable">Two-factor login is not available for this device (error %1$d)</string>
+    <string name="myts_error_service_unavailable">myTeamSpeak is unavailable right now. Try again later.</string>
+    <string name="myts_error_rejected">myTeamSpeak rejected the request. Wait a moment and try again.</string>
+    <string name="myts_error_transient">myTeamSpeak returned an error (HTTP %1$d). This is often temporary: wait a moment and try again.</string>
+    <string name="myts_error_network">Could not reach myTeamSpeak. Check your connection.</string>
+    <string name="myts_error_protocol">Unexpected reply from myTeamSpeak</string>
+    <string name="myts_error_unknown">Login failed (error %1$d)</string>
 </resources>

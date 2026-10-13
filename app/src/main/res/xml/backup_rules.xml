@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Auto Backup on Android 10-11. The myTeamSpeak session tokens never leave
+     the device: see data/MyTsSessionStore.kt. -->
+<full-backup-content>
+    <exclude domain="sharedpref" path="myts_session.xml" />
+</full-backup-content>

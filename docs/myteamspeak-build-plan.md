@@ -162,9 +162,12 @@ unchanged from M4.
 
 ## Risks (top 4)
 
-1. **Item encryption (Q4).** If payloads are KDF-wrapped blobs, M2 waits on
-   KDF reversing (Ghidra on `setup_sync_account_using_auth_token` /
-   `Item_Manager`). Budgeted as M2 sub-milestone, not a surprise.
+1. **Item encryption (Q4) — CONFIRMED (run6): payloads are encrypted blobs**
+   (`item_blob` ~7.5 bits/B, no `Item_Data` parse). M2 therefore **waits on
+   KDF reversing** (Ghidra on `setup_sync_account_using_auth_token` /
+   `Item_Manager`, or dynamic gdb at the decrypt call — see
+   `myteamspeak-sync-protocol.md` §7). This is now a hard M2 dependency, not a
+   contingency.
 2. **Undocumented rate limits / flaky 400/401s** (forum evidence). Mitigation:
    incremental sync, ≥4 s replay pacing, retryable-error UX.
 3. **2FA on mobile.** Forum: logins with 2FA fail on TS3/mobile. Mitigation:

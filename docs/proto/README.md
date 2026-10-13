@@ -28,5 +28,9 @@ python3 docs/proto/extract_descriptors.py BIN OUT --all
 | `Account_Serializing.proto` | The client's local account record (`Account_Data`, `Auth_Token_Package`) — not on the wire, shows what it keeps |
 | `myteamspeak_user.proto` | `UserAccountService` (`getBackupKey`, `getAccountData`, 2FA, …) |
 
-The rest are imports. The golden `protoc --decode_raw` test from M0 still
-needs one captured payload.
+The rest are imports. The golden `protoc --decode_raw` test from M0 now has
+captured payloads: `captures/myts/run6-*.req.bin` (framed `u8 len + method +
+protobuf`) decode cleanly with these schemas via `tools/myts/analyze.py`.
+Note (run6): sync `item_blob`s on the wire are **encrypted**, so a
+`Sync_Reply` reply does not decode to a plaintext `Item_Data` until the KDF
+(task 1D) is reimplemented — use a request payload for the golden test.

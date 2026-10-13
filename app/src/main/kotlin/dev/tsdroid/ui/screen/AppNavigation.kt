@@ -15,7 +15,11 @@ fun AppNavigation() {
                 onConnected = { navController.navigate("server") {
                     popUpTo("connection") { inclusive = true }
                 }},
+                onOpenMyTs = { navController.navigate("myts_login") },
             )
+        }
+        composable("myts_login") {
+            MyTsLoginRoute(onBack = { navController.popBackStack() })
         }
         composable("server") {
             ServerScreen(

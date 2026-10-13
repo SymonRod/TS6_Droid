@@ -3,6 +3,23 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.protobuf)
+}
+
+// myTeamSpeak schemas recovered from the desktop client (docs/proto). Only the
+// login closure is generated for now (M1); add files here as later milestones
+// need the sync/user services. The protobuf plugin compiles every .proto under
+// a source directory and ignores include filters, hence the staging copy.
+val stageMyTsProtos by tasks.registering(Sync::class) {
+    from(rootDir.resolve("docs/proto")) {
+        include(
+            "myteamspeak_login.proto",
+            "myteamspeak_common.proto",
+            "myteamspeak_avatar_common.proto",
+            "synchronization_common.proto",
+        )
+    }
+    into(layout.buildDirectory.dir("myts-proto"))
 }
 
 android {
@@ -61,6 +78,29 @@ android {
     sourceSets {
         getByName("main") {
             java.srcDirs("src/main/java", "src/main/kotlin")
+            (this as ExtensionAware).extensions.getByName<SourceDirectorySet>("proto")
+                .srcDir(stageMyTsProtos)
+        }
+        getByName("debug") {
+            java.srcDirs("src/debug/kotlin")
+        }
+        getByName("release") {
+            java.srcDirs("src/release/kotlin")
+        }
+    }
+}
+
+protobuf {
+    protoc {
+        artifact = libs.protobuf.protoc.get().toString()
+    }
+    generateProtoTasks {
+        all().configureEach {
+            dependsOn(stageMyTsProtos)
+            builtins {
+                create("java") { option("lite") }
+                create("kotlin") { option("lite") }
+            }
         }
     }
 }
@@ -162,6 +202,10 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.coil.compose)
     implementation(libs.webrtc)
+    implementation(libs.okhttp)
+    implementation(libs.androidx.security.crypto)
+    implementation(libs.protobuf.kotlin.lite)
     debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.okhttp.logging.interceptor)
     testImplementation(libs.junit)
 }

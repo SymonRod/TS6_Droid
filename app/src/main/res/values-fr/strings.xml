@@ -114,4 +114,30 @@
     <string name="screen_share_stats">%1$d×%2$d · %3$d fps</string>
     <string name="screen_share_fit">Afficher l’image entière</string>
     <string name="screen_share_fill">Remplir l’écran</string>
+
+    <!-- myTeamSpeak -->
+    <string name="myts_title">myTeamSpeak</string>
+    <string name="myts_open">Compte myTeamSpeak</string>
+    <string name="myts_back">Retour</string>
+    <string name="myts_login_intro">Connectez-vous avec votre compte myTeamSpeak. Votre mot de passe n\'est envoyé qu\'à myTeamSpeak et n\'est jamais enregistré sur cet appareil.</string>
+    <string name="myts_email">E-mail</string>
+    <string name="myts_password">Mot de passe</string>
+    <string name="myts_otp">Code à deux facteurs</string>
+    <string name="myts_login">Se connecter</string>
+    <string name="myts_retry">Réessayer</string>
+    <string name="myts_logout">Se déconnecter</string>
+    <string name="myts_logged_in_as">Connecté en tant que %1$s</string>
+    <string name="myts_import_later">L\'import des favoris et des contacts arrivera dans une prochaine version.</string>
+    <string name="myts_error_fields_required">L\'e-mail et le mot de passe sont requis</string>
+    <string name="myts_error_wrong_credentials">E-mail ou mot de passe incorrect</string>
+    <string name="myts_error_email_pending">Confirmez votre adresse e-mail avant de vous connecter</string>
+    <string name="myts_error_otp_required">Ce compte utilise l\'authentification à deux facteurs. Saisissez le code de votre application d\'authentification.</string>
+    <string name="myts_error_otp_invalid">Code à deux facteurs invalide</string>
+    <string name="myts_error_otp_unavailable">La connexion à deux facteurs n\'est pas disponible pour cet appareil (erreur %1$d)</string>
+    <string name="myts_error_service_unavailable">myTeamSpeak est indisponible pour le moment. Réessayez plus tard.</string>
+    <string name="myts_error_rejected">myTeamSpeak a refusé la requête. Patientez un instant puis réessayez.</string>
+    <string name="myts_error_transient">myTeamSpeak a renvoyé une erreur (HTTP %1$d). C\'est souvent temporaire : patientez un instant puis réessayez.</string>
+    <string name="myts_error_network">Impossible de joindre myTeamSpeak. Vérifiez votre connexion.</string>
+    <string name="myts_error_protocol">Réponse inattendue de myTeamSpeak</string>
+    <string name="myts_error_unknown">Échec de la connexion (erreur %1$d)</string>
 </resources>

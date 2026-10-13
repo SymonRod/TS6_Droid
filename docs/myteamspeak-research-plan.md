@@ -224,13 +224,13 @@ encryption`, … — cf. forum log samples). Goal table:
 
 | # | Question | Answered by |
 |---|---|---|
-| Q1 | Auth call order + method/message names (login → session → token?) | run 1 bodies + `LoginData`/`LoginSession`/`AuthToken*` decode |
-| Q2 | Sync framing: headers, `requestServerItems` verb, `Sync_Request_ItemClasses{session, globalversion}` encoding | run 3 |
-| Q3 | Per-class item fetch: how `item_uuid/item_version` detail requests map to `Bookmark_Data` / `Contact` payloads | runs 4–5 with known canary items |
-| Q4 | Encryption: are payloads opaque blobs? Which KDF/salt/iv/tag? | run 3–5: cleartext protobuf vs blob decides 1D |
+| Q1 | Auth call order + method/message names (login → session → token?) | **run6 partial**: `session`/`deleteSession` on `/authentication` seen; full `login` not exercised (profile already logged in) |
+| Q2 | Sync framing: headers, `requestServerItems` verb, `Sync_Request_ItemClasses{session, globalversion}` encoding | **run6 ANSWERED**: framing `u8 len+method+protobuf`; `requestServerItems` pulls, `synchronizeItems` pushes |
+| Q3 | Per-class item fetch: how `item_uuid/item_version` detail requests map to `Bookmark_Data` / `Contact` payloads | **run6 partial**: request cursors seen; pull-reply blobs mis-correlated in the startup burst (tool limit) |
+| Q4 | Encryption: are payloads opaque blobs? Which KDF/salt/iv/tag? | **run6 ANSWERED (blob side)**: `item_blob` is encrypted (~7.5 bits/B, no `Item_Data` parse). KDF family/salt/iv still open → 1D |
 | Q5 | 2FA behavior: `otp` field use, `ERROR_AUTH_REQUIRES_OTP` trigger | run 2 (only if a test account with OTP exists) |
-| Q6 | Token renewal (`RenewalTokenLogin`, `otp_renewal_token`, `device_id`) | run 6 |
-| Q7 | `globalversion` semantics (incremental vs full sync) | diff run 3 vs runs 4–5 |
+| Q6 | Token renewal (`RenewalTokenLogin`, `otp_renewal_token`, `device_id`) | run 6 (not yet observed) |
+| Q7 | `globalversion` semantics (incremental vs full sync) | **run6 partial**: each `synchronizeItems` push returns a new `globalversion` (looks incremental) |
 
 Pace requests like the screenshare probes if replaying manually — flood
 protection (`error id=524`, 10 s lockout) is a voice-server mechanism, but the
