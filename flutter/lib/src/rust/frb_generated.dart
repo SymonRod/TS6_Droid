@@ -178,6 +178,7 @@ abstract class RustLibApi extends BaseApi {
     required TsClient that,
     required String name,
     required int bitrate,
+    required bool audio,
   });
 
   TsSnapshot crateApiTsClientSnapshot({required TsClient that});
@@ -933,6 +934,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required TsClient that,
     required String name,
     required int bitrate,
+    required bool audio,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -944,6 +946,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
           sse_encode_String(name, serializer);
           sse_encode_u_32(bitrate, serializer);
+          sse_encode_bool(audio, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -956,7 +959,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateApiTsClientSetupStreamConstMeta,
-        argValues: [that, name, bitrate],
+        argValues: [that, name, bitrate, audio],
         apiImpl: this,
       ),
     );
@@ -965,7 +968,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiTsClientSetupStreamConstMeta =>
       const TaskConstMeta(
         debugName: "TsClient_setup_stream",
-        argNames: ["that", "name", "bitrate"],
+        argNames: ["that", "name", "bitrate", "audio"],
       );
 
   @override
@@ -3070,14 +3073,19 @@ class TsClientImpl extends RustOpaque implements TsClient {
   Future<void> setOutputMuted({required bool muted}) => RustLib.instance.api
       .crateApiTsClientSetOutputMuted(that: this, muted: muted);
 
-  /// Publishes a P2P screen share (video only). The server assigns the id; it
-  /// arrives with `StreamsChanged` as a stream owned by us.
-  Future<void> setupStream({required String name, required int bitrate}) =>
-      RustLib.instance.api.crateApiTsClientSetupStream(
-        that: this,
-        name: name,
-        bitrate: bitrate,
-      );
+  /// Publishes a P2P screen share. `audio` announces an audio track so viewers show
+  /// their volume control. The server assigns the id; it arrives with `StreamsChanged`
+  /// as a stream owned by us.
+  Future<void> setupStream({
+    required String name,
+    required int bitrate,
+    required bool audio,
+  }) => RustLib.instance.api.crateApiTsClientSetupStream(
+    that: this,
+    name: name,
+    bitrate: bitrate,
+    audio: audio,
+  );
 
   TsSnapshot snapshot() =>
       RustLib.instance.api.crateApiTsClientSnapshot(that: this);

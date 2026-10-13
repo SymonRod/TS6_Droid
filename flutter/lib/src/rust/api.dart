@@ -8,7 +8,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'api.freezed.dart';
 
-// These functions are ignored because they are not marked as `pub`: `conv_channel`, `conv_event`, `conv_state`, `conv_stream`, `conv_user`, `err`
+// These functions are ignored because they are not marked as `pub`: `conv_channel`, `conv_event`, `conv_state`, `conv_stream`, `conv_user`, `disconnect_all`, `err`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Handle`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
@@ -88,9 +88,14 @@ abstract class TsClient implements RustOpaqueInterface {
 
   Future<void> setOutputMuted({required bool muted});
 
-  /// Publishes a P2P screen share (video only). The server assigns the id; it
-  /// arrives with `StreamsChanged` as a stream owned by us.
-  Future<void> setupStream({required String name, required int bitrate});
+  /// Publishes a P2P screen share. `audio` announces an audio track so viewers show
+  /// their volume control. The server assigns the id; it arrives with `StreamsChanged`
+  /// as a stream owned by us.
+  Future<void> setupStream({
+    required String name,
+    required int bitrate,
+    required bool audio,
+  });
 
   TsSnapshot snapshot();
 

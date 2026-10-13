@@ -58,7 +58,7 @@ class StreamBroadcaster extends ChangeNotifier {
       debugPrint('share: capture audioTracks=${cap.getAudioTracks().length}');
       _capture = cap;
       cap.getVideoTracks().first.onEnded = () => stop();
-      await _client.setupStream(name: name, bitrate: _bitrate);
+      await _client.setupStream(name: name, bitrate: _bitrate, audio: withAudio);
       _setupTimeout = Timer(const Duration(seconds: 10), () {
         if (state == ShareState.starting) _fail('setup_timeout');
       });
