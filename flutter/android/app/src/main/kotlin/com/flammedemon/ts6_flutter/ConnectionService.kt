@@ -43,6 +43,9 @@ class ConnectionService : Service() {
         }
         /** Adds/removes the mediaProjection FGS type; call after the capture consent, before capturing. */
         fun setProjection(ctx: Context, on: Boolean) {
+            // Not running (e.g. teardown after disconnect): starting it would never reach
+            // startForeground() and Android kills the process.
+            if (instance == null) return
             ctx.startForegroundService(
                 Intent(ctx, ConnectionService::class.java).setAction(ACTION_PROJECTION).putExtra("on", on))
         }
