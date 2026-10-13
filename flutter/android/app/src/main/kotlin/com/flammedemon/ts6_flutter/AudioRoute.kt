@@ -20,6 +20,7 @@ class AudioRoute(private val context: Context) {
     private val main = Handler(Looper.getMainLooper())
     private var selectedId: Int? = null
     private var started = false
+    private var retries = 0
     private var prevMode = AudioManager.MODE_NORMAL
 
     /** (available devices, active id, auto). Always invoked on the main thread. */
@@ -70,7 +71,11 @@ class AudioRoute(private val context: Context) {
     private fun candidates(): List<AudioDeviceInfo> {
         val all = if (Build.VERSION.SDK_INT >= 31) am.availableCommunicationDevices
         else am.getDevices(AudioManager.GET_DEVICES_OUTPUTS).toList()
-        return all.filter { it.type in SUPPORTED }.distinctBy { it.id }
+        val ok = all.filter { it.type in SUPPORTED }.distinctBy { it.id }
+        // One physical Bluetooth device can show up as both BLE and SCO: keep only the preferred one.
+        val bt = setOf(AudioDeviceInfo.TYPE_BLUETOOTH_SCO, AudioDeviceInfo.TYPE_BLE_HEADSET)
+        return ok.sortedBy { AUTO_ORDER.indexOf(it.type).let { i -> if (i < 0) Int.MAX_VALUE else i } }
+            .distinctBy { if (it.type in bt) "bt:" + (it.productName?.toString() ?: it.address) else "id:${it.id}" }
     }
 
     private fun pick(list: List<AudioDeviceInfo>): AudioDeviceInfo? {
@@ -85,7 +90,12 @@ class AudioRoute(private val context: Context) {
         if (selectedId != null && list.none { it.id == selectedId }) selectedId = null
         val target = pick(list)
         if (Build.VERSION.SDK_INT >= 31) {
-            if (target != null) am.setCommunicationDevice(target) else am.clearCommunicationDevice()
+            if (target != null) {
+                if (am.communicationDevice?.id != target.id && !am.setCommunicationDevice(target)) {
+                    // Bluetooth profile not ready yet right after connecting: retry shortly.
+                    if (retries++ < 8) main.postDelayed({ apply() }, 500)
+                } else retries = 0
+            } else am.clearCommunicationDevice()
         } else {
             val sco = target?.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO
             @Suppress("DEPRECATION")
