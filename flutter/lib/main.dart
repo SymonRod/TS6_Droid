@@ -1,3 +1,4 @@
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -54,12 +55,14 @@ class TsApp extends ConsumerWidget {
   const TsApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => MaterialApp.router(
-        title: 'TS6 Droid',
-        theme: buildTheme(Brightness.light),
-        darkTheme: buildTheme(Brightness.dark),
-        routerConfig: ref.watch(routerProvider),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
+  Widget build(BuildContext context, WidgetRef ref) => DynamicColorBuilder(
+        builder: (light, dark) => MaterialApp.router(
+          title: 'TS6 Droid',
+          theme: buildTheme(Brightness.light, dynamic: light?.harmonized()),
+          darkTheme: buildTheme(Brightness.dark, dynamic: dark?.harmonized()),
+          routerConfig: ref.watch(routerProvider),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
       );
 }
