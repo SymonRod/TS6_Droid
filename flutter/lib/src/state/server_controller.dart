@@ -188,6 +188,8 @@ class ServerController extends Notifier<ServerState> {
           await disconnect();
         case 'muteToggleRequested': // notification button
           if (state.status == ConnStatus.connected) await toggleMute();
+        case 'screenShareEnded': // stopped from the system UI, not from the app
+          await broadcaster?.stop();
         case 'voiceActivity': // capture-thread level detector (visual only)
           _voice = call.arguments == true;
           _syncLocalTalking();

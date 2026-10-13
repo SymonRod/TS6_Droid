@@ -19,6 +19,8 @@ import java.nio.ByteBuffer;
  */
 public class SystemAudioCapture {
     private static final String TAG = "SystemAudioCapture";
+    /** Called when the user stops the capture from the system (chip/notification). */
+    public static volatile Runnable onProjectionStopped;
     private static volatile AudioRecord record;
     private static int recordRate, recordChannels;
 

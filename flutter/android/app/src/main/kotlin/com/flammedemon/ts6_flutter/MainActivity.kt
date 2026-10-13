@@ -34,6 +34,9 @@ class MainActivity : FlutterActivity() {
         ConnectionService.onDisconnectRequested = {
             runOnUiThread { ch.invokeMethod("disconnectRequested", null) }
         }
+        com.cloudwebrtc.webrtc.SystemAudioCapture.onProjectionStopped = Runnable {
+            runOnUiThread { ch.invokeMethod("screenShareEnded", null) }
+        }
         ConnectionService.onMuteToggleRequested = {
             runOnUiThread { ch.invokeMethod("muteToggleRequested", null) }
         }

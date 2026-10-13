@@ -541,6 +541,8 @@ public class GetUserMediaImpl {
                             @Override
                             public void onStop() {
                                 super.onStop();
+                                Runnable r = SystemAudioCapture.onProjectionStopped;
+                                if (r != null) r.run();
                                 // After Huawei P30 and Android 10 version test, the onstop method is called, which will not affect the next process,
                                 // and there is no need to call the resulterror method
                                 //resultError("MediaProjection.Callback()", "User revoked permission to capture the screen.", result);
