@@ -425,20 +425,34 @@ class ServerController extends Notifier<ServerState> {
     }
   }
 
-  /// Local deafen: stops playback of everyone else (and mutes the mic while on).
-  Future<void> toggleDeafen() async {
+  bool _micWasOnBeforeDeafen = false;
+
+  /// Deafen: stops local playback, tells the server (client_output_muted) and,
+  /// like the official client, mutes the mic while on; the mic is restored on
+  /// undeafen if it was active before.
+  Future<void> toggleDeafen({bool restoreMic = true}) async {
     final d = !state.deafened;
+    if (d) _micWasOnBeforeDeafen = !state.muted;
     state = state.copyWith(deafened: d);
     try {
       await _audioChannel.invokeMethod('setDeafened', {'deafened': d});
+      await _client?.setOutputMuted(muted: d);
     } catch (e) {
       state = state.copyWith(error: cleanError(e));
     }
-    if (d && !state.muted) await _applyMuted(true);
+    if (d) {
+      if (!state.muted) await _applyMuted(true);
+    } else if (restoreMic && _micWasOnBeforeDeafen && !state.ptt) {
+      await _applyMuted(false);
+    }
   }
 
   Future<void> toggleMute() async {
-    if (state.deafened && state.muted) await toggleDeafen();
+    if (state.deafened) {
+      // Enabling the mic while deafened also undeafens (mic stays as requested).
+      await toggleDeafen(restoreMic: false);
+      if (!state.muted) return;
+    }
     await _applyMuted(!state.muted);
   }
 

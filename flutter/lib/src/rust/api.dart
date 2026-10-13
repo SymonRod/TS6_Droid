@@ -70,6 +70,8 @@ abstract class TsClient implements RustOpaqueInterface {
 
   Future<void> setInputMuted({required bool muted});
 
+  Future<void> setOutputMuted({required bool muted});
+
   TsSnapshot snapshot();
 
   /// Blocks until the initial state sync is done.
