@@ -21,13 +21,22 @@ public class DumpAsm extends GhidraScript {
     @Override
     public void run() throws Exception {
         long[] decompileTargets = {
-            0x01de6d00L,
+            0x023FD779L, // write sink (run32/36 sender spine)
+            0x023F1E26L,
+            0x023F0043L,
+            0x023EFEC7L,
+            0x023A723FL, // upper variant A (597B write path)
+            0x023A7154L,
+            0x0239D495L,
+            0x0232426BL,
+            0x0233788BL,
+            0x02337A5DL,
+            0x01DC6F6AL, // upper frames above 0x2337A5D
+            0x01DD65A5L,
         };
 
         // {startOffset, endOffsetExclusive} ranges to disassemble raw.
         long[][] asmRanges = {
-            {0x01de6d00L, 0x01de6d80L},   // FUN_01de6d00 entry (ABI at entry)
-            {0x01de5460L, 0x01de54c0L},   // call site in FUN_01de5430 (approx, adjust if needed)
         };
 
         FunctionManager fm = currentProgram.getFunctionManager();

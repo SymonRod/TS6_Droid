@@ -425,7 +425,581 @@ logged-in session** from this run (today's date) — reuse it for any future
 capture that doesn't require re-login. The pre-run13 session is preserved in
 `captures/myts/profile-backup-20261013-204929/` if needed for comparison.
 
-## Tools (in `tools/myts/`, **not committed yet**)
+## run14 (2026-10-13): fresh-login RPC capture — `login` bypasses the hooked POST
+
+Goal: run13 rec step 1 — capture the real `login` RPC during a fresh login.
+Profile wiped (backed up to `profile-backup-run14-20261013-210348`),
+`gdb_capture.py` with `MYTS_RUN=run14`, user logged in by hand with the
+throwaway account (success confirmed, fresh `AccountData` + `ProtobufItems`
+in the profile afterwards). gdb stopped cleanly after; normal instance
+untouched.
+
+- **Negative result: 13 RPCs captured, zero `login` / `requestAuthToken` /
+  `session` on `/authentication`.** First REQ (~26 s after arming, right at
+  login) is already `requestServerItems` carrying a valid session. The login
+  RPC does **not** go through the `com::teamspeak::rpc::Channel` worker POST
+  at `0x1dfd82a` — same hook that catches every other RPC. Hypotheses (not
+  yet tested): a different native HTTP client/call site, or a CEF/website
+  flow (`www.myteamspeak.com/api`) with tokens handed to the native layer.
+- **Positive side (fresh-sync ground truth):** `requestServerItems` with
+  `globalversion: 00000000-0000-0000-0000-000000000000` (zero UUID = no
+  cursors); **`sync_version: V1_1` on every sync RPC** — the app sends
+  `DEFAULT` (`MyTsViewModel.kt` `LOGIN_SYNC_VERSION`), fix to `V1_1`.
+  New methods observed: `getContactList`, `requestContactsAvatar` (carries
+  `AvatarRequestID` packed as `Any`). One fresh `synchronizeItems` CONFIG
+  push (355 B blob) — new encrypted sample with known-default content.
+  `getSignedBadges` replies parse as empty or fail — same per-thread
+  mis-pairing limit as run6, don't trust those pairings.
+- **Next:** (a) find the real login path — strings/Ghidra for the
+  `www.myteamspeak.com/api` login call site or other HTTP POST sites;
+  (b) static forward trace from the confirmed demangled anchors
+  `Account_Manager_Impl::setup_sync_account_using_authentication_token`,
+  `request_password_from_user`, `LoginDataJson` (all present in the binary);
+  (c) one-line app fix: `LOGIN_SYNC_VERSION = V1_1`.
+
+## run15 (2026-10-13): ts3cloud-xref hunt + bridge table decode — login entry narrowed
+
+Q: where does the native `login` go, given run14 proved it bypasses the
+hooked Channel POST? Two headless runs on the existing Ghidra project
+(`tools/ghidra_scripts/FindTs3CloudXrefs.java`, kept; `DumpAsm.java`
+retargeted, disposable ranges).
+
+- `application/ts3cloud` has exactly **one** code xref: `0x1efd816` in
+  `FUN_01efd410` (the Channel wrapper feeding the hooked worker). So there
+  is a single native ts3cloud sender — login uses no native ts3cloud HTTP.
+- `loginAccount` lives in the rodata bridge-name table next to
+  `getMytsAccountState`, `tschat_addIdentifier`, … with xrefs from the two
+  known registrars (`FUN_01aa5d20`, `FUN_01c7cb10`). Decoded entry shape
+  (stack-built short `std::string` + numeric id, id passed *after* the name):
+  `getMytsAccountState→201`, `tschat_addIdentifier→385`, … — a
+  name→id dispatch table for `tsclient_internal.*`, handlers resolved by id
+  elsewhere (not at the registration site, so no handler pointer to lift
+  here). The 16-byte `MOVUPS` + overlapping dword (last xmm byte redundant)
+  is compiler padding, not content.
+- No code loads the `loginAccount` bytes at `0x5e7170` itself, so its entry
+  is registered elsewhere or by id — static bridge-following stalls here;
+  not worth another run7-style sink.
+- Tooling note: Ghidra link addr = file offset + `0x100000` (verified on
+  `loginAccount`, `getAccountHashedPassword`; the ts3cloud string definition
+  starts one byte early at `...c0`). Use `addr - 0x100000` for `dd`/grep.
+- **Next (dynamic, no profile wipe): memory-scan for the known 48-byte wire
+  value.** It is live in the run14 session heap (Account/LoginData buffers).
+  New script: scan heap for the pattern after login, plant read/write
+  watchpoints on hits adjacent to account context, have the user log out +
+  log in again, catch the writer with a backtrace — that site is the KDF
+  output store (or a copy one frame below it). Watchpoint budget (4 debug
+  regs) is fine; value bytes never leave `captures/`.
+
+## run16–18 (2026-10-13): value-watch strategy — tooling post-mortem, strategy retired
+
+Idea: scan the logged-in heap for the known 48-byte wire value
+(`tools/myts/gdb_pwscan.py`, pattern extracted pre-launch into an ephemeral
+112 B file, shredded after; never logged), plant hardware *write*
+watchpoints, catch the KDF's writer at the next logout+login.
+
+- Scan itself works: `find` covers ~1000 MB in <1 s; 24–26 ascii + 19–21 raw
+  hits per run. Heap context hashes **recur across runs** (`6666a072`,
+  `388217ff` at different ASLR addresses) — the at-rest Account buffer
+  fingerprint, reusable without any watchpoint. Stacks show ascii+raw pairs
+  16 B apart (transient RPC-serialization copies).
+- Watchpoints don't: (a) first attempt armed stack/transient hits and left
+  failed `Watch` objects that poisoned resume ("too many breakpoints",
+  process died); (b) the stack filter `(addr >> 48) == 0x7fff` never matches
+  48-bit addresses — stacks were never excluded; (c) `self.delete()` of the
+  trigger inside its own stop handler **segfaults gdb** (coredumpctl:
+  `/usr/bin/gdb SIGSEGV`, twice); (d) even heap insertions are racy on this
+  ~100-thread Chromium target.
+- Mechanistic verdict (beyond tooling): an at-rest Account copy's writer is
+  the login *save* path, not the KDF — catching it would not yield the
+  transform. Retire this strategy; keep the ctx-hash fingerprints and the
+  `gdb_pwscan.py` scanner (fixed filter/deletion) for buffer location only.
+
+## run19 (2026-10-13, in progress): login goes through Boost.Beast, not httplib
+
+Reading file bytes around the `loginAccount` bridge-name table (Ghidra addr
+minus `0x100000` slide) shows a packed NUL-separated name table, and right
+next to it the real discovery: the binary vendors **Boost.Beast** HTTP
+(`Beast_Downloader`, `ui::s3::DownloaderHandler`,
+`ui::decentral::Downloader`, `updater::Downloader`) — the second native HTTP
+stack run14/15 were missing. `https://www.myteamspeak.com/api/` is in the
+binary (only website-API URL besides communities/register links, which
+`main.js` never fetches). Working hypothesis: native login = Beast POST to
+the website API, carrying the wire password; the KDF sits 1–2 caller levels
+above the send site.
+Next: xref hunt for `www.myteamspeak.com/api/`, `No myts authentication
+token`, table base `ActivateReply` (same headless pattern) → DumpAsm the
+send site → run6-style plaintext capture at the Beast layer during a fresh
+login (answers Q1 + confirms wire value/framing) → trace callers backward
+to the KDF.
+
+Outcome (run19b–e): the `api/` URL sits in an **upload-flavored string
+table** (`s3UploadDone`, `contentLength` neighbors) consumed through a
+`{ptr,len}` string_view table inside `FUN_01c31af0`'s range — the two "code"
+xrefs (`0x1c3289f/0x1c32909`) are **data slots, not instructions** (file
+bytes are pointer/len pairs; DumpAsm correctly empty). So this site is the
+website-API *upload* client, not login. The auth-error fn `0x1a47105` is a
+2-line log stub with **zero callers** (dead/indirect — no static parent).
+Static table-forensics has hit diminishing returns (run7 pattern); stop here.
+**Next discriminator is metadata, not code: SNI capture.** At a fresh login,
+run `tcpdump -i any tcp port 443` (or 1 s `ss -tnp` sampling) and read the
+TLS ClientHello SNI / destination IPs: `www.myteamspeak.com` vs
+`clientapi.myteamspeak.com` vs other. No cert breaking, no gdb, no Ghidra —
+one session, decisive answer to "where does the login POST go", which then
+selects the hook (Beast write site vs Channel vs CEF). Needs a profile wipe
++ hand-typed throwaway login like run14.
+
+## run20 (2026-10-13): SNI discriminator — DONE, login = clientapi (+1 www precursor)
+
+Method (handoff plan, rootless variant): user installed tcpdump; capture ran
+under sudo in the user's own terminal
+(`sudo tcpdump -i any tcp port 443 -w captures/myts/run20.pcap`, PID 118033).
+Profile backed up (`profile-backup-run20-20261013-213100`) + wiped, isolated
+client launched plain (no gdb, PID 118141, environ-verified), user hand-typed
+the throwaway login. SNI parsed offline with a throwaway script
+(`/tmp/opencode/sni_parse.py`, handles SLL2/linktype 276 — plain `tcpdump -r`
+has no TLS dissector and tshark is not installed).
+
+Timeline (client start 21:31:01, login confirmed by user before 21:31:49):
+- 21:31:02 — startup burst: `ts3services`, `la.teamspeak.com`,
+  `files.teamspeak-services.com` (update/revocation checks).
+- **21:31:33 — exactly ONE `www.myteamspeak.com` connection.**
+- **21:31:34–36 — NINE `clientapi.myteamspeak.com` connections** (1 + 8
+  across two edge IPs). This 3 s burst is the only login-shaped cohort in the
+  window and starts 1 s after the www hit.
+- 21:31:51–52 — four more `clientapi` connections (post-login sync burst,
+  after the user had already reported success — consistent with run13/14's
+  `requestServerItems`/sync/user/tschat burst, not the login itself).
+- Rest of window: `badges-content` (173, Cloudflare-shared IP with chat),
+  `chat-5.tmspk.net` + `chat.teamspeak.com`, CEF/DoH noise
+  (`dns.google`, `cloudflare-dns.com`, `*.googleapis.com` — Chromium, not auth).
+
+Process attribution (post-hoc `/proc` socket walk, ESTABLISHED only): the
+short-lived login cohorts were already closed; isolated main (118141) still
+holds `chat-5.tmspk.net:443` (logged-in chat — confirms the login succeeded
+in the isolated profile), CEF network-service holds update/badge/google
+conns. So the www-vs-clientapi login cohort is **timing-attributed, not
+process-attributed** — keep that caveat.
+
+**Verdict:** the login POST goes to **`clientapi.myteamspeak.com`** (bulk),
+preceded 1 s earlier by a **single `www.myteamspeak.com` hit** (precursor:
+token page? version check? CEF?). The run19 "Beast → website API carries
+login" hypothesis is demoted but not dead — the www hit is real and
+login-adjacent. Run14 stands (Channel POST @0x1dfd82a carries no login), so
+the clientapi login sender is **Beast-native or the CEF network stack** —
+still to distinguish.
+
+**Next (no wipe needed): per-process connect logger.** New tiny LD_PRELOAD
+shim hooking `getaddrinfo`+`connect`, log-only, all processes incl. CEF
+children: have the user log OUT and back IN in the running isolated client
+(session logout → fresh login flow, no profile wipe) and see whether the
+clientapi login burst originates from the main process (native/Beast) or the
+`--type=utility …NetworkService` child (CEF). That selects the hook: Beast
+write site vs CEF network stack.
+
+Profile state: `captures/myts/profile/` = fresh run20 logged-in session;
+pre-run20 session in `profile-backup-run20-20261013-213100/`.
+Pcap: `captures/myts/run20.pcap` (root-owned, git-ignored). Parser kept only
+in /tmp (throwaway); re-create from this section if needed
+(SLL2 header = 20 B, then IPv4/TCP/TLS-ClientHello walk for ext type 0).
+
+## run21 (2026-10-13): per-process attribution — DONE, login is 100% native
+
+Tool: new log-only `LD_PRELOAD` shim `tools/myts/connwatch.c` (built to
+`captures/myts/connwatch.so`, git-ignored) hooking `getaddrinfo` (hostnames)
++ `connect` (IPv4), tagging `main=1` (browser process, no `--type=`) vs
+`main=0` (Chromium children). Zero redirect, login proceeds normally.
+User logged out in the run20 client (back to login screen, no wipe), isolated
+tree killed after environ-identity check (normal instance untouched),
+relaunched with the shim (`run21-conn.log`), user logged in again.
+
+Result (126 lines, login cohort fully inside):
+- **All myTeamSpeak resolutions come from the main process:** 1×
+  `www.myteamspeak.com`, 13× `clientapi.myteamspeak.com`, plus chat/push and
+  `update.teamspeak.com` — every one `main=1` (PID 121190, the browser
+  process). Each `clientapi` resolve is immediately followed by its connect:
+  resolve→connect pairs, native RPC shape, not a page load.
+- **The CEF NetworkService child (`--type=utility …NetworkService`) makes
+  zero myTeamSpeak connections** — only Google/Chromium IPs and the files
+  host. The `www` precursor is therefore also native code, not a CEF page.
+- Non-blocking `errno=115` (EINPROGRESS) on the connects is normal.
+
+**Verdict:** login is 100% native, and run14 already excluded the
+Channel/cpp-httplib sender — so the login POST goes through the **second
+native HTTP stack (Boost.Beast)**. Next: hook the Beast write/send site
+during a fresh login (run6-style plaintext capture at the Beast layer),
+which yields the real `login` RPC body + wire password framing (Q1) and,
+one caller level up, the KDF (1D).
+
+Profile state: `captures/myts/profile/` = fresh run21 logged-in session
+(logout+login cycle). run20 pcap + run21 conn log retained under
+`captures/myts/` (git-ignored).
+
+## run22 (2026-10-13): Beast send path narrowed statically — login reply handlers found, capture staged
+
+Static-only session (no launch/kill; live isolated tree PID 121190 + normal
+instance verified via `/proc/<pid>/environ`, md5 `8234f961…` re-confirmed).
+Eight headless runs on the existing Ghidra project (`-noanalysis`,
+disposable scripts in `/tmp/opencode/`, repo kept clean):
+
+- **Beast confirmed as the second native HTTP stack.** `boost::beast`
+  `write_op`/`serializer`/`ssl_stream<basic_stream<asio::ip::tcp…>>` RTTI
+  litters rodata (file `0x318xxx`); OpenSSL is **statically linked** (0 SSL
+  entries in dynsyms, no `libssl` dlopen) so send sites can't be enumerated
+  via imports — in-process gdb hooks only.
+- **REST endpoint table found.** A constructor-range function around
+  `0x1d8f030`–`0x1d8f700` builds 9+ URL `std::string`s into an object
+  (`RBX+0x00…`): `/authentication`, `/session`, `/synchronization`, `/user`,
+  `/addon`, `/integration`, `/messenger`, `/tschat` (all
+  `https://clientapi.myteamspeak.com/…`, exact lengths verified from file
+  bytes with the `link = file + 0x100000` slide). Tail calls client setup
+  `0x1e330d0` with the table. (Caveat: the Ghidra slide was verified for
+  LOAD0/rodata and `.text`; `.data.rel.ro` addresses need per-segment
+  mapping — see below.)
+- **Beast JSON reply callback reversed: `FUN_01dacba0 @ 0x1dacba0`.**
+  Entry found by backward RET scan from the `"data json: "` log site
+  (`0x1dad063`). Decompiled: async response handler, `status()` via vtable
+  `+0x20`, `== 200` → JSON parse (`FUN_0295fcc0`/`0295fc30`), logs
+  `"data json: <A> proto json: <B>"`, delivers to continuation at
+  `RDI+0x30` slot `+0x30`; else `"http status code: "` / `"invalid
+  response"` / `"empty response"`. So the account/sync lib speaks **JSON
+  over Beast** on at least some endpoints (alongside the ts3cloud Channel).
+  Note: no `"password"`/`"auth_token"` JSON key literals exist in the
+  binary — the login JSON key names (if any) are still unknown.
+- **40-entry handler table** (`{slot, 8, handler}` triples, file `0xb32c8`,
+  git-ignored scratch): maps response slots (`.data.rel.ro`
+  `0x3eff9a8…`, read back relocated via Ghidra memory) to sibling handlers
+  (`0x1dacab0`, `0x1dacb20`, `0x1dacba0`, `0x1dada30…0x1dadea0`, plus shared
+  `0x4005e50`/`0x4005e00` and `0x816xxx` entries). Our callback is index 2.
+  Zero *recorded* code refs (expected under `-noanalysis`); the request
+  (send) side binds these at runtime via vtable (`0x3eff9b8` DATA ref).
+- **Bridge thread (KDF approach):** `getAccountHashedPassword` bridge id =
+  `0x99` (153), registrar `0x1ab72f0` (disasm `0x1aa6d53…`, run15 shape
+  confirmed). Invoke forwarder `FUN_01acf7b0` decompiled: generic
+  continuation plumbing, not crypto — registrar path stays a sink, same as
+  run7 verdict.
+- **Staged, not yet run:** `tools/myts/gdb_beast.py` (new, compiles,
+  `MYTS_DRY` preflight passes) = run6 trio + log-everything breakpoints on
+  the handler block (`0x1dacab0…0x1dada90`, unknown ABI → dumps all six arg
+  regs as attempted strings/vectors + timestamps). Plan: gdb-launch a
+  **copy** of the isolated profile (`captures/myts/profile-run22/`,
+  already `cp -a`'d, 171 MB — live profile + normal instance untouched, no
+  wipe needed since logout+login replays the login flow per run21), user
+  logs out + back in with the throwaway account; timing correlation picks
+  the login handler, whose binder is the send site (one level down) and
+  whose request builder is one level up toward the KDF.
+- **Round 3 DONE (~21:55, fresh login in verified gdb client): 13 Channel
+  RPCs again, still zero HANDLER hits across all 31 slots.** Login
+  request+reply used none of: Channel POST, the 40-table handlers, the
+  Channel parse site. Static corollaries nailed in parallel: exactly ONE
+  code xref to `application/ts3cloud` in the whole binary (`0x1efd816`,
+  Channel) — Beast uses different framing; `application/octet-stream` /
+  `Content-Type: %s` refs are generic MIME/CEF tables, not the sender; the
+  `www` literals belong to the uploader (`FUN_01c31af0`) and misc bridges,
+  and all oauth/grant_type/form hits are vendored gRPC — www is a dead end
+  for the login body. The framing-error string has a single user too
+  (`FUN_01efd410`, Channel) — framing is descriptor-driven, so literal
+  hunting is exhausted; method names come from descriptors at runtime.
+- **Round 4 staged (`gdb_beast.py` + PARSE-ENTRY, `MYTS_RUN=run25`): stop
+  hunting the sender statically, catch the REPLY globally.** New
+  breakpoint at `ParseFromString` ENTRY (`0x289f050`, all stacks): saves
+  every 64B–16KB parse buffer (cap 5000, offline net) and runs a
+  dependency-free wire-shape match inline (`field1 bytes 40–80B +
+  field 2 printable 30–64B` = `LoginSession{key,session}`; self-tested
+  true-pos/neg). On a hit it logs lengths + `bt 25` — the backtrace IS the
+  Beast reply path; request builder/KDF follow statically from that class.
+  Needs: kill run24 gdb (verified), relaunch, user logs out+in (no wipe).
+- **Round 4-bis DONE (~22:00, fresh login, gdb 148205): global parse trap
+  caught the login TOKEN flow.** 105 parse dumps; offline wire-layout
+  triage (field#/type/length only, no values) shows: 4× `152B =
+  [(1,str:149B)]` token-textured (83%+ printable) parses at SEQ 8–11,
+  BEFORE the first Channel REQ — crisp `AuthTokenReply` shape
+  (`auth_token=1`, no field 2). Rest: badges mispairs (3756B), identity
+  crypto (331/332B: 64/32/112/33B fields), encrypted sync blobs (my walker
+  rejects = not protobuf at all — client trial-parses them, fails, treats
+  as encrypted; independent confirmation of §7), token-ish 246/307B
+  ambiguous. Crisp `LoginSession` (key~48 + session~36 + username) seen
+  NOWHERE — its reply either uses another parse entry or arrives as JSON.
+  `gdb_beast.py` matcher extended: `AUTH-REPLY` rule (f1 str 100–260B, no
+  f2) self-tested precise on round-4 bins (152✓, 246/307/badges/ident
+  correctly rejected). Round 5 = same trap, logout+login replay: the
+  AUTH-REPLY backtrace IS the Beast reply path.
+- **Round 5-bis HIT (run28, fresh login, gdb 153616): 4× AUTH-REPLY with
+  full backtraces.** Same 152B/149B token shape, thread 84, 1 ms apart
+  (one reply parsed through 4 tail-call-collapsed layers). Convergent
+  spine: `0x1d460b0` (in `FUN_01d45e10`) ← `0x1d4bade` ← `0x1d1d7ae` ←
+  `0x1d1c399` ← `0x1d1bbfd` ← `0x124623` ← `0x124111` ← `0x1cbb68e` ←
+  thread start; three leaf variants above the dispatcher. Static caveat:
+  0x1d4bade decompiles as a flock helper — function boundaries are
+  unreliable under `-noanalysis`, so the follow-up used raw disasm
+  windows, not decompiles (tail calls collapse frames; one retaddr even
+  lands mid-NOP).
+- **Round 6 staged (`MYTS_RUN=run29`): probe the dispatcher object.**
+  New breakpoints at dispatcher ENTRY (`0x1d45e10`, dumps regs + handler
+  object) and the post-parse point (`0x1d460b0`): each dumps
+  `[this-0x40, this+0x340)` raw to `.bin` plus a metadata-only log line
+  (offsets/lengths/short-hashes, never content) for every decodable
+  string/vector, plus a stack window. The request context (URL, method,
+  body, KDF-side continuation) should be reachable from that object.
+  Needs: kill run28 gdb (verified), wipe copy (logged-in launches hand
+  off — deterministic rule), relaunch, user fresh-logs-in.
+
+## Session close-out (2026-10-13 ~22:15, user stopped for the night)
+
+## run30 (2026-10-13 ~22:27): syscall-trap v1 — cap eaten by CEF/audio noise
+
+Same fresh-profile gdb pattern (`MYTS_RUN=run30` + `SSLKEYLOGFILE`), new
+`SendTrapBreakpoint` on libc `send`/`sendto`/`sendmsg` gated by
+`/tmp/myts-sendgate` (cap 400). Gate opened at login screen, user logged in.
+
+- **All 400 SEND hits fired within 0.4 s of gate-open, all noise:** main
+  thread hammering fd 188 with 112 B `send` (bt: `libcef.so` IPC) and thread
+  77 fd 127 (`pa_write`, pulseaudio). The real login POST (~4 s later, REQ
+  burst at +4.4 s) was never recorded — cap exhausted.
+- **Bonus: `SSLKEYLOGFILE` works** — client wrote TLS secrets from startup
+  (`run30-keys.log` 5 KB; +778 B over the run). Unproven whether it covers
+  the native Beast/OpenSSL stack or only CEF/BoringSSL — needs a pcap +
+  decrypt attempt (round 32 material, needs sudo tcpdump + TLS parser).
+- Fix for round 31 (in `gdb_beast.py`): bt taken first, hits whose bt
+  contains `libcef.so`/`libpulse`/`libasound`/`hotkey_helper` dropped
+  *uncounted*, cap raised to 5000. fd-watch extended with
+  `/proc/net/tcp{,6}` snapshots for fd→inode→IP mapping.
+
+## run29 (2026-10-13 ~22:20): round-6 dispatcher probe — AUTH-REPLY lead FALSIFIED
+
+Killed run28 gdb (verified `MYTS_RUN=run28`+profile-run22 in both envs;
+normal instance had meanwhile restarted itself as PID 167261 on the default
+profile — untouched), wiped `profile-run22/{config,cache}`, relaunched
+`MYTS_RUN=run29` with the dispatcher probe (`DISPATCH-ENTRY 0x1d45e10`,
+`DISPATCH-PARSE 0x1d460b0` + full trio/PARSE-ENTRY/31 HANDLERs — 37 armed,
+dry-run clean). Fresh profile stayed hooked (handoff rule holds, 4th
+confirmation). User fresh-logged-in (~66 s after start, post-login sync
+burst normal, first REQ already `requestServerItems`+valid session).
+
+- **Zero `DISPATCH-ENTRY`/`DISPATCH-PARSE` hits, zero `HANDLER` hits (0/31),
+  zero new `AUTH-REPLY`/`LOGIN-REPLY` at login time.** The Beast login
+  request+reply remains fully unhooked from every trap.
+- **The 4× 152B/149B "token" parses fired at STARTUP (+0.7 s), ~65 s BEFORE
+  the login, on a fresh-wiped profile that holds no session.** Byte-identical
+  (`cmp` clean, sha256 match) to run28's "login-time" token and across all 4
+  parses within run29. Spine converges with run28 (`0x1d460b0 ← 0x1d4bade ←
+  0x1d1d7ae ← …`, run29 just missing run28's tail-call leaf frames above the
+  parse entry). `0x1d460b0` appears as a *return address* in the spine yet
+  the breakpoint exactly there never fires — consistent with the run28
+  caveat (tail-call-collapsed frames, retaddr landing mid-function on a
+  branch that skips that exact instruction).
+- **Verdict: the AUTH-REPLY trail (rounds 4–5bis) chased a startup constant,
+  not the login token.** A session token cannot pre-exist its login on a
+  wiped profile; the matcher (`f1 str 100–260B, no f2`) is matching some
+  other baked-in single-field message (cert/key/signed blob) parsed 4×
+  through collapsed layers at every startup. Retire the AUTH-REPLY matcher
+  as a login signal; keep `ParseFromString`-ENTRY as a generic trap.
+- Standing: login = native main-process traffic to `clientapi` (run20/21),
+  Channel = post-login sync only, **both Beast send and Beast reply paths
+  still unhooked**. The `/authentication` URL table (`0x1d8f030`–`0x1d8f700`)
+  readers were never followed — best static lead left.
+- **Next (round 7) options:** (A) `SSLKEYLOGFILE` cheap test — plain (non-gdb)
+  launch with the env var, logout+login, check for a keylog file (iff the
+  static OpenSSL honors it); (B) gdb `catch syscall sendmsg/write` during the
+  login window with auto-bt — backtrace IS the Beast sender, then targeted
+  plaintext breakpoints at the serializer; (C, static, no user needed) follow
+  the `/authentication` table readers → send site → request builder → KDF;
+  (D) `LD_PRELOAD` sendmsg+getpeername logger for a precise login-send timing
+  map to guide (B). Recommend C now + A/B next login window.
+- Live state: run29 gdb client (PID 167661 under gdb 167636) LEFT RUNNING,
+  logged in, hooks live; normal instance (PID 167261, default profile)
+  untouched. `profile/` (run21 session) intact; `profile-run22/` = fresh
+  run29 logged-in session.
+
+## run31 (2026-10-13 ~22:29): syscall-trap v2 — ARMED, awaiting login
+
+Run30 killed (verified), profile-run22 wiped, `MYTS_RUN=run31` relaunched
+with the v2 trap (noise filter + cap 5000) + `SSLKEYLOGFILE=run31-keys.log`.
+Gate closed, fd-watch (fd + `/proc/net/tcp{,6}` snapshots) running. Same
+choreography: user reports login screen → gate opens → user logs in.
+
+## run31 results: login POST sends still absent
+
+34 native SENDs, all accounted for, none the login: ~30× 20 B `sendto`
+(DNS — proven: #001's bt is `sendto ← getaddrinfo` on thread 84, the
+Channel/RPC thread, 0.3 s before the post-login sync burst; the migrating
+fds/threads across the login window = the run21 resolve burst) + 4×
+`sendmsg` fd 234 (rdx shown is `MSG_NOSIGNAL`, length unknown; main-binary
+frames `0x58c8xxxx`, unrelated region — likely voice/crashpad, TBD).
+**Zero TLS app-data-sized sends between gate-open and the REQ burst** —
+the login POST used none of `send`/`sendto`/`sendmsg`, or its bt was
+dropped by the libcef noise filter. Open: `write`/`writev`/`sendmmsg`
+(unhooked), or sender inside browser-process libcef net (filtered).
+Keylog at 17 entries, coverage still unproven (needs pcap + decrypt).
+
+## run32 results (2026-10-13 ~22:35): sender path CAUGHT, client DoS'd by own traps
+
+v3 (write/writev/sendmmsg + CEF split cap) captured the live TLS sender:
+thread-84 `write` bursts on fresh fds (`sendmmsg vlen=2 → sendto 20B DNS →
+`write 334/340 → 80 → 176-250 → 24`) = per-connection TLS handshake+POST,
+right before the Channel REQ burst. Backtraces give real sender frames:
+`write ← 0x7951779 ← 0x7945e26 ← 0x7944043 ← 0x7943ec7 ← …` (two upper
+variants: `0x7941159…` vs `0x78fb23f…`) — static DumpAsm follow-up pending.
+BUT the traps also machine-gunned the client: thread-58 `write fd=187
+798B` background loop (bt `← 0x688ef38 ← 0x688ebe2 ← …`, pre-login,
+unrelated) ate 4758/5000 native slots in 11 s; the all-stop storm stalled
+TLS handshakes → server timeouts → `moveHome` retry loop (244×, unique to
+run32 — run29/31 clean) = the user's "error in continuazione". Added
+`0x688ef38` to the noise filter.
+
+## run33/35 (2026-10-13 ~22:36-22:43): startup SIGABRT ×4 — diagnosed
+
+Full-trap launches aborted deterministically at +0.6 s (`mutex lock
+failed: Invalid argument`, thread 75/76, pre-parse). Plain launch (same
+wiped profile) and minimal-script launch (run34, trio only) both survive —
+ruling out environment/profile. Abort-bt hook (new `on_stop` SIGABRT →
+`runXX-abort-bt.log`) showed only terminate frames (`← 0x59296316…`).
+Root cause: the send/write trap STORM during startup (10k+ all-stop hits/s
+while threads spawn) — run32 survived it once by scheduler luck. Fix (in
+`gdb_beast.py`): send-traps planted DISABLED, enabled 60 s later via
+`gdb.post_event` from a daemon thread (`MYTS_SEND_DELAY`, logged
+"SENDTRAP opens in 60s"). run36 proves it: 0 aborts, startup parses normal.
+
+## run38 (2026-10-13 ~23:07): decrypt path — BUILT, TESTED, VERDICT: DEAD FOR LOGIN
+
+Plain launch (reliable, zero errors) + `SSLKEYLOGFILE` + user-run
+`sudo tcpdump -i any tcp port 443` (22 MB, 28.6k pkts, 562 streams).
+New tool `tools/myts/tls_decrypt.py` (pcap/SLL2 + TCP reassembly + SNI +
+TLS-1.3 trial-decrypt with TRAFFIC_SECRET_0, metadata-only log):
+selftested (RFC 5869 PRK, manual-vs-lib KDF cross-check, AES-GCM
+round-trip, synthetic SNI) and debugged on the real capture — fixed 2
+genuine bugs found along the way (pcap endian branches swapped;
+HKDF-Expand-Label length field must be the OUTPUT length, caught only by
+the cross-check since round-trips hide it).
+Result: **0 streams decrypt** — including the small clean `dns.google`
+DoH stream as control. `strings` settles it: the main binary has NO
+`SSLKEYLOGFILE` support (only CEF/BoringSSL logs; the binary's keylog
+strings are a gRPC-test stub + an "Ignoring TLS Key logging" error
+template). The 7 logged conns are CEF contexts (DoH excluded) — **native
+Beast/OpenSSL conns are never logged, so this path cannot yield the
+login**. Retire; keep the tool (works, may serve CEF traffic later).
+
+## TOMORROW (next session entry point)
+
+Goal unchanged: login request body + wire-password framing (Q1) + KDF (1D).
+1. **Primary: gdb REQPATH late-open round** — script ready
+   (`gdb_beast.py`: REQPATH entries 0x239B7F0/0x2336600, planted disabled,
+   open at +60 s with send-traps; CEF thread-1 IPC filter; loop filter;
+   abort-bt hook). Needs ONE fresh login. If the +0.6 s SIGABRT streak
+   persists, bisect by dropping the 31-HANDLER block first (biggest
+   early-planted delta never isolated), then DISPATCH/PARSE-ENTRY.
+2. **No-user parallel: static upward walk** — `FindCallers.java` on
+   0x2336600/0x239B7F0 in `captures/myts/ghidra` (request builder above
+   the state machine; upward tail-call gap noted — walk CALLERS, not
+   callees). Needs no login, no window.
+3. Reference: live sender spine `write ← 0x7951779 ← 0x7945e26 ←
+   0x7944043 ← 0x7943ec7 ← 0x78fb23f ← … ← 0x732a5a5` (run36); cluster
+   identified as static-OpenSSL TLS (SHA-256 compress @ FUN_023f10a0,
+   EVP-digest plumbing, handshake state machine @ FUN_02336600).
+   AUTH-REPLY matcher retired (startup constant). Keylog/pcap retired.
+Live state: all gdb/headless dead; run38 plain killed (verified);
+normal instance untouched; `profile/` (run21 session) intact;
+`profile-run22/` = run38 logged-in session (stale, wipe next round).
+
+## run37 (2026-10-13 ~22:53-23:05): abort streak — PIVOT to decrypt path
+
+2/2 launches aborted at +0.6 s with the storm-guard config (REQPATH
+planted-disabled). run37#2 ≡ run36 + two INERT disabled breakpoints, yet
+run36 survived — the abort is not script-determined (the only delta, a
+noise string + disabled bps, never executes pre-gate). Scorecard:
+survivors run29/30/31/32/34/36/plain, aborters run33×3/35/37×2. Gdb path
+now unreliable (5/6 aborts); stop burning logins on it.
+PIVOT (decided): plain launch (proven reliable) + `SSLKEYLOGFILE` (proven:
+run36 keylog holds 8–9 full TLS-1.3 secret sets incl. EARLY + EXPORTER) +
+user-run `sudo tcpdump -i any tcp port 443` (run20 pattern) → offline
+TLS-1.3 decrypt in Python (`cryptography` 50.0.1 present; no dpkt — hand-roll
+pcap/SLL2 + record parsing, ~150 lines: reassemble TCP, SNI-filter
+clientapi, trial-decrypt 0x17 records with TRAFFIC_SECRET_0-derived
+key/iv, per-direction seq from 0). If native Beast conns are covered by the
+keylog, this yields the login HTTP request+response plaintext directly —
+same prize as the traps, zero client disturbance, zero error windows.
+Needs: ONE plain fresh-login round (run38) with pcap. No gdb, no gate,
+no choreography timing — user just logs in whenever.
+
+## run36 (2026-10-13 ~22:46): storm-guard build — CLEAN LOGIN, sender spine live
+
+Survived startup (0 aborts), user logged in with NO errors (storm-guard +
+loop filter fix the run32 DoS). Thread-85 `write` bursts again on fresh
+fds; a **597 B app-data write** (fd 198, mid-sync — likely the
+`synchronizeItems` CONFIG push, not the login) gave the full 13-frame
+sender spine: `write ← 0x7951779 ← 0x7945e26 ← 0x7944043 ← 0x7943ec7 ←
+0x78fb23f ← 0x78fb154 ← 0x78f1495 ← 0x787826b ← 0x788b88b ← 0x788ba5d ←
+0x731af6a ← 0x732a5a5`. Pre-REQ login bursts (fd 186 @+3.9 s, handshake
+sizes only — the POST may itself be a ~300 B write: 334/250/176) still
+unattributed byte-wise. fd numbers recycle per connection (fd 198 inode
+changed across snapshots; fd 186/235 too short-lived to sample) —
+consistent with Beast short-conns. CEF-SEND cap (300) again eaten in 1 s
+by thread-1 IPC — added thread-1 IPC-size filter for next round.
+Static follow-up LAUNCHED: `DumpAsm.java` retargeted at the 12 sender
+frames (`run36-decompile.log`, background headless) → identify functions →
+request builder → plaintext breakpoint next round.
+Live state: run36 gdb client logged in, hooks live; normal instance
+untouched.
+
+## run32 (2026-10-13 ~22:35): send-trap v3 — ARMED, awaiting login
+
+v3: +`write`/`writev`/`sendmmsg` traps; libcef frames no longer dropped but
+logged under a separate 300-slot `CEF-SEND` cap (answers "browser-process
+libcef?" without drowning natives); audio/hotkey still dropped. fd-watch
+now snapshots `udp{,6}` too. Same gate choreography.
+
+## Session close-out (2026-10-13 ~22:15, user stopped for the night)
+
+- **Run28 gdb client (round 5-bis) LEFT RUNNING, logged in, hooks live**
+  (verify via `/proc/<pid>/environ`: `MYTS_RUN=run28`,
+  `XDG_CONFIG_HOME=…/profile-run22/config` before touching). Normal
+  instance (`/usr/bin/teamspeak`, default profile) runs alongside. The
+  original isolated tree (121190) was closed by the user; its on-disk
+  profile (`captures/myts/profile/`, run21 session) is intact, never wiped.
+- **Round 6 is STAGED but NOT RUN** (`gdb_beast.py` + dispatcher probe,
+  `MYTS_DRY` passes): kill run28 gdb (verified) → wipe `profile-run22`
+  (mandatory — logged-in launches hand off) → relaunch `MYTS_RUN=run29`
+  → verify hooked → user fresh-logs-in. Then read
+  `run29-*-obj.bin` (request context) + `AUTH-REPLY` bt flow as before.
+- Standing results: login = 100% native main-process Beast traffic to
+  `clientapi` (run20/21); Channel carries only post-login sync (runs
+  6/14/22/24/26/28); token-reply path pinned with backtraces (run28);
+  ts3cloud/framing-error literals are Channel-only; 40-entry handler
+  table mapped; bridge id 153; KDF (1D) still open — request body +
+  wire-password framing still uncaught (rounds 1–5bis).
+- **Deterministic launch rule found (rounds 2/4/5 vs 1/3/4-bis): logged-in
+  profile-run22 + gdb-launch = parent "exited normally" + unhooked twin
+  survives; fresh-wiped profile-run22 = stays under gdb.** Three
+  reproductions of the handoff (run23→133451, run25→145777, run27→151812,
+  each PPID 7105, each on a logged-in copy). So logout+login replays are
+  NOT capturable this way — every trap round must be a FRESH login
+  (wipe copy, launch, user logs in). Round-4-bis proved fresh logins emit
+  the 152B token parses, so the AUTH-REPLY trap will fire there.
+- **Capture FAILED twice, zero hits (user-approved, 2026-10-13 ~21:47).**
+  Attempt 1: gdb client exited normally instantly — the `cp -a`'d live
+  profile carried Chromium `SingletonLock/Socket/Cookie`, single-instance
+  trip. Attempt 2 (locks removed from the copy only): client aborted in
+  early startup (`libc++abi: std::__1::system_error: mutex lock failed`,
+  SIGABRT, coredump present) before any RPC thread ran — no REQ/HANDLER/
+  PARSE fired. Live isolated tree (121190) + normal instance untouched.
+  Prime suspect: copying a *live* Chromium profile mid-write (SQLite WAL)
+  leaves inconsistent state. Fix staged for next round: fresh empty
+  `profile-run22/{config,cache}` (copy is disposable; live profile intact)
+  + identical gdb net — i.e. the run14/run20 wipe pattern, which worked.
+- **Round 1 DONE with fresh profile (~21:50, user fresh-login, gdb
+  131363): 13 Channel RPCs, login itself missed.** Fresh-profile client
+  stayed up; user logged in by hand. `run22-*.bin` = textbook post-login
+  sync burst, run14-shaped: first REQ already `requestServerItems` with
+  zero-UUID `globalversion` + valid session, `sync_version: V1_1`
+  everywhere, one CONFIG `synchronizeItems` push (encrypted blob), then
+  integration/user/tschat pulls (same per-thread reply mis-pairing as
+  run6 — some `.resp.bin` don't parse, don't trust those pairings).
+  **Zero HANDLER hits** out of 9 hooked: the login request+reply used none
+  of the hooked slots — it went through one of the ~31 other table entries
+  (or a non-JSON Beast reply path). Next: `gdb_beast.py` widened to all 24
+  `0x1daxxx` table handlers + `0x1332F30` + `0x816xxx` (arm failures now
+  tolerated/skipped), relaunch, user logs out+in again in the new window.
+
+## Tools (in `tools/myts/`, committed in `5492833`)
 
 - `capture_addon.py` — mitmproxy addon, dumps TeamSpeak-host flows and names
   the RPC. `MYTS_RUN=runN mitmdump --listen-host 127.0.0.1 --listen-port 8089
@@ -443,6 +1017,11 @@ capture that doesn't require re-login. The pre-run13 session is preserved in
   proxy, main process only, `MYTS_SHIM_LOG` for per-connect logging. Build:
   `gcc -shared -fPIC -O2 -o captures/myts/connect_shim.so
   tools/myts/connect_shim.c -ldl`.
+- `gdb_beast.py` — (new, uncommitted, run22) run6 trio + breakpoints on the
+  Beast JSON-response handler block (`0x1dacab0…0x1dada90`); unknown ABI so
+  every hit dumps all six arg regs as attempted strings/vectors with
+  timestamps. Needs a logout+login drive in a gdb-launched copy-profile
+  client; see the run22 section above.
 
 ## Local state (all git-ignored under `captures/myts/`)
 
