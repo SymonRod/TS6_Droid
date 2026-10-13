@@ -24,6 +24,9 @@ class MainActivity : FlutterActivity() {
         ConnectionService.onDisconnectRequested = {
             runOnUiThread { ch.invokeMethod("disconnectRequested", null) }
         }
+        ConnectionService.onMuteToggleRequested = {
+            runOnUiThread { ch.invokeMethod("muteToggleRequested", null) }
+        }
         ch.setMethodCallHandler { call, result ->
             when (call.method) {
                 // Asks RECORD_AUDIO (+ POST_NOTIFICATIONS on 33+); returns true if mic granted.
@@ -39,13 +42,20 @@ class MainActivity : FlutterActivity() {
                     }
                 }
                 "startService" -> {
-                    ConnectionService.start(this, call.argument<String>("text") ?: "Connected")
+                    ConnectionService.start(
+                        this,
+                        call.argument<String>("text") ?: "Connected",
+                        call.argument<String>("disconnect") ?: "Disconnect",
+                        call.argument<String>("mute") ?: "Mute",
+                        call.argument<String>("unmute") ?: "Unmute",
+                    )
                     result.success(null)
                 }
                 "stopService" -> { ConnectionService.stop(this); result.success(null) }
                 "setMuted" -> {
                     val m = call.argument<Boolean>("muted") ?: true
                     ConnectionService.engine?.muted = m
+                    ConnectionService.updateMuted(m)
                     // Mic may have been granted after the service started.
                     if (!m) ConnectionService.engine?.startCapture()
                     result.success(null)

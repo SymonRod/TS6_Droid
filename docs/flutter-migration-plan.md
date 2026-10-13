@@ -21,16 +21,21 @@ deleted. Flutter builds `tslib-frb` from `../tslib` (see
 | 3 audio (Kotlin capture/playback, Opus in Rust) | verified both directions |
 | 4 foreground service, screen-off audio, notification Disconnect | verified |
 | 5 P2P screen share viewer (`flutter_webrtc`) | verified: the stream plays on the phone against a real sharer (rotation, fit/fill, long sessions not yet exercised) |
+| polish pass (BBCode, saved chat, avatars/icons, go_router, clean errors, dispose on ConnectionLost, channel passwords, push-to-talk, mute in notification, stripped `.so`, fr/it) | written, `flutter analyze` clean, release APK builds and launches on the S25; behaviour not yet checked by hand |
 | 6 file manager, myTS login | not started |
 
 Next, in this order:
 1. Split `flutter/` into its own repo that consumes `ts6-lib` (submodule or
    git path); fix the `rustProjectDir` path in `android/app/build.gradle.kts`.
-2. Polish pass: BBCode rendering, chat persistence, avatars/icons, `go_router`,
-   clean error text (strip the `AnyhowException` prefix), dispose the Rust
-   client on `ConnectionLost`, channel passwords, push-to-talk, mute in the
-   notification, strip the `.so` (it ships with debug info), fr/it strings.
+2. ~~Polish pass~~ done (see table); verify by hand on the phone.
 3. File manager, then myTS login (prefer moving it into Rust).
+
+Polish-pass notes: `tslib-frb` gained `move_to_channel_with_password`,
+`download_file` and the `FileDownloaded`/`FileTransferFailed` events (icons and
+avatars are fetched from channel 0 and cached in the app cache dir). Chat is
+stored as JSON per server address (last 500 messages). The Gradle task strips
+`libtslib_frb.so` and keeps the unstripped copy in `../tslib/symbols/frb/`.
+Strings live in `flutter/lib/l10n/*.arb` (en, fr, it).
 
 Known gaps from the first round: screen share has no stream list (entry is the
 green icon next to the user), `requestStreamInfo` is tried once per owner, no

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:go_router/go_router.dart';
+
+import '../../l10n/app_localizations.dart';
 import '../rust/api.dart';
 import '../state/server_controller.dart';
-import 'stream_screen.dart';
+import '../util/errors.dart';
+import 'bbcode.dart';
+import 'ts_image.dart';
 
 class ServerScreen extends ConsumerStatefulWidget {
   const ServerScreen({super.key});
@@ -20,6 +25,7 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
     final s = ref.watch(serverProvider);
     final snap = s.snapshot;
     final ctrl = ref.read(serverProvider.notifier);
+    final l = AppLocalizations.of(context);
 
     ref.listen(serverProvider.select((s) => s.error), (_, err) {
       if (err != null) {
@@ -33,13 +39,20 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
         title: Text(snap?.serverInfo.name ?? 'Server'),
         actions: [
           IconButton(
-            icon: Icon(s.muted ? Icons.mic_off : Icons.mic, color: s.muted ? null : Colors.green),
-            tooltip: s.muted ? 'Unmute' : 'Mute',
-            onPressed: ctrl.toggleMute,
+            icon: Icon(Icons.touch_app, color: s.ptt ? Theme.of(context).colorScheme.primary : null),
+            tooltip: l.pttSetting,
+            isSelected: s.ptt,
+            onPressed: () => ctrl.setPushToTalk(!s.ptt),
           ),
+          if (!s.ptt)
+            IconButton(
+              icon: Icon(s.muted ? Icons.mic_off : Icons.mic, color: s.muted ? null : Colors.green),
+              tooltip: s.muted ? l.unmute : l.mute,
+              onPressed: ctrl.toggleMute,
+            ),
           IconButton(
             icon: const Icon(Icons.logout),
-            tooltip: 'Disconnect',
+            tooltip: l.disconnect,
             onPressed: ctrl.disconnect,
           ),
         ],
@@ -47,15 +60,18 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
       body: snap == null
           ? const Center(child: CircularProgressIndicator())
           : IndexedStack(index: _tab, children: [
-              _ChannelTree(snap: snap, talking: s.talking),
+              Column(children: [
+                Expanded(child: _ChannelTree(snap: snap, talking: s.talking)),
+                if (s.ptt) _PttButton(active: !s.muted, onChanged: ctrl.pttHold),
+              ]),
               _Chat(snap: snap, messages: s.messages),
             ]),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
         onDestinationSelected: (i) => setState(() => _tab = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.account_tree), label: 'Channels'),
-          NavigationDestination(icon: Icon(Icons.chat), label: 'Chat'),
+        destinations: [
+          NavigationDestination(icon: const Icon(Icons.account_tree), label: l.channels),
+          NavigationDestination(icon: const Icon(Icons.chat), label: l.chat),
         ],
       ),
     );
@@ -92,12 +108,100 @@ void _watch(BuildContext context, WidgetRef ref, TsUser u) {
   final stream = snap.streams.where((s) => s.ownerId == u.id).firstOrNull;
   if (stream == null) {
     ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Stream info not received yet, try again.')));
+        .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).streamNotReady)));
     ref.read(serverProvider.notifier).requestStreamInfo(u.id);
     return;
   }
   viewer.join(stream.ownerId, stream.id, stream.name ?? u.nickname);
-  Navigator.of(context).push(MaterialPageRoute(builder: (_) => StreamScreen(viewer: viewer)));
+  context.push('/server/stream');
+}
+
+Future<void> _join(BuildContext context, WidgetRef ref, TsChannel ch) async {
+  final ctrl = ref.read(serverProvider.notifier);
+  if (!ch.hasPassword) return ctrl.moveToChannel(ch.id);
+  final l = AppLocalizations.of(context);
+  final field = TextEditingController();
+  final pw = await showDialog<String>(
+    context: context,
+    builder: (c) => AlertDialog(
+      title: Text(l.channelPasswordTitle),
+      content: TextField(
+        controller: field,
+        autofocus: true,
+        obscureText: true,
+        decoration: InputDecoration(labelText: l.password),
+        onSubmitted: (v) => Navigator.pop(c, v),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(c), child: Text(l.cancel)),
+        FilledButton(onPressed: () => Navigator.pop(c, field.text), child: Text(l.join)),
+      ],
+    ),
+  );
+  field.dispose();
+  if (pw != null) await ctrl.moveToChannel(ch.id, password: pw);
+}
+
+/// Avatar when the server has one, otherwise the talk/mute/person icon.
+class _UserAvatar extends StatelessWidget {
+  final TsUser u;
+  final bool talking;
+  const _UserAvatar(this.u, {required this.talking});
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = Icon(
+      talking ? Icons.mic : (u.isInputMuted ? Icons.mic_off : Icons.person),
+      size: 20,
+      color: talking ? Colors.green : null,
+    );
+    final hasAvatar = (u.avatarId ?? '').isNotEmpty && u.uid.isNotEmpty;
+    if (!hasAvatar) return icon;
+    return Container(
+      padding: const EdgeInsets.all(1.5),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: talking ? Colors.green : Colors.transparent, width: 2),
+      ),
+      child: TsImage('avatar:${u.uid}', size: 26, round: true, fallback: icon),
+    );
+  }
+}
+
+class _PttButton extends StatelessWidget {
+  final bool active;
+  final ValueChanged<bool> onChanged;
+  const _PttButton({required this.active, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Listener(
+          onPointerDown: (_) => onChanged(true),
+          onPointerUp: (_) => onChanged(false),
+          onPointerCancel: (_) => onChanged(false),
+          child: Container(
+            height: 64,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: active ? Colors.green : cs.secondaryContainer,
+              borderRadius: BorderRadius.circular(32),
+            ),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(active ? Icons.mic : Icons.mic_off, color: active ? Colors.white : cs.onSecondaryContainer),
+              const SizedBox(width: 8),
+              Text(AppLocalizations.of(context).holdToTalk,
+                  style: TextStyle(color: active ? Colors.white : cs.onSecondaryContainer)),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _ChannelTree extends ConsumerWidget {
@@ -117,23 +221,28 @@ class _ChannelTree extends ConsumerWidget {
           leading: Icon(ch.hasPassword ? Icons.lock : Icons.tag, size: 20),
           title: Text(_channelLabel(ch.name),
               style: TextStyle(fontWeight: here ? FontWeight.bold : FontWeight.normal)),
+          trailing: ch.iconId != 0 ? TsImage('icon:${ch.iconId}', size: 20) : null,
           selected: here,
-          onTap: here ? null : () => ref.read(serverProvider.notifier).moveToChannel(ch.id),
+          onTap: here ? null : () => _join(context, ref, ch),
         ));
         for (final u in snap.users.where((u) => u.channelId == ch.id)) {
           rows.add(ListTile(
             dense: true,
             contentPadding: EdgeInsets.only(left: 36.0 + depth * 16, right: 8),
-            leading: Icon(
-              talking.contains(u.id) ? Icons.mic : (u.isInputMuted ? Icons.mic_off : Icons.person),
-              size: 20,
-              color: talking.contains(u.id) ? Colors.green : null,
-            ),
-            title: Text(u.nickname + (u.id == snap.clientId ? ' (you)' : '')),
+            leading: _UserAvatar(u, talking: talking.contains(u.id)),
+            title: Row(children: [
+              Flexible(
+                  child: Text(u.nickname + (u.id == snap.clientId ? ' (${AppLocalizations.of(context).you})' : ''),
+                      overflow: TextOverflow.ellipsis)),
+              if (u.iconId != 0) ...[
+                const SizedBox(width: 6),
+                TsImage('icon:${u.iconId}', size: 16),
+              ],
+            ]),
             trailing: u.isStreaming && u.id != snap.clientId
                 ? IconButton(
                     icon: const Icon(Icons.screen_share, size: 20, color: Colors.green),
-                    tooltip: 'Watch screen share',
+                    tooltip: AppLocalizations.of(context).watchShare,
                     onPressed: () => _watch(context, ref, u),
                   )
                 : (u.isStreaming ? const Icon(Icons.screen_share, size: 18, color: Colors.green) : null),
@@ -179,7 +288,7 @@ class _ChatState extends ConsumerState<_Chat> {
       }
       _input.clear();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(cleanError(e))));
     }
   }
 
@@ -196,15 +305,16 @@ class _ChatState extends ConsumerState<_Chat> {
   @override
   Widget build(BuildContext context) {
     final shown = widget.messages.where((m) => m.target == _target).toList();
+    final l = AppLocalizations.of(context);
     final others = widget.snap.users.where((u) => u.id != widget.snap.clientId).toList();
     return Column(children: [
       Padding(
         padding: const EdgeInsets.all(8),
         child: SegmentedButton<TsMessageTarget>(
-          segments: const [
-            ButtonSegment(value: TsMessageTarget.channel, label: Text('Channel')),
-            ButtonSegment(value: TsMessageTarget.server, label: Text('Server')),
-            ButtonSegment(value: TsMessageTarget.private, label: Text('Private')),
+          segments: [
+            ButtonSegment(value: TsMessageTarget.channel, label: Text(l.tabChannel)),
+            ButtonSegment(value: TsMessageTarget.server, label: Text(l.tabServer)),
+            ButtonSegment(value: TsMessageTarget.private, label: Text(l.tabPrivate)),
           ],
           selected: {_target},
           onSelectionChanged: (v) => setState(() => _target = v.first),
@@ -215,7 +325,7 @@ class _ChatState extends ConsumerState<_Chat> {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: DropdownButton<int>(
             isExpanded: true,
-            hint: const Text('Send to...'),
+            hint: Text(l.sendTo),
             value: others.any((u) => u.id == _privateTo) ? _privateTo : null,
             items: [for (final u in others) DropdownMenuItem(value: u.id, child: Text(u.nickname))],
             onChanged: (v) => setState(() => _privateTo = v),
@@ -236,7 +346,7 @@ class _ChatState extends ConsumerState<_Chat> {
                   padding: const EdgeInsets.all(8),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(m.sender, style: Theme.of(context).textTheme.labelSmall),
-                    SelectableText(m.text), // BBCode shown raw for now
+                    BbText(m.text),
                   ]),
                 ),
               ),
@@ -250,7 +360,7 @@ class _ChatState extends ConsumerState<_Chat> {
           Expanded(
             child: TextField(
               controller: _input,
-              decoration: const InputDecoration(hintText: 'Message', border: OutlineInputBorder()),
+              decoration: InputDecoration(hintText: l.messageHint, border: const OutlineInputBorder()),
               onSubmitted: (_) => _send(),
             ),
           ),

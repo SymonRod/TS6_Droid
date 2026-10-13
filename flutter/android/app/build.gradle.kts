@@ -69,7 +69,15 @@ buildRustLibs.configure {
         val ndkDir = System.getenv("ANDROID_NDK_HOME")
             ?: file("$sdkDir/ndk").listFiles()!!.filter { it.isDirectory }.maxByOrNull { it.name }!!.absolutePath
         val sysroot = "$ndkDir/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib"
+        val strip = file("$ndkDir/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip")
         mapOf("arm64-v8a" to "aarch64-linux-android", "x86_64" to "x86_64-linux-android").forEach { (abi, triple) ->
+            // Keep an unstripped copy for ndk-stack, then strip the one that ships.
+            val so = projectDir.resolve("src/main/jniLibs/$abi/libtslib_frb.so")
+            if (so.exists()) {
+                val sym = rustProjectDir.resolve("symbols/frb/$abi").also { it.mkdirs() }
+                so.copyTo(sym.resolve("libtslib_frb.so"), overwrite = true)
+                ProcessBuilder(strip.absolutePath, "--strip-unneeded", so.absolutePath).inheritIO().start().waitFor()
+            }
             file("$sysroot/$triple/libc++_shared.so")
                 .copyTo(projectDir.resolve("src/main/jniLibs/$abi/libc++_shared.so"), overwrite = true)
         }

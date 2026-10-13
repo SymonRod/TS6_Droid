@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
+import 'package:go_router/go_router.dart';
+
+import '../../l10n/app_localizations.dart';
 import '../state/stream_viewer.dart';
 
 /// Full-screen viewer. Rotates freely; fit/fill toggle; pinch-zoom via
@@ -33,18 +36,18 @@ class _StreamScreenState extends State<StreamScreen> {
 
   Future<void> _close() async {
     await widget.viewer.leave();
-    if (mounted) Navigator.of(context).pop();
+    if (mounted) context.pop();
   }
 
-  String _status(StreamViewer v) => switch (v.phase) {
-        StreamPhase.requesting => 'Waiting for the sharer to accept...',
-        StreamPhase.connecting => 'Connecting...',
+  String _status(AppLocalizations l, StreamViewer v) => switch (v.phase) {
+        StreamPhase.requesting => l.shareRequesting,
+        StreamPhase.connecting => l.shareConnecting,
         StreamPhase.failed => switch (v.message) {
-            'stream_ended' => 'The stream ended.',
-            'join_timeout' => 'The sharer did not answer.',
-            'refused' => 'The sharer refused.',
-            'ice_failed' => 'Could not connect (ICE failed).',
-            final m => m ?? 'Failed.',
+            'stream_ended' => l.shareEnded,
+            'join_timeout' => l.shareTimeout,
+            'refused' => l.shareRefused,
+            'ice_failed' => l.shareIce,
+            final m => m ?? l.shareFailed,
           },
         _ => '',
       };
@@ -80,7 +83,7 @@ class _StreamScreenState extends State<StreamScreen> {
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
                     if (v.phase != StreamPhase.failed) const CircularProgressIndicator(),
                     const SizedBox(height: 16),
-                    Text(_status(v), style: const TextStyle(color: Colors.white)),
+                    Text(_status(AppLocalizations.of(context), v), style: const TextStyle(color: Colors.white)),
                   ]),
                 ),
               Positioned(
@@ -92,13 +95,13 @@ class _StreamScreenState extends State<StreamScreen> {
                       IconButton(
                         color: Colors.white,
                         icon: Icon(_fill ? Icons.fit_screen : Icons.fullscreen),
-                        tooltip: _fill ? 'Fit' : 'Fill',
+                        tooltip: _fill ? AppLocalizations.of(context).fit : AppLocalizations.of(context).fill,
                         onPressed: () => setState(() => _fill = !_fill),
                       ),
                     IconButton(
                       color: Colors.white,
                       icon: const Icon(Icons.close),
-                      tooltip: 'Leave',
+                      tooltip: AppLocalizations.of(context).leave,
                       onPressed: _close,
                     ),
                   ]),

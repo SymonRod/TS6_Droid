@@ -1,0 +1,53 @@
+{
+  "@@locale": "en",
+  "serverAddress": "Server address (host:port)",
+  "nickname": "Nickname",
+  "serverPassword": "Server password (optional)",
+  "channelOptional": "Channel (optional, path with /)",
+  "connect": "Connect",
+  "saveBookmark": "Save bookmark",
+  "updateBookmark": "Update bookmark",
+  "cancel": "Cancel",
+  "reconnectLast": "Reconnect to last server on start",
+  "noBookmarks": "No bookmarks yet",
+  "errAddrNick": "Address and nickname are required",
+  "disconnect": "Disconnect",
+  "channels": "Channels",
+  "chat": "Chat",
+  "tabChannel": "Channel",
+  "tabServer": "Server",
+  "tabPrivate": "Private",
+  "sendTo": "Send to...",
+  "messageHint": "Message",
+  "mute": "Mute",
+  "unmute": "Unmute",
+  "pushToTalk": "Push to talk",
+  "holdToTalk": "Hold to talk",
+  "you": "you",
+  "watchShare": "Watch screen share",
+  "streamNotReady": "Stream info not received yet, try again.",
+  "channelPasswordTitle": "Channel password",
+  "password": "Password",
+  "join": "Join",
+  "leave": "Leave",
+  "fit": "Fit the whole frame",
+  "fill": "Fill the screen",
+  "shareRequesting": "Waiting for the sharer to accept...",
+  "shareConnecting": "Connecting...",
+  "shareEnded": "The stream has ended",
+  "shareTimeout": "No answer from the sharer",
+  "shareRefused": "The sharer refused your request",
+  "shareIce": "Could not connect to the stream",
+  "shareFailed": "Failed.",
+  "connectedTo": "Connected to {address}",
+  "@connectedTo": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "notifMute": "Mute",
+  "notifUnmute": "Unmute",
+  "pttSetting": "Push-to-talk mode"
+}

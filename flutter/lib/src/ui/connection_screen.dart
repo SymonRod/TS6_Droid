@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../data/server_bookmark.dart';
 import '../state/server_controller.dart';
 
@@ -56,7 +57,7 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
     if (b.address.isEmpty || b.nickname.isEmpty) {
       ref.read(serverProvider.notifier).clearError();
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Address and nickname are required')));
+          .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).errAddrNick)));
       return;
     }
     await ref.read(bookmarkStoreProvider).setLastAddress(b.address);
@@ -88,6 +89,7 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
     final s = ref.watch(serverProvider);
     final bookmarks = ref.watch(bookmarksProvider).value ?? const [];
     final connecting = s.status == ConnStatus.connecting;
+    final l = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('TS6 Droid')),
@@ -96,18 +98,18 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
         children: [
           TextField(
             controller: _address,
-            decoration: const InputDecoration(labelText: 'Server address (host:port)'),
+            decoration: InputDecoration(labelText: l.serverAddress),
             keyboardType: TextInputType.url,
           ),
-          TextField(controller: _nickname, decoration: const InputDecoration(labelText: 'Nickname')),
+          TextField(controller: _nickname, decoration: InputDecoration(labelText: l.nickname)),
           TextField(
             controller: _password,
-            decoration: const InputDecoration(labelText: 'Server password (optional)'),
+            decoration: InputDecoration(labelText: l.serverPassword),
             obscureText: true,
           ),
           TextField(
             controller: _channel,
-            decoration: const InputDecoration(labelText: 'Channel (optional, path with /)'),
+            decoration: InputDecoration(labelText: l.channelOptional),
           ),
           const SizedBox(height: 12),
           if (s.error != null)
@@ -121,19 +123,19 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
                 onPressed: connecting ? null : () => _connect(_fromFields()),
                 child: connecting
                     ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('Connect'),
+                    : Text(l.connect),
               ),
             ),
             const SizedBox(width: 8),
             OutlinedButton(
               onPressed: _save,
-              child: Text(_editing >= 0 ? 'Update bookmark' : 'Save bookmark'),
+              child: Text(_editing >= 0 ? l.updateBookmark : l.saveBookmark),
             ),
-            if (_editing >= 0) TextButton(onPressed: _clear, child: const Text('Cancel')),
+            if (_editing >= 0) TextButton(onPressed: _clear, child: Text(l.cancel)),
           ]),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Reconnect to last server on start'),
+            title: Text(l.reconnectLast),
             value: _autoReconnect,
             onChanged: (v) async {
               await ref.read(bookmarkStoreProvider).setAutoReconnect(v);
@@ -141,7 +143,7 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
             },
           ),
           const Divider(),
-          if (bookmarks.isEmpty) const Padding(padding: EdgeInsets.all(16), child: Text('No bookmarks yet')),
+          if (bookmarks.isEmpty) Padding(padding: const EdgeInsets.all(16), child: Text(l.noBookmarks)),
           for (var i = 0; i < bookmarks.length; i++)
             ListTile(
               leading: const Icon(Icons.dns),

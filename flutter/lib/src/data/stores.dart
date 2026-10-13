@@ -47,6 +47,11 @@ class SettingsStore {
   Future<void> setAudioGain(double v) async =>
       (await SharedPreferences.getInstance()).setDouble('audio_gain', v);
 
+  Future<bool> pushToTalk() async =>
+      (await SharedPreferences.getInstance()).getBool('push_to_talk') ?? false;
+  Future<void> setPushToTalk(bool v) async =>
+      (await SharedPreferences.getInstance()).setBool('push_to_talk', v);
+
   Future<bool> showLinkThumbnails() async =>
       (await SharedPreferences.getInstance()).getBool('show_link_thumbnails') ?? false;
   Future<void> setShowLinkThumbnails(bool v) async =>

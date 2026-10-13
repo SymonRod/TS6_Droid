@@ -1,11 +1,18 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:ui' show Locale, PlatformDispatcher;
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 
+import '../../l10n/app_localizations.dart';
+import '../data/message_store.dart';
 import '../data/server_bookmark.dart';
 import '../data/stores.dart';
 import '../rust/api.dart';
+import '../util/errors.dart';
 import 'stream_viewer.dart';
 
 /// Platform channel to the Kotlin foreground service / audio engine (phases 3-4).
@@ -15,6 +22,15 @@ const _audioChannel = MethodChannel('ts6/audio');
 final bookmarkStoreProvider = Provider((_) => BookmarkStore());
 final settingsStoreProvider = Provider((_) => SettingsStore());
 final identityStoreProvider = Provider((_) => IdentityStore());
+final messageStoreProvider = Provider((_) => MessageStore());
+
+AppLocalizations _l10n() {
+  try {
+    return lookupAppLocalizations(PlatformDispatcher.instance.locale);
+  } catch (_) {
+    return lookupAppLocalizations(const Locale('en'));
+  }
+}
 
 class ChatMessage {
   final String sender;
@@ -22,8 +38,28 @@ class ChatMessage {
   final TsMessageTarget target;
   final bool isMe;
   final int senderId;
-  final DateTime time = DateTime.now();
-  ChatMessage(this.sender, this.text, this.target, {this.isMe = false, this.senderId = 0});
+  final DateTime time;
+  ChatMessage(this.sender, this.text, this.target,
+      {this.isMe = false, this.senderId = 0, DateTime? time})
+      : time = time ?? DateTime.now();
+
+  Map<String, dynamic> toJson() => {
+        'sender': sender,
+        'text': text,
+        'target': target.name,
+        'isMe': isMe,
+        'senderId': senderId,
+        'time': time.millisecondsSinceEpoch,
+      };
+
+  factory ChatMessage.fromJson(Map<String, dynamic> j) => ChatMessage(
+        j['sender'] as String? ?? '',
+        j['text'] as String? ?? '',
+        TsMessageTarget.values.asNameMap()[j['target']] ?? TsMessageTarget.channel,
+        isMe: j['isMe'] as bool? ?? false,
+        senderId: j['senderId'] as int? ?? 0,
+        time: DateTime.fromMillisecondsSinceEpoch(j['time'] as int? ?? 0),
+      );
 }
 
 enum ConnStatus { idle, connecting, connected }
@@ -35,6 +71,8 @@ class ServerState {
   final List<ChatMessage> messages;
   final Set<int> talking;
   final bool muted;
+  final bool ptt;
+  final int imageRev;
 
   const ServerState({
     this.status = ConnStatus.idle,
@@ -43,6 +81,8 @@ class ServerState {
     this.messages = const [],
     this.talking = const {},
     this.muted = true,
+    this.ptt = false,
+    this.imageRev = 0,
   });
 
   ServerState copyWith({
@@ -53,6 +93,8 @@ class ServerState {
     List<ChatMessage>? messages,
     Set<int>? talking,
     bool? muted,
+    bool? ptt,
+    int? imageRev,
   }) =>
       ServerState(
         status: status ?? this.status,
@@ -61,6 +103,8 @@ class ServerState {
         messages: messages ?? this.messages,
         talking: talking ?? this.talking,
         muted: muted ?? this.muted,
+        ptt: ptt ?? this.ptt,
+        imageRev: imageRev ?? this.imageRev,
       );
 }
 
@@ -71,14 +115,30 @@ class ServerController extends Notifier<ServerState> {
   StreamSubscription<TsEvent>? _sub;
   Timer? _refreshTimer;
   Timer? _periodic;
+  Timer? _saveTimer;
   StreamViewer? viewer;
+  String? _address;
   final _queriedOwners = <int>{};
+
+  // Icons and avatars: key -> bytes, fetched from the server (channel 0) and cached on disk.
+  final _images = <String, Uint8List>{};
+  final _imageQueue = <String>[];
+  final _imageInFlight = <String, Timer>{}; // key -> timeout
+  final _imageFails = <String, int>{};
+  Directory? _imageDir;
 
   @override
   ServerState build() {
-    // Notification "Disconnect" button.
     _audioChannel.setMethodCallHandler((call) async {
-      if (call.method == 'disconnectRequested') await disconnect();
+      switch (call.method) {
+        case 'disconnectRequested': // notification button
+          await disconnect();
+        case 'muteToggleRequested': // notification button
+          if (state.status == ConnStatus.connected) await toggleMute();
+      }
+    });
+    ref.read(settingsStoreProvider).pushToTalk().then((v) {
+      if (ref.mounted) state = state.copyWith(ptt: v);
     });
     ref.onDispose(() => _teardown());
     return const ServerState();
@@ -97,26 +157,43 @@ class ServerController extends Notifier<ServerState> {
         channel: b.channel,
       );
       _client = client;
+      _address = b.address;
       viewer = StreamViewer(client);
+      final ptt = await ref.read(settingsStoreProvider).pushToTalk();
+      final saved = await ref.read(messageStoreProvider).load(b.address);
       await client.waitConnected();
       _sub = client.events().listen(_onEvent, onError: (Object e) {
-        state = state.copyWith(error: '$e');
+        state = state.copyWith(error: cleanError(e));
       });
       // Phase 3/4: permissions, then foreground service (audio runs in Kotlin+Rust).
       try {
+        final l = _l10n();
         await _audioChannel.invokeMethod('requestPermissions');
-        await _audioChannel.invokeMethod('startService', {'text': 'Connected to ${b.address}'});
+        await _audioChannel.invokeMethod('startService', {
+          'text': l.connectedTo(b.address),
+          'disconnect': l.disconnect,
+          'mute': l.notifMute,
+          'unmute': l.notifUnmute,
+        });
         await _audioChannel.invokeMethod('setMuted', {'muted': true});
         await client.setInputMuted(muted: true);
       } catch (e) {
-        state = state.copyWith(error: 'audio: $e');
+        state = state.copyWith(error: 'audio: ${cleanError(e)}');
       }
       _periodic = Timer.periodic(const Duration(milliseconds: 500), (_) => _refresh());
-      state = state.copyWith(status: ConnStatus.connected, snapshot: client.snapshot());
+      state = state.copyWith(
+        status: ConnStatus.connected,
+        snapshot: client.snapshot(),
+        messages: [for (final j in saved) ChatMessage.fromJson(j)],
+        ptt: ptt,
+        muted: true,
+      );
       return true;
     } catch (e) {
+      final c = _client;
       _teardown();
-      state = ServerState(error: '$e');
+      if (c != null) _release(c);
+      state = ServerState(error: cleanError(e));
       return false;
     }
   }
@@ -158,23 +235,144 @@ class ServerController extends Notifier<ServerState> {
         state = state.copyWith(talking: {...state.talking}..remove(e.userId));
       case TsEvent_Disconnected() || TsEvent_ConnectionLost():
         final reason = e is TsEvent_Disconnected ? e.reason : (e as TsEvent_ConnectionLost).reason;
+        final c = _client;
+        _saveNow();
         _teardown();
+        // The Rust client (runtime, sockets, audio sender) must be released too.
+        if (c != null) _release(c);
         _audioChannel.invokeMethod('stopService').catchError((_) {});
-        state = ServerState(error: reason, messages: state.messages);
+        state = ServerState(error: cleanError(reason), messages: state.messages, ptt: state.ptt);
         return;
       case TsEvent_CommandError():
-        state = state.copyWith(error: e.message);
+        state = state.copyWith(error: cleanError(e.message));
       case TsEvent_Poked():
         _addMessage(ChatMessage(e.pokerName, '[poke] ${e.message}', TsMessageTarget.private,
             senderId: e.pokerId));
+      case TsEvent_FileDownloaded():
+        _onImage(e.path, e.data);
+      case TsEvent_FileTransferFailed():
+        _onImageFailed(e.path);
       default:
         break;
     }
     _scheduleRefresh();
   }
 
+  /// Disconnect (best effort) and free the native client.
+  void _release(TsClient c) {
+    () async {
+      try {
+        await c.disconnect();
+      } catch (_) {}
+      c.dispose();
+    }();
+  }
+
+  // ----------------------------------------------------------------- images
+
+  static String _uidToAvatarPath(String uid) {
+    final bytes = base64.decode(base64.normalize(uid));
+    final sb = StringBuffer('/avatar_');
+    for (final b in bytes) {
+      sb.writeCharCode(0x61 + (b >> 4));
+      sb.writeCharCode(0x61 + (b & 15));
+    }
+    return sb.toString();
+  }
+
+  static String _pathFor(String key) =>
+      key.startsWith('icon:') ? '/icon_${key.substring(5)}' : _uidToAvatarPath(key.substring(7));
+
+  /// Returns the bytes if already known; otherwise starts loading and returns
+  /// null (the UI rebuilds when `imageRev` changes). Keys: `icon:<id>`, `avatar:<uid>`.
+  Uint8List? image(String key) {
+    final hit = _images[key];
+    if (hit != null) return hit;
+    if ((_imageFails[key] ?? 0) >= 3 || _imageInFlight.containsKey(key) || _imageQueue.contains(key)) {
+      return null;
+    }
+    _imageQueue.add(key);
+    Future.microtask(_pumpImages);
+    return null;
+  }
+
+  Future<File> _imageFile(String key) async {
+    _imageDir ??= await Directory('${(await getApplicationCacheDirectory()).path}/ts_images').create();
+    return File('${_imageDir!.path}/${key.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_')}');
+  }
+
+  Future<void> _pumpImages() async {
+    final c = _client;
+    if (c == null) return;
+    while (_imageInFlight.length < 2 && _imageQueue.isNotEmpty) {
+      final key = _imageQueue.removeAt(0);
+      try {
+        final f = await _imageFile(key);
+        if (await f.exists() && await f.length() > 0) {
+          _images[key] = await f.readAsBytes();
+          state = state.copyWith(imageRev: state.imageRev + 1);
+          continue;
+        }
+        _imageInFlight[key] = Timer(const Duration(seconds: 15), () => _onImageFailed(_pathFor(key)));
+        await c.downloadFile(channelId: 0, path: _pathFor(key));
+      } catch (_) {
+        _imageInFlight.remove(key)?.cancel();
+        _imageFails[key] = (_imageFails[key] ?? 0) + 1;
+      }
+    }
+  }
+
+  String? _keyForPath(String path) {
+    for (final k in _imageInFlight.keys) {
+      if (_pathFor(k) == path) return k;
+    }
+    return null;
+  }
+
+  Future<void> _onImage(String path, List<int> data) async {
+    final key = _keyForPath(path);
+    if (key == null) return;
+    _imageInFlight.remove(key)?.cancel();
+    if (data.isNotEmpty) {
+      final bytes = Uint8List.fromList(data);
+      _images[key] = bytes;
+      try {
+        await (await _imageFile(key)).writeAsBytes(bytes);
+      } catch (_) {}
+      if (ref.mounted) state = state.copyWith(imageRev: state.imageRev + 1);
+    } else {
+      _imageFails[key] = (_imageFails[key] ?? 0) + 1;
+    }
+    _pumpImages();
+  }
+
+  void _onImageFailed(String path) {
+    final key = _keyForPath(path);
+    if (key == null) return;
+    _imageInFlight.remove(key)?.cancel();
+    _imageFails[key] = (_imageFails[key] ?? 0) + 1;
+    _pumpImages();
+  }
+
+  // ------------------------------------------------------------------- chat
+
   void _addMessage(ChatMessage m) {
     state = state.copyWith(messages: [...state.messages, m]);
+    _saveTimer ??= Timer(const Duration(seconds: 2), _saveNow);
+  }
+
+  void _saveNow() {
+    _saveTimer?.cancel();
+    _saveTimer = null;
+    final a = _address;
+    if (a == null) return;
+    ref.read(messageStoreProvider).save(a, [for (final m in state.messages) m.toJson()]);
+  }
+
+  Future<void> clearChat() async {
+    state = state.copyWith(messages: const []);
+    final a = _address;
+    if (a != null) await ref.read(messageStoreProvider).clear(a);
   }
 
   String get _myName {
@@ -199,24 +397,40 @@ class ServerController extends Notifier<ServerState> {
         ChatMessage(_myName, text, TsMessageTarget.private, isMe: true, senderId: userId));
   }
 
-  Future<void> moveToChannel(int channelId) async {
+  Future<void> moveToChannel(int channelId, {String? password}) async {
     try {
-      await _client?.moveToChannel(channelId: channelId);
+      if (password != null && password.isNotEmpty) {
+        await _client?.moveToChannelWithPassword(channelId: channelId, password: password);
+      } else {
+        await _client?.moveToChannel(channelId: channelId);
+      }
     } catch (e) {
-      state = state.copyWith(error: '$e');
+      state = state.copyWith(error: cleanError(e));
     }
   }
 
-  Future<void> toggleMute() async {
-    final m = !state.muted;
+  // ------------------------------------------------------------------ audio
+
+  Future<void> _applyMuted(bool m) async {
     state = state.copyWith(muted: m);
     try {
       await _audioChannel.invokeMethod('setMuted', {'muted': m});
       await _client?.setInputMuted(muted: m);
     } catch (e) {
-      state = state.copyWith(error: '$e');
+      state = state.copyWith(error: cleanError(e));
     }
   }
+
+  Future<void> toggleMute() => _applyMuted(!state.muted);
+
+  Future<void> setPushToTalk(bool on) async {
+    state = state.copyWith(ptt: on);
+    await ref.read(settingsStoreProvider).setPushToTalk(on);
+    await _applyMuted(true);
+  }
+
+  /// Push-to-talk button: down opens the mic, up closes it.
+  Future<void> pttHold(bool down) => _applyMuted(!down);
 
   void requestStreamInfo(int ownerId) => _client?.requestStreamInfo(ownerId: ownerId).catchError((_) {});
 
@@ -224,6 +438,7 @@ class ServerController extends Notifier<ServerState> {
 
   Future<void> disconnect() async {
     final c = _client;
+    if (c != null) _saveNow();
     _teardown();
     _audioChannel.invokeMethod('stopService').catchError((_) {});
     if (c != null) {
@@ -232,7 +447,7 @@ class ServerController extends Notifier<ServerState> {
       } catch (_) {}
       c.dispose();
     }
-    state = const ServerState();
+    state = ServerState(ptt: state.ptt);
   }
 
   void _teardown() {
@@ -245,6 +460,13 @@ class ServerController extends Notifier<ServerState> {
     _periodic = null;
     _refreshTimer?.cancel();
     _refreshTimer = null;
+    _saveTimer?.cancel();
+    _saveTimer = null;
+    for (final t in _imageInFlight.values) {
+      t.cancel();
+    }
+    _imageInFlight.clear();
+    _imageQueue.clear();
     _client = null;
   }
 }

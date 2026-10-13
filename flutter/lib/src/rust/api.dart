@@ -33,6 +33,12 @@ abstract class TsClient implements RustOpaqueInterface {
   /// it actually leaves the socket (same as `TsClient.kt`).
   Future<void> disconnect();
 
+  /// Starts a download; the bytes arrive as `TsEvent::FileDownloaded`.
+  Future<void> downloadFile({
+    required PlatformInt64 channelId,
+    required String path,
+  });
+
   /// Event stream: a worker thread polls `process_events` every 20 ms.
   /// Call once per client.
   Stream<TsEvent> events();
@@ -42,6 +48,11 @@ abstract class TsClient implements RustOpaqueInterface {
   Future<void> leaveStream({required int ownerId, required String streamId});
 
   Future<void> moveToChannel({required PlatformInt64 channelId});
+
+  Future<void> moveToChannelWithPassword({
+    required PlatformInt64 channelId,
+    required String password,
+  });
 
   Future<void> requestStreamInfo({required int ownerId});
 
@@ -273,6 +284,15 @@ sealed class TsEvent with _$TsEvent {
     required String streamId,
     required String json,
   }) = TsEvent_StreamSignaling;
+  const factory TsEvent.fileDownloaded({
+    required PlatformInt64 channelId,
+    required String path,
+    required Uint8List data,
+  }) = TsEvent_FileDownloaded;
+  const factory TsEvent.fileTransferFailed({
+    required String path,
+    required String error,
+  }) = TsEvent_FileTransferFailed;
 }
 
 enum TsMessageTarget { server, channel, private }

@@ -64,7 +64,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 257383078;
+  int get rustContentHash => -63332271;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -86,6 +86,12 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateApiTsClientDisconnect({required TsClient that});
 
+  Future<void> crateApiTsClientDownloadFile({
+    required TsClient that,
+    required PlatformInt64 channelId,
+    required String path,
+  });
+
   Stream<TsEvent> crateApiTsClientEvents({required TsClient that});
 
   Future<void> crateApiTsClientJoinStream({
@@ -103,6 +109,12 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateApiTsClientMoveToChannel({
     required TsClient that,
     required PlatformInt64 channelId,
+  });
+
+  Future<void> crateApiTsClientMoveToChannelWithPassword({
+    required TsClient that,
+    required PlatformInt64 channelId,
+    required String password,
   });
 
   Future<void> crateApiTsClientRequestStreamInfo({
@@ -253,6 +265,46 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "TsClient_disconnect", argNames: ["that"]);
 
   @override
+  Future<void> crateApiTsClientDownloadFile({
+    required TsClient that,
+    required PlatformInt64 channelId,
+    required String path,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
+            that,
+            serializer,
+          );
+          sse_encode_i_64(channelId, serializer);
+          sse_encode_String(path, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 3,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiTsClientDownloadFileConstMeta,
+        argValues: [that, channelId, path],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiTsClientDownloadFileConstMeta =>
+      const TaskConstMeta(
+        debugName: "TsClient_download_file",
+        argNames: ["that", "channelId", "path"],
+      );
+
+  @override
   Stream<TsEvent> crateApiTsClientEvents({required TsClient that}) {
     final sink = RustStreamSink<TsEvent>();
     unawaited(
@@ -268,7 +320,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 3,
+              funcId: 4,
               port: port_,
             );
           },
@@ -309,7 +361,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 4,
+            funcId: 5,
             port: port_,
           );
         },
@@ -348,7 +400,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 6,
             port: port_,
           );
         },
@@ -386,7 +438,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 7,
             port: port_,
           );
         },
@@ -408,6 +460,46 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateApiTsClientMoveToChannelWithPassword({
+    required TsClient that,
+    required PlatformInt64 channelId,
+    required String password,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
+            that,
+            serializer,
+          );
+          sse_encode_i_64(channelId, serializer);
+          sse_encode_String(password, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 8,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiTsClientMoveToChannelWithPasswordConstMeta,
+        argValues: [that, channelId, password],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiTsClientMoveToChannelWithPasswordConstMeta =>
+      const TaskConstMeta(
+        debugName: "TsClient_move_to_channel_with_password",
+        argNames: ["that", "channelId", "password"],
+      );
+
+  @override
   Future<void> crateApiTsClientRequestStreamInfo({
     required TsClient that,
     required int ownerId,
@@ -424,7 +516,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 9,
             port: port_,
           );
         },
@@ -462,7 +554,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 8,
+            funcId: 10,
             port: port_,
           );
         },
@@ -502,7 +594,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 9,
+            funcId: 11,
             port: port_,
           );
         },
@@ -540,7 +632,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 10,
+            funcId: 12,
             port: port_,
           );
         },
@@ -582,7 +674,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 11,
+            funcId: 13,
             port: port_,
           );
         },
@@ -620,7 +712,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 14,
             port: port_,
           );
         },
@@ -651,7 +743,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 13)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 15)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_ts_snapshot,
@@ -680,7 +772,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 14,
+            funcId: 16,
             port: port_,
           );
         },
@@ -710,7 +802,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 15,
+            funcId: 17,
             port: port_,
           );
         },
@@ -739,7 +831,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 16)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 18)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -768,7 +860,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 17,
+            funcId: 19,
             port: port_,
           );
         },
@@ -800,7 +892,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 18)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 20)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_u_8,
@@ -829,7 +921,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 19)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 21)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -1190,6 +1282,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           ownerId: dco_decode_u_16(raw[1]),
           streamId: dco_decode_String(raw[2]),
           json: dco_decode_String(raw[3]),
+        );
+      case 24:
+        return TsEvent_FileDownloaded(
+          channelId: dco_decode_i_64(raw[1]),
+          path: dco_decode_String(raw[2]),
+          data: dco_decode_list_prim_u_8_strict(raw[3]),
+        );
+      case 25:
+        return TsEvent_FileTransferFailed(
+          path: dco_decode_String(raw[1]),
+          error: dco_decode_String(raw[2]),
         );
       default:
         throw Exception("unreachable");
@@ -1777,6 +1880,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           streamId: var_streamId,
           json: var_json,
         );
+      case 24:
+        var var_channelId = sse_decode_i_64(deserializer);
+        var var_path = sse_decode_String(deserializer);
+        var var_data = sse_decode_list_prim_u_8_strict(deserializer);
+        return TsEvent_FileDownloaded(
+          channelId: var_channelId,
+          path: var_path,
+          data: var_data,
+        );
+      case 25:
+        var var_path = sse_decode_String(deserializer);
+        var var_error = sse_decode_String(deserializer);
+        return TsEvent_FileTransferFailed(path: var_path, error: var_error);
       default:
         throw UnimplementedError('');
     }
@@ -2399,6 +2515,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_u_16(ownerId, serializer);
         sse_encode_String(streamId, serializer);
         sse_encode_String(json, serializer);
+      case TsEvent_FileDownloaded(
+        channelId: final channelId,
+        path: final path,
+        data: final data,
+      ):
+        sse_encode_i_32(24, serializer);
+        sse_encode_i_64(channelId, serializer);
+        sse_encode_String(path, serializer);
+        sse_encode_list_prim_u_8_strict(data, serializer);
+      case TsEvent_FileTransferFailed(path: final path, error: final error):
+        sse_encode_i_32(25, serializer);
+        sse_encode_String(path, serializer);
+        sse_encode_String(error, serializer);
     }
   }
 
@@ -2540,6 +2669,16 @@ class TsClientImpl extends RustOpaque implements TsClient {
   Future<void> disconnect() =>
       RustLib.instance.api.crateApiTsClientDisconnect(that: this);
 
+  /// Starts a download; the bytes arrive as `TsEvent::FileDownloaded`.
+  Future<void> downloadFile({
+    required PlatformInt64 channelId,
+    required String path,
+  }) => RustLib.instance.api.crateApiTsClientDownloadFile(
+    that: this,
+    channelId: channelId,
+    path: path,
+  );
+
   /// Event stream: a worker thread polls `process_events` every 20 ms.
   /// Call once per client.
   Stream<TsEvent> events() =>
@@ -2563,6 +2702,15 @@ class TsClientImpl extends RustOpaque implements TsClient {
       .instance
       .api
       .crateApiTsClientMoveToChannel(that: this, channelId: channelId);
+
+  Future<void> moveToChannelWithPassword({
+    required PlatformInt64 channelId,
+    required String password,
+  }) => RustLib.instance.api.crateApiTsClientMoveToChannelWithPassword(
+    that: this,
+    channelId: channelId,
+    password: password,
+  );
 
   Future<void> requestStreamInfo({required int ownerId}) => RustLib.instance.api
       .crateApiTsClientRequestStreamInfo(that: this, ownerId: ownerId);
