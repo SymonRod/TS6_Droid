@@ -49,6 +49,8 @@
   },
   "notifMute": "Mute",
   "notifUnmute": "Unmute",
+  "shareDeviceAudio": "Share device audio",
+  "shareDeviceAudioHint": "Music, games and videos reach viewers (not voices or mic). Set before sharing.",
   "pttSetting": "Push-to-talk mode",
   "deafen": "Deafen",
   "undeafen": "Undeafen",

@@ -352,6 +352,18 @@ abstract class AppLocalizations {
   /// **'Unmute'**
   String get notifUnmute;
 
+  /// No description provided for @shareDeviceAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Share device audio'**
+  String get shareDeviceAudio;
+
+  /// No description provided for @shareDeviceAudioHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Music, games and videos reach viewers (not voices or mic). Set before sharing.'**
+  String get shareDeviceAudioHint;
+
   /// No description provided for @pttSetting.
   ///
   /// In en, this message translates to:

@@ -42,6 +42,8 @@
   "connectedTo": "Connesso a {address}",
   "notifMute": "Muto",
   "notifUnmute": "Riattiva",
+  "shareDeviceAudio": "Condividi audio del dispositivo",
+  "shareDeviceAudioHint": "Musica, giochi e video arrivano a chi guarda (non voci né microfono). Da impostare prima di condividere.",
   "pttSetting": "Modalità premi per parlare",
   "deafen": "Disattiva audio",
   "undeafen": "Riattiva audio",

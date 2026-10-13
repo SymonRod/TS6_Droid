@@ -339,6 +339,13 @@ class _ControlBar extends ConsumerWidget {
               },
             ),
             SwitchListTile(
+              secondary: const Icon(Icons.volume_up),
+              title: Text(l.shareDeviceAudio),
+              subtitle: Text(l.shareDeviceAudioHint),
+              value: ref.watch(shareAudioProvider),
+              onChanged: sharing ? null : ref.read(shareAudioProvider.notifier).set,
+            ),
+            SwitchListTile(
               secondary: const Icon(Icons.touch_app),
               title: Text(l.pttSetting),
               value: s.ptt,

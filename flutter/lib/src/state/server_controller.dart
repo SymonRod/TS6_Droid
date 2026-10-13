@@ -559,7 +559,7 @@ class ServerController extends Notifier<ServerState> {
     final me = snap.clientId;
     if (me == null) return;
     final nick = snap.users.where((u) => u.id == me).map((u) => u.nickname).firstOrNull ?? 'Screen';
-    await b.start(nick, me, snap.streams);
+    await b.start(nick, me, snap.streams, withAudio: ref.read(shareAudioProvider));
   }
 
   void _onBroadcaster() {
@@ -647,3 +647,13 @@ class BookmarksController extends AsyncNotifier<List<ServerBookmark>> {
 
 final bookmarksProvider =
     AsyncNotifierProvider<BookmarksController, List<ServerBookmark>>(BookmarksController.new);
+
+/// "Share device audio" option of the screen share; only editable before sharing starts.
+class ShareAudio extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void set(bool v) => state = v;
+}
+
+final shareAudioProvider = NotifierProvider<ShareAudio, bool>(ShareAudio.new);

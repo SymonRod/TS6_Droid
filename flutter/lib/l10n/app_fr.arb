@@ -42,6 +42,8 @@
   "connectedTo": "Connecté à {address}",
   "notifMute": "Mute",
   "notifUnmute": "Réactiver",
+  "shareDeviceAudio": "Partager l’audio de l’appareil",
+  "shareDeviceAudioHint": "Musique, jeux et vidéos arrivent aux spectateurs (ni voix ni micro). À régler avant de partager.",
   "pttSetting": "Mode appuyer pour parler",
   "deafen": "Couper le son",
   "undeafen": "Rétablir le son",

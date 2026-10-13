@@ -137,6 +137,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get notifUnmute => 'Réactiver';
 
   @override
+  String get shareDeviceAudio => 'Partager l’audio de l’appareil';
+
+  @override
+  String get shareDeviceAudioHint =>
+      'Musique, jeux et vidéos arrivent aux spectateurs (ni voix ni micro). À régler avant de partager.';
+
+  @override
   String get pttSetting => 'Mode appuyer pour parler';
 
   @override

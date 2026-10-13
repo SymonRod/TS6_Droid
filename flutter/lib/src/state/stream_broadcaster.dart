@@ -30,6 +30,7 @@ class StreamBroadcaster extends ChangeNotifier {
   String? error;
 
   MediaStream? _capture;
+  bool _withAudio = false;
   String? _streamId;
   int? _myId;
   Set<String> _knownOwn = {};
@@ -39,11 +40,12 @@ class StreamBroadcaster extends ChangeNotifier {
   bool get active => state != ShareState.idle;
 
   /// Asks the capture consent, then publishes the stream. [name] is what viewers see.
-  Future<void> start(String name, int myId, Iterable<TsStream> current) async {
+  Future<void> start(String name, int myId, Iterable<TsStream> current, {bool withAudio = false}) async {
     if (active) return;
     state = ShareState.starting;
     error = null;
     _myId = myId;
+    _withAudio = withAudio;
     _knownOwn = {for (final s in current) if (s.ownerId == myId) s.id};
     notifyListeners();
     try {
@@ -52,7 +54,8 @@ class StreamBroadcaster extends ChangeNotifier {
       final ok = await Helper.requestCapturePermission();
       if (!ok) throw 'capture_denied';
       await _audioChannel.invokeMethod('setScreenShare', {'on': true});
-      final cap = await navigator.mediaDevices.getDisplayMedia({'video': true, 'audio': false});
+      final cap = await navigator.mediaDevices.getDisplayMedia({'video': true, 'audio': withAudio});
+      debugPrint('share: capture audioTracks=${cap.getAudioTracks().length}');
       _capture = cap;
       cap.getVideoTracks().first.onEnded = () => stop();
       await _client.setupStream(name: name, bitrate: _bitrate);
@@ -164,12 +167,22 @@ class StreamBroadcaster extends ChangeNotifier {
       );
       peer.sender = tr.sender;
       // The desktop client's offers also carry an audio section (opus) and a viewer waits
-      // forever without it. Inactive keeps the m-line but sends nothing: sendonly made
-      // libwebrtc open the mic and put the user's voice into the stream.
-      await pc.addTransceiver(
-        kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
-        init: RTCRtpTransceiverInit(direction: TransceiverDirection.Inactive),
-      );
+      // forever without it. Inactive keeps the m-line but sends nothing: sendonly without
+      // a track made libwebrtc open the mic and put the user's voice into the stream.
+      // With the device-audio option the section is SendOnly with the playback-capture track.
+      final audio = _withAudio ? cap.getAudioTracks() : const <MediaStreamTrack>[];
+      if (audio.isNotEmpty) {
+        await pc.addTransceiver(
+          track: audio.first,
+          kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
+          init: RTCRtpTransceiverInit(direction: TransceiverDirection.SendOnly, streams: [cap]),
+        );
+      } else {
+        await pc.addTransceiver(
+          kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
+          init: RTCRtpTransceiverInit(direction: TransceiverDirection.Inactive),
+        );
+      }
       final caps = await getRtpSenderCapabilities('video');
       final all = caps.codecs ?? const <RTCRtpCodecCapability>[];
       final vp8 = all.where((c) => c.mimeType.toLowerCase() == 'video/vp8').toList();

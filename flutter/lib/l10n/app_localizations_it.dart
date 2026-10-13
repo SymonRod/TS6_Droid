@@ -138,6 +138,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get notifUnmute => 'Riattiva';
 
   @override
+  String get shareDeviceAudio => 'Condividi audio del dispositivo';
+
+  @override
+  String get shareDeviceAudioHint =>
+      'Musica, giochi e video arrivano a chi guarda (non voci né microfono). Da impostare prima di condividere.';
+
+  @override
   String get pttSetting => 'Modalità premi per parlare';
 
   @override
