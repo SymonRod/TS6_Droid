@@ -1,0 +1,3 @@
+rust_input: crate::api
+rust_root: ../../tslib/crates/tslib-frb
+dart_output: lib/src/rust
