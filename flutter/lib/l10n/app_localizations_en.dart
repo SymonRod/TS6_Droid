@@ -138,4 +138,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pttSetting => 'Push-to-talk mode';
+
+  @override
+  String get deafen => 'Deafen';
+
+  @override
+  String get undeafen => 'Undeafen';
 }

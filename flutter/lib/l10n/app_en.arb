@@ -49,5 +49,7 @@
   },
   "notifMute": "Mute",
   "notifUnmute": "Unmute",
-  "pttSetting": "Push-to-talk mode"
+  "pttSetting": "Push-to-talk mode",
+  "deafen": "Deafen",
+  "undeafen": "Undeafen"
 }

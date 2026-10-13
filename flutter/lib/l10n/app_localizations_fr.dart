@@ -138,4 +138,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pttSetting => 'Mode appuyer pour parler';
+
+  @override
+  String get deafen => 'Couper le son';
+
+  @override
+  String get undeafen => 'Rétablir le son';
 }

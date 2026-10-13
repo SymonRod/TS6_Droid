@@ -72,6 +72,7 @@ class ServerState {
   final Set<int> talking;
   final bool muted;
   final bool ptt;
+  final bool deafened;
   final int imageRev;
 
   const ServerState({
@@ -82,6 +83,7 @@ class ServerState {
     this.talking = const {},
     this.muted = true,
     this.ptt = false,
+    this.deafened = false,
     this.imageRev = 0,
   });
 
@@ -94,6 +96,7 @@ class ServerState {
     Set<int>? talking,
     bool? muted,
     bool? ptt,
+    bool? deafened,
     int? imageRev,
   }) =>
       ServerState(
@@ -104,6 +107,7 @@ class ServerState {
         talking: talking ?? this.talking,
         muted: muted ?? this.muted,
         ptt: ptt ?? this.ptt,
+        deafened: deafened ?? this.deafened,
         imageRev: imageRev ?? this.imageRev,
       );
 }
@@ -421,7 +425,22 @@ class ServerController extends Notifier<ServerState> {
     }
   }
 
-  Future<void> toggleMute() => _applyMuted(!state.muted);
+  /// Local deafen: stops playback of everyone else (and mutes the mic while on).
+  Future<void> toggleDeafen() async {
+    final d = !state.deafened;
+    state = state.copyWith(deafened: d);
+    try {
+      await _audioChannel.invokeMethod('setDeafened', {'deafened': d});
+    } catch (e) {
+      state = state.copyWith(error: cleanError(e));
+    }
+    if (d && !state.muted) await _applyMuted(true);
+  }
+
+  Future<void> toggleMute() async {
+    if (state.deafened && state.muted) await toggleDeafen();
+    await _applyMuted(!state.muted);
+  }
 
   Future<void> setPushToTalk(bool on) async {
     state = state.copyWith(ptt: on);

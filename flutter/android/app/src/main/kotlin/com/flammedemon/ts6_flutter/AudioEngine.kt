@@ -17,6 +17,7 @@ class AudioEngine(private val context: Context) {
     }
 
     @Volatile var muted = true
+    @Volatile var deafened = false
     @Volatile private var running = false
     private var record: AudioRecord? = null
     private var track: AudioTrack? = null
@@ -83,7 +84,7 @@ class AudioEngine(private val context: Context) {
             Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO)
             val mix = ShortArray(FRAME)
             while (running) {
-                if (NativeAudio.mixFrame(mix)) t.write(mix, 0, FRAME) else Thread.sleep(5)
+                if (NativeAudio.mixFrame(mix)) { if (!deafened) t.write(mix, 0, FRAME) } else Thread.sleep(5)
             }
         }, "ts-playback").also { it.start() }
     }

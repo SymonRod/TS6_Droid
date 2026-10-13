@@ -42,5 +42,7 @@
   "connectedTo": "Connesso a {address}",
   "notifMute": "Muto",
   "notifUnmute": "Riattiva",
-  "pttSetting": "Modalità premi per parlare"
+  "pttSetting": "Modalità premi per parlare",
+  "deafen": "Disattiva audio",
+  "undeafen": "Riattiva audio"
 }

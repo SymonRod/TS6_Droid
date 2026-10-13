@@ -42,5 +42,7 @@
   "connectedTo": "Connecté à {address}",
   "notifMute": "Mute",
   "notifUnmute": "Réactiver",
-  "pttSetting": "Mode appuyer pour parler"
+  "pttSetting": "Mode appuyer pour parler",
+  "deafen": "Couper le son",
+  "undeafen": "Rétablir le son"
 }

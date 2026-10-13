@@ -139,4 +139,10 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pttSetting => 'Modalità premi per parlare';
+
+  @override
+  String get deafen => 'Disattiva audio';
+
+  @override
+  String get undeafen => 'Riattiva audio';
 }

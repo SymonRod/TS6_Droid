@@ -52,6 +52,10 @@ class MainActivity : FlutterActivity() {
                     result.success(null)
                 }
                 "stopService" -> { ConnectionService.stop(this); result.success(null) }
+                "setDeafened" -> {
+                    ConnectionService.engine?.deafened = call.argument<Boolean>("deafened") ?: false
+                    result.success(null)
+                }
                 "setMuted" -> {
                     val m = call.argument<Boolean>("muted") ?: true
                     ConnectionService.engine?.muted = m

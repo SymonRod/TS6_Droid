@@ -357,6 +357,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Push-to-talk mode'**
   String get pttSetting;
+
+  /// No description provided for @deafen.
+  ///
+  /// In en, this message translates to:
+  /// **'Deafen'**
+  String get deafen;
+
+  /// No description provided for @undeafen.
+  ///
+  /// In en, this message translates to:
+  /// **'Undeafen'**
+  String get undeafen;
 }
 
 class _AppLocalizationsDelegate

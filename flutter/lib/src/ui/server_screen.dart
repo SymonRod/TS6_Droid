@@ -8,6 +8,7 @@ import '../rust/api.dart';
 import '../state/server_controller.dart';
 import '../util/errors.dart';
 import 'bbcode.dart';
+import 'theme.dart';
 import 'ts_image.dart';
 
 class ServerScreen extends ConsumerStatefulWidget {
@@ -34,46 +35,26 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
       }
     });
 
+    final kb = MediaQuery.of(context).viewInsets.bottom > 0;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(snap?.serverInfo.name ?? 'Server'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.touch_app, color: s.ptt ? Theme.of(context).colorScheme.primary : null),
-            tooltip: l.pttSetting,
-            isSelected: s.ptt,
-            onPressed: () => ctrl.setPushToTalk(!s.ptt),
-          ),
-          if (!s.ptt)
-            IconButton(
-              icon: Icon(s.muted ? Icons.mic_off : Icons.mic, color: s.muted ? null : Colors.green),
-              tooltip: s.muted ? l.unmute : l.mute,
-              onPressed: ctrl.toggleMute,
-            ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: l.disconnect,
-            onPressed: ctrl.disconnect,
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text(snap?.serverInfo.name ?? 'Server')),
       body: snap == null
           ? const Center(child: CircularProgressIndicator())
           : IndexedStack(index: _tab, children: [
-              Column(children: [
-                Expanded(child: _ChannelTree(snap: snap, talking: s.talking)),
-                if (s.ptt) _PttButton(active: !s.muted, onChanged: ctrl.pttHold),
-              ]),
+              _ChannelTree(snap: snap, talking: s.talking),
               _Chat(snap: snap, messages: s.messages),
             ]),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        onDestinationSelected: (i) => setState(() => _tab = i),
-        destinations: [
-          NavigationDestination(icon: const Icon(Icons.account_tree), label: l.channels),
-          NavigationDestination(icon: const Icon(Icons.chat), label: l.chat),
-        ],
-      ),
+      bottomNavigationBar: Column(mainAxisSize: MainAxisSize.min, children: [
+        if (snap != null && !kb) const _ControlBar(),
+        NavigationBar(
+          selectedIndex: _tab,
+          onDestinationSelected: (i) => setState(() => _tab = i),
+          destinations: [
+            NavigationDestination(icon: const Icon(Icons.account_tree), label: l.channels),
+            NavigationDestination(icon: const Icon(Icons.chat), label: l.chat),
+          ],
+        ),
+      ]),
     );
   }
 }
@@ -142,7 +123,26 @@ Future<void> _join(BuildContext context, WidgetRef ref, TsChannel ch) async {
   if (pw != null) await ctrl.moveToChannel(ch.id, password: pw);
 }
 
-/// Avatar when the server has one, otherwise the talk/mute/person icon.
+Color _avatarColor(String key) {
+  var h = 0;
+  for (final c in key.codeUnits) {
+    h = (h * 31 + c) & 0x7fffffff;
+  }
+  return HSLColor.fromAHSL(1, (h % 360).toDouble(), 0.5, 0.36).toColor();
+}
+
+String _initials(String name) {
+  final words = name.trim().split(RegExp(r'[\s_\-.]+')).where((w) => w.isNotEmpty).toList();
+  if (words.isEmpty) return '?';
+  if (words.length == 1) {
+    final r = words[0].runes.toList();
+    return String.fromCharCodes(r.take(2)).toUpperCase();
+  }
+  return (String.fromCharCode(words[0].runes.first) + String.fromCharCode(words[1].runes.first)).toUpperCase();
+}
+
+/// Server avatar when we have one, otherwise a coloured circle with initials.
+/// A green ring pulses in while the user is talking.
 class _UserAvatar extends StatelessWidget {
   final TsUser u;
   final bool talking;
@@ -150,110 +150,291 @@ class _UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final icon = Icon(
-      talking ? Icons.mic : (u.isInputMuted ? Icons.mic_off : Icons.person),
-      size: 20,
-      color: talking ? Colors.green : null,
+    const size = 34.0;
+    final ring = TsColors.of(context).talking;
+    final key = u.uid.isNotEmpty ? u.uid : u.nickname;
+    final initials = Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(color: _avatarColor(key), shape: BoxShape.circle),
+      child: Text(_initials(u.nickname),
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
     );
     final hasAvatar = (u.avatarId ?? '').isNotEmpty && u.uid.isNotEmpty;
-    if (!hasAvatar) return icon;
-    return Container(
-      padding: const EdgeInsets.all(1.5),
+    final inner = hasAvatar ? TsImage('avatar:${u.uid}', size: size, round: true, fallback: initials) : initials;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: talking ? Colors.green : Colors.transparent, width: 2),
+        border: Border.all(color: talking ? ring : Colors.transparent, width: 2.5),
+        boxShadow: talking ? [BoxShadow(color: ring.withValues(alpha: 0.45), blurRadius: 8)] : null,
       ),
-      child: TsImage('avatar:${u.uid}', size: 26, round: true, fallback: icon),
+      child: inner,
     );
   }
 }
 
-class _PttButton extends StatelessWidget {
-  final bool active;
-  final ValueChanged<bool> onChanged;
-  const _PttButton({required this.active, required this.onChanged});
+class _ControlBar extends ConsumerWidget {
+  const _ControlBar();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(serverProvider);
+    final ctrl = ref.read(serverProvider.notifier);
+    final l = AppLocalizations.of(context);
     final cs = Theme.of(context).colorScheme;
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Listener(
-          onPointerDown: (_) => onChanged(true),
-          onPointerUp: (_) => onChanged(false),
-          onPointerCancel: (_) => onChanged(false),
-          child: Container(
-            height: 64,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: active ? Colors.green : cs.secondaryContainer,
-              borderRadius: BorderRadius.circular(32),
+    final tc = TsColors.of(context);
+    final live = !s.muted;
+
+    Widget btn(IconData icon, String label, VoidCallback onTap,
+        {Color? bg, Color? fg, int flex = 1}) {
+      return Expanded(
+        flex: flex,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Material(
+            color: bg ?? cs.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(22),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(22),
+              onTap: onTap,
+              child: _btnFace(icon, label, fg ?? cs.onSurface),
             ),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(active ? Icons.mic : Icons.mic_off, color: active ? Colors.white : cs.onSecondaryContainer),
-              const SizedBox(width: 8),
-              Text(AppLocalizations.of(context).holdToTalk,
-                  style: TextStyle(color: active ? Colors.white : cs.onSecondaryContainer)),
-            ]),
           ),
+        ),
+      );
+    }
+
+    final Widget mic;
+    if (s.ptt) {
+      mic = Expanded(
+        flex: 2,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Listener(
+            onPointerDown: (_) => ctrl.pttHold(true),
+            onPointerUp: (_) => ctrl.pttHold(false),
+            onPointerCancel: (_) => ctrl.pttHold(false),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 120),
+              decoration: BoxDecoration(
+                color: live ? tc.talking : cs.secondaryContainer,
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: _btnFace(live ? Icons.mic : Icons.mic_off, l.holdToTalk,
+                  live ? Colors.black : cs.onSecondaryContainer),
+            ),
+          ),
+        ),
+      );
+    } else {
+      mic = btn(
+        s.muted ? Icons.mic_off : Icons.mic,
+        s.muted ? l.unmute : l.mute,
+        ctrl.toggleMute,
+        bg: s.muted ? tc.muted.withValues(alpha: 0.22) : tc.talking,
+        fg: s.muted ? tc.muted : Colors.black,
+        flex: 2,
+      );
+    }
+
+    return Material(
+      color: cs.surfaceContainer,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
+        child: SizedBox(
+          height: 68,
+          child: Row(children: [
+            mic,
+            btn(s.deafened ? Icons.headset_off : Icons.headset, s.deafened ? l.undeafen : l.deafen,
+                ctrl.toggleDeafen,
+                bg: s.deafened ? tc.muted.withValues(alpha: 0.22) : null, fg: s.deafened ? tc.muted : null),
+            btn(Icons.touch_app, 'PTT',
+                () => ctrl.setPushToTalk(!s.ptt),
+                bg: s.ptt ? cs.primaryContainer : null, fg: s.ptt ? cs.onPrimaryContainer : null),
+            btn(Icons.call_end, l.disconnect, ctrl.disconnect, bg: tc.muted, fg: Colors.white),
+          ]),
         ),
       ),
     );
   }
+
+  Widget _btnFace(IconData icon, String label, Color fg) => Center(
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Icon(icon, size: 28, color: fg),
+          const SizedBox(height: 2),
+          Text(label,
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 10.5, height: 1.1, color: fg, fontWeight: FontWeight.w500)),
+        ]),
+      );
 }
 
-class _ChannelTree extends ConsumerWidget {
+class _ChannelTree extends ConsumerStatefulWidget {
   final TsSnapshot snap;
   final Set<int> talking;
   const _ChannelTree({required this.snap, required this.talking});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ChannelTree> createState() => _ChannelTreeState();
+}
+
+class _ChannelTreeState extends ConsumerState<_ChannelTree> {
+  final _collapsed = <int>{};
+  static const _indent = 20.0;
+
+  Widget _guides(int depth, Color color, Widget child) => IntrinsicHeight(
+        child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          const SizedBox(width: 8),
+          for (var i = 0; i < depth; i++)
+            SizedBox(
+              width: _indent,
+              child: Align(alignment: Alignment.centerLeft, child: Container(width: 1.5, color: color)),
+            ),
+          Expanded(child: child),
+        ]),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final snap = widget.snap;
+    final cs = Theme.of(context).colorScheme;
+    final tc = TsColors.of(context);
+    final l = AppLocalizations.of(context);
+    final line = cs.outlineVariant;
+    final myChannel =
+        snap.users.where((u) => u.id == snap.clientId).map((u) => u.channelId).firstOrNull ?? snap.channelId;
     final rows = <Widget>[];
+
     void walk(int parent, int depth) {
       for (final ch in _orderedChildren(snap.channels, parent)) {
-        final here = snap.channelId == ch.id;
-        rows.add(ListTile(
-          dense: true,
-          contentPadding: EdgeInsets.only(left: 12.0 + depth * 16, right: 8),
-          leading: Icon(ch.hasPassword ? Icons.lock : Icons.tag, size: 20),
-          title: Text(_channelLabel(ch.name),
-              style: TextStyle(fontWeight: here ? FontWeight.bold : FontWeight.normal)),
-          trailing: ch.iconId != 0 ? TsImage('icon:${ch.iconId}', size: 20) : null,
-          selected: here,
-          onTap: here ? null : () => _join(context, ref, ch),
+        final here = myChannel == ch.id;
+        final kids = _orderedChildren(snap.channels, ch.id);
+        final users = snap.users.where((u) => u.channelId == ch.id).toList();
+        final expandable = kids.isNotEmpty || users.isNotEmpty;
+        final closed = _collapsed.contains(ch.id);
+        final total = users.length;
+        rows.add(_guides(
+          depth,
+          line,
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+            child: Material(
+              color: here ? cs.primary.withValues(alpha: 0.22) : Colors.transparent,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(color: here ? cs.primary : Colors.transparent, width: 1.5)),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: here ? null : () => _join(context, ref, ch),
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 2, right: 4),
+                  child: Row(children: [
+                    SizedBox(
+                      width: 36,
+                      height: 44,
+                      child: expandable
+                          ? IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: AnimatedRotation(
+                                turns: closed ? -0.25 : 0,
+                                duration: const Duration(milliseconds: 150),
+                                child: const Icon(Icons.expand_more, size: 22),
+                              ),
+                              onPressed: () => setState(() {
+                                if (!_collapsed.remove(ch.id)) _collapsed.add(ch.id);
+                              }),
+                            )
+                          : null,
+                    ),
+                    Icon(ch.hasPassword ? Icons.lock : Icons.tag,
+                        size: 18, color: here ? cs.primary : cs.onSurfaceVariant),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(_channelLabel(ch.name),
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: here ? FontWeight.w700 : FontWeight.w600,
+                              color: here ? cs.primary : cs.onSurface)),
+                    ),
+                    if (ch.iconId != 0) ...[const SizedBox(width: 6), TsImage('icon:${ch.iconId}', size: 18)],
+                    if (closed && total > 0) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                            color: cs.surfaceContainerHighest, borderRadius: BorderRadius.circular(10)),
+                        child: Text('$total', style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+                      ),
+                    ],
+                  ]),
+                ),
+              ),
+            ),
+          ),
         ));
-        for (final u in snap.users.where((u) => u.channelId == ch.id)) {
-          rows.add(ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.only(left: 36.0 + depth * 16, right: 8),
-            leading: _UserAvatar(u, talking: talking.contains(u.id)),
-            title: Row(children: [
-              Flexible(
-                  child: Text(u.nickname + (u.id == snap.clientId ? ' (${AppLocalizations.of(context).you})' : ''),
-                      overflow: TextOverflow.ellipsis)),
-              if (u.iconId != 0) ...[
-                const SizedBox(width: 6),
-                TsImage('icon:${u.iconId}', size: 16),
-              ],
-            ]),
-            trailing: u.isStreaming && u.id != snap.clientId
-                ? IconButton(
-                    icon: const Icon(Icons.screen_share, size: 20, color: Colors.green),
-                    tooltip: AppLocalizations.of(context).watchShare,
-                    onPressed: () => _watch(context, ref, u),
-                  )
-                : (u.isStreaming ? const Icon(Icons.screen_share, size: 18, color: Colors.green) : null),
-          ));
+        if (!closed) {
+          for (final u in users) {
+            final isTalking = widget.talking.contains(u.id);
+            final me = u.id == snap.clientId;
+            rows.add(_guides(
+              depth + 1,
+              line,
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 4),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 46),
+                  child: Row(children: [
+                    _UserAvatar(u, talking: isTalking),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(u.nickname + (me ? ' (${l.you})' : ''),
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: isTalking || me ? FontWeight.w600 : FontWeight.normal,
+                              color: isTalking ? tc.talking : cs.onSurface)),
+                    ),
+                    if (u.iconId != 0) ...[TsImage('icon:${u.iconId}', size: 16), const SizedBox(width: 6)],
+                    if (u.isAway) Icon(Icons.bedtime, size: 18, color: tc.away),
+                    if (u.isOutputMuted || !u.hasOutputHardware)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 6),
+                        child: Icon(Icons.headset_off, size: 18, color: tc.muted),
+                      ),
+                    if (u.isInputMuted || !u.hasInputHardware)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 6),
+                        child: Icon(Icons.mic_off, size: 18, color: tc.muted),
+                      ),
+                    if (u.isStreaming)
+                      me
+                          ? Padding(
+                              padding: const EdgeInsets.only(left: 6),
+                              child: Icon(Icons.screen_share, size: 18, color: tc.talking))
+                          : IconButton(
+                              icon: Icon(Icons.screen_share, size: 22, color: tc.talking),
+                              tooltip: l.watchShare,
+                              onPressed: () => _watch(context, ref, u),
+                            ),
+                  ]),
+                ),
+              ),
+            ));
+          }
+          walk(ch.id, depth + 1);
         }
-        walk(ch.id, depth + 1);
       }
     }
 
     walk(0, 0);
-    return ListView(children: rows);
+    return ListView(padding: const EdgeInsets.symmetric(vertical: 6), children: rows);
   }
 }
 
@@ -338,17 +519,40 @@ class _ChatState extends ConsumerState<_Chat> {
           itemCount: shown.length,
           itemBuilder: (_, i) {
             final m = shown[i];
+            final cs = Theme.of(context).colorScheme;
+            final t = TimeOfDay.fromDateTime(m.time).format(context);
             return Align(
               alignment: m.isMe ? Alignment.centerRight : Alignment.centerLeft,
-              child: Card(
-                color: m.isMe ? Theme.of(context).colorScheme.primaryContainer : null,
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(m.sender, style: Theme.of(context).textTheme.labelSmall),
-                    BbText(m.text),
-                  ]),
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 3),
+                constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.82),
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                decoration: BoxDecoration(
+                  color: m.isMe ? cs.primaryContainer : cs.surfaceContainerHigh,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(18),
+                    topRight: const Radius.circular(18),
+                    bottomLeft: Radius.circular(m.isMe ? 18 : 4),
+                    bottomRight: Radius.circular(m.isMe ? 4 : 18),
+                  ),
                 ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(mainAxisSize: MainAxisSize.min, children: [
+                    if (!m.isMe)
+                      Flexible(
+                        child: Text(m.sender,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w700, color: HSLColor.fromColor(_avatarColor(m.sender))
+                                    .withLightness(Theme.of(context).brightness == Brightness.dark ? 0.72 : 0.32)
+                                    .toColor())),
+                      ),
+                    if (!m.isMe) const SizedBox(width: 8),
+                    Text(t, style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant)),
+                  ]),
+                  const SizedBox(height: 2),
+                  BbText(m.text),
+                ]),
               ),
             );
           },

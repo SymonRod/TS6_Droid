@@ -22,6 +22,7 @@ deleted. Flutter builds `tslib-frb` from `../tslib` (see
 | 4 foreground service, screen-off audio, notification Disconnect | verified |
 | 5 P2P screen share viewer (`flutter_webrtc`) | verified: the stream plays on the phone against a real sharer (rotation, fit/fill, long sessions not yet exercised) |
 | polish pass (BBCode, saved chat, avatars/icons, go_router, clean errors, dispose on ConnectionLost, channel passwords, push-to-talk, mute in notification, stripped `.so`, fr/it) | written, `flutter analyze` clean, release APK builds and launches on the S25; behaviour not yet checked by hand |
+| UI restyle (dynamic colour + OLED theme, collapsible channel tree with guides, initials avatars, status badges, current-channel highlight, bottom control bar with mic/deafen/PTT/disconnect, chat bubbles with time) | written, `flutter analyze` clean, release APK installed on the S25 and checked by screenshot (channels, chat, control bar); talking ring, PTT hold and deafen not yet exercised by hand. Deafen is local only (playback gate in `AudioEngine`), it does not set the TS output-muted flag |
 | 6 file manager, myTS login | not started |
 
 Next, in this order:
