@@ -22,25 +22,24 @@ docs/                        # protocol research and design notes
 ```
 
 The native library `tslib` (Rust) handles the TeamSpeak protocol over JNI and
-**lives outside this repository**, at `../tslib`. It is a Cargo workspace
-(`tslib-core`, `tslib-audio`, `tslib-chat`, `tslib-channel`, `tslib-ffi`,
-`tslib-jni`, `tslib-python`, `tslib-bot`) built on
-[tsclientlib](https://github.com/ReSpeak/tsclientlib).
+**lives outside this repository**, in
+[SymonRod/ts6-lib](https://github.com/SymonRod/ts6-lib), checked out at
+`../tslib`. It is a Cargo workspace (`tslib-core`, `tslib-audio`, `tslib-chat`,
+`tslib-channel`, `tslib-ffi`, `tslib-jni`, `tslib-frb`, `tslib-stream`,
+`tslib-python`, `tslib-bot`).
 
-`tslib` depends on a **fork**,
-[SymonRod/tsclientlib](https://github.com/SymonRod/tsclientlib) (branch
-`ts6-client-is-streaming`), which declares the TeamSpeak 6
-arguments/commands upstream does not know — `client_is_streaming` plus the
-P2P viewer commands (eight incoming `notifystream*`/`notifyrespondjoinstreamrequest`
-notifications, three outgoing `joinstreamrequest`/`streamsignaling`/`requeststreaminfo`
-commands). The
-declarations live in a submodule, forked as
-[SymonRod/tsdeclarations](https://github.com/SymonRod/tsdeclarations) on the
-same branch; cargo checks it out on its own, so no `git submodule` step is
-needed here. Adding a TS6 argument means a commit in *both* forks: the field in
+`tsclientlib` (a fork of [ReSpeak/tsclientlib](https://github.com/ReSpeak/tsclientlib))
+and its TeamSpeak 6 declarations are **vendored** in that repo under
+`vendor/tsclientlib/` (declarations in
+`vendor/tsclientlib/utils/tsproto-structs/declarations/`) and built as path
+dependencies, so there are no separate forks or submodules to keep in sync.
+Adding a TS6 argument is one commit in `ts6-lib`: the field in
 `declarations/Messages.toml` (plus the command's `attributes`, optional with
-`?`) and, for a book property, `declarations/Book.toml` with `opt=true`; then
-bump the submodule pointer in the tsclientlib fork.
+`?`) and, for a book property, `declarations/Book.toml` with `opt=true`.
+To pull upstream changes use `git subtree pull --prefix=vendor/tsclientlib`.
+
+The Flutter port lives in `flutter/` (see `docs/flutter-migration-plan.md`) and
+uses the `tslib-frb` crate of the same library.
 
 ## Build
 
