@@ -7,6 +7,36 @@ ends with something runnable, and gaps are written down instead of blocking.
 The Kotlin app stays in the repo and keeps shipping until the Flutter app
 reaches parity on the "must have" list below. No big-bang switch.
 
+## Status (2026-10-13)
+
+Phases 0-5 are written and committed on `main`. Library is now
+[SymonRod/ts6-lib](https://github.com/SymonRod/ts6-lib) (private), checked out
+at `../tslib`, with tsclientlib + TS6 declarations vendored; the old forks are
+deleted. Flutter builds `tslib-frb` from `../tslib` (see
+`flutter/android/app/build.gradle.kts`).
+
+| Phase | State |
+|---|---|
+| 0-2 connect, channels, users, chat, bookmarks | verified on a real phone and server |
+| 3 audio (Kotlin capture/playback, Opus in Rust) | verified both directions |
+| 4 foreground service, screen-off audio, notification Disconnect | verified |
+| 5 P2P screen share viewer (`flutter_webrtc`) | compiles, **never tested against a real sharer** |
+| 6 file manager, myTS login | not started |
+
+Next, in this order:
+1. Test the screen share with a desktop sharer; fix whatever breaks.
+2. Split `flutter/` into its own repo that consumes `ts6-lib` (submodule or
+   git path); fix the `rustProjectDir` path in `android/app/build.gradle.kts`.
+3. Polish pass: BBCode rendering, chat persistence, avatars/icons, `go_router`,
+   clean error text (strip the `AnyhowException` prefix), dispose the Rust
+   client on `ConnectionLost`, channel passwords, push-to-talk, mute in the
+   notification, strip the `.so` (it ships with debug info), fr/it strings.
+4. File manager, then myTS login (prefer moving it into Rust).
+
+Known gaps from the first round: screen share has no stream list (entry is the
+green icon next to the user), `requestStreamInfo` is tried once per owner, no
+stats overlay, ICE errors are generic. NDK in use is 28.2, not 27.x.
+
 ## Decisions
 
 | Topic | Decision | Why |
