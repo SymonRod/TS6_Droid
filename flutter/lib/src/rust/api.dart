@@ -8,9 +8,9 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'api.freezed.dart';
 
-// These functions are ignored because they are not marked as `pub`: `conv_channel`, `conv_event`, `conv_state`, `conv_user`, `err`
+// These functions are ignored because they are not marked as `pub`: `conv_channel`, `conv_event`, `conv_state`, `conv_stream`, `conv_user`, `err`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Handle`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TsClient>>
 abstract class TsClient implements RustOpaqueInterface {
@@ -37,13 +37,25 @@ abstract class TsClient implements RustOpaqueInterface {
   /// Call once per client.
   Stream<TsEvent> events();
 
+  Future<void> joinStream({required int ownerId, required String streamId});
+
+  Future<void> leaveStream({required int ownerId, required String streamId});
+
   Future<void> moveToChannel({required PlatformInt64 channelId});
+
+  Future<void> requestStreamInfo({required int ownerId});
 
   Future<void> sendChannelMessage({required String msg});
 
   Future<void> sendPrivateMessage({required int userId, required String msg});
 
   Future<void> sendServerMessage({required String msg});
+
+  Future<void> sendStreamSignaling({
+    required int ownerId,
+    required String streamId,
+    required String json,
+  });
 
   Future<void> setInputMuted({required bool muted});
 
@@ -247,6 +259,20 @@ sealed class TsEvent with _$TsEvent {
     required PlatformInt64 channelId,
     required PlatformInt64 permissionHints,
   }) = TsEvent_ChannelPermissionsUpdated;
+  const factory TsEvent.streamsChanged({required List<TsStream> streams}) =
+      TsEvent_StreamsChanged;
+  const factory TsEvent.streamJoinResponse({
+    required int ownerId,
+    required String streamId,
+    required bool accepted,
+    String? message,
+    String? offer,
+  }) = TsEvent_StreamJoinResponse;
+  const factory TsEvent.streamSignaling({
+    required int ownerId,
+    required String streamId,
+    required String json,
+  }) = TsEvent_StreamSignaling;
 }
 
 enum TsMessageTarget { server, channel, private }
@@ -310,6 +336,7 @@ class TsSnapshot {
   final List<TsChannel> channels;
   final List<TsUser> users;
   final TsServerInfo serverInfo;
+  final List<TsStream> streams;
 
   const TsSnapshot({
     required this.state,
@@ -318,6 +345,7 @@ class TsSnapshot {
     required this.channels,
     required this.users,
     required this.serverInfo,
+    required this.streams,
   });
 
   @override
@@ -327,7 +355,8 @@ class TsSnapshot {
       channelId.hashCode ^
       channels.hashCode ^
       users.hashCode ^
-      serverInfo.hashCode;
+      serverInfo.hashCode ^
+      streams.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -339,7 +368,47 @@ class TsSnapshot {
           channelId == other.channelId &&
           channels == other.channels &&
           users == other.users &&
-          serverInfo == other.serverInfo;
+          serverInfo == other.serverInfo &&
+          streams == other.streams;
+}
+
+class TsStream {
+  final int ownerId;
+  final String id;
+  final String? name;
+  final int? streamType;
+  final int? viewerCount;
+  final bool? audio;
+
+  const TsStream({
+    required this.ownerId,
+    required this.id,
+    this.name,
+    this.streamType,
+    this.viewerCount,
+    this.audio,
+  });
+
+  @override
+  int get hashCode =>
+      ownerId.hashCode ^
+      id.hashCode ^
+      name.hashCode ^
+      streamType.hashCode ^
+      viewerCount.hashCode ^
+      audio.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TsStream &&
+          runtimeType == other.runtimeType &&
+          ownerId == other.ownerId &&
+          id == other.id &&
+          name == other.name &&
+          streamType == other.streamType &&
+          viewerCount == other.viewerCount &&
+          audio == other.audio;
 }
 
 class TsUser {

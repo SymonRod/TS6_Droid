@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../rust/api.dart';
 import '../state/server_controller.dart';
+import 'stream_screen.dart';
 
 class ServerScreen extends ConsumerStatefulWidget {
   const ServerScreen({super.key});
@@ -84,6 +85,21 @@ String _channelLabel(String name) {
   return m != null ? m.group(1)! : name;
 }
 
+void _watch(BuildContext context, WidgetRef ref, TsUser u) {
+  final viewer = ref.read(serverProvider.notifier).viewer;
+  final snap = ref.read(serverProvider).snapshot;
+  if (viewer == null || snap == null) return;
+  final stream = snap.streams.where((s) => s.ownerId == u.id).firstOrNull;
+  if (stream == null) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('Stream info not received yet, try again.')));
+    ref.read(serverProvider.notifier).requestStreamInfo(u.id);
+    return;
+  }
+  viewer.join(stream.ownerId, stream.id, stream.name ?? u.nickname);
+  Navigator.of(context).push(MaterialPageRoute(builder: (_) => StreamScreen(viewer: viewer)));
+}
+
 class _ChannelTree extends ConsumerWidget {
   final TsSnapshot snap;
   final Set<int> talking;
@@ -114,7 +130,13 @@ class _ChannelTree extends ConsumerWidget {
               color: talking.contains(u.id) ? Colors.green : null,
             ),
             title: Text(u.nickname + (u.id == snap.clientId ? ' (you)' : '')),
-            trailing: u.isStreaming ? const Icon(Icons.screen_share, size: 18, color: Colors.green) : null,
+            trailing: u.isStreaming && u.id != snap.clientId
+                ? IconButton(
+                    icon: const Icon(Icons.screen_share, size: 20, color: Colors.green),
+                    tooltip: 'Watch screen share',
+                    onPressed: () => _watch(context, ref, u),
+                  )
+                : (u.isStreaming ? const Icon(Icons.screen_share, size: 18, color: Colors.green) : null),
           ));
         }
         walk(ch.id, depth + 1);

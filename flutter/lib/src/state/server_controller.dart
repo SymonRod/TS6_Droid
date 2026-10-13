@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/server_bookmark.dart';
 import '../data/stores.dart';
 import '../rust/api.dart';
+import 'stream_viewer.dart';
 
 /// Platform channel to the Kotlin foreground service / audio engine (phases 3-4).
 /// PCM and Opus never cross it: only control calls.
@@ -70,6 +71,8 @@ class ServerController extends Notifier<ServerState> {
   StreamSubscription<TsEvent>? _sub;
   Timer? _refreshTimer;
   Timer? _periodic;
+  StreamViewer? viewer;
+  final _queriedOwners = <int>{};
 
   @override
   ServerState build() {
@@ -94,6 +97,7 @@ class ServerController extends Notifier<ServerState> {
         channel: b.channel,
       );
       _client = client;
+      viewer = StreamViewer(client);
       await client.waitConnected();
       _sub = client.events().listen(_onEvent, onError: (Object e) {
         state = state.copyWith(error: '$e');
@@ -121,7 +125,16 @@ class ServerController extends Notifier<ServerState> {
     final c = _client;
     if (c == null) return;
     try {
-      state = state.copyWith(snapshot: c.snapshot());
+      final snap = c.snapshot();
+      state = state.copyWith(snapshot: snap);
+      // Shares already running at join time only show up after a request.
+      for (final u in snap.users) {
+        if (u.isStreaming &&
+            !snap.streams.any((s) => s.ownerId == u.id) &&
+            _queriedOwners.add(u.id)) {
+          c.requestStreamInfo(ownerId: u.id).catchError((_) {});
+        }
+      }
     } catch (_) {}
   }
 
@@ -133,6 +146,7 @@ class ServerController extends Notifier<ServerState> {
   }
 
   void _onEvent(TsEvent e) {
+    viewer?.onEvent(e);
     switch (e) {
       case TsEvent_TextMessage():
         final me = state.snapshot?.clientId;
@@ -204,6 +218,8 @@ class ServerController extends Notifier<ServerState> {
     }
   }
 
+  void requestStreamInfo(int ownerId) => _client?.requestStreamInfo(ownerId: ownerId).catchError((_) {});
+
   void clearError() => state = state.copyWith(clearError: true);
 
   Future<void> disconnect() async {
@@ -220,6 +236,9 @@ class ServerController extends Notifier<ServerState> {
   }
 
   void _teardown() {
+    viewer?.dispose();
+    viewer = null;
+    _queriedOwners.clear();
     _sub?.cancel();
     _sub = null;
     _periodic?.cancel();
