@@ -27,6 +27,9 @@ class MainActivity : FlutterActivity() {
         ConnectionService.onMuteToggleRequested = {
             runOnUiThread { ch.invokeMethod("muteToggleRequested", null) }
         }
+        ConnectionService.onVoiceActivity = { v ->
+            runOnUiThread { ch.invokeMethod("voiceActivity", v) }
+        }
         ch.setMethodCallHandler { call, result ->
             when (call.method) {
                 // Asks RECORD_AUDIO (+ POST_NOTIFICATIONS on 33+); returns true if mic granted.

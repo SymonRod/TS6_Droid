@@ -14,10 +14,15 @@ class AudioEngine(private val context: Context) {
     companion object {
         const val SAMPLE_RATE = 48000
         private const val FRAME = 960 // 20 ms mono
+        // Visual "I am speaking" indicator only; never gates what is sent.
+        private const val VOICE_RMS_ON = 600.0   // ~ -35 dBFS
+        private const val VOICE_HANGOVER_FRAMES = 17 // ~340 ms
     }
 
     @Volatile var muted = true
     @Volatile var deafened = false
+    /** Called from the capture thread on speaking/not-speaking transitions only. */
+    @Volatile var onVoiceActivity: ((Boolean) -> Unit)? = null
     @Volatile private var running = false
     private var record: AudioRecord? = null
     private var track: AudioTrack? = null
@@ -51,16 +56,26 @@ class AudioEngine(private val context: Context) {
             Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO)
             val buf = ShortArray(FRAME)
             val bytes = ByteArray(FRAME * 2)
+            var voice = false
+            var hang = 0
+            fun setVoice(v: Boolean) {
+                if (v != voice) { voice = v; onVoiceActivity?.invoke(v) }
+            }
             while (running) {
                 val n = rec.read(buf, 0, FRAME)
                 if (n != FRAME) { if (n < 0) break else continue }
-                if (muted) continue
+                if (muted) { hang = 0; setVoice(false); continue }
+                var sum = 0.0
+                for (i in 0 until FRAME) { val x = buf[i].toDouble(); sum += x * x }
+                if (Math.sqrt(sum / FRAME) >= VOICE_RMS_ON) { hang = VOICE_HANGOVER_FRAMES; setVoice(true) }
+                else if (hang > 0) hang-- else setVoice(false)
                 for (i in 0 until FRAME) {
                     bytes[i * 2] = (buf[i].toInt() and 0xFF).toByte()
                     bytes[i * 2 + 1] = (buf[i].toInt() shr 8).toByte()
                 }
                 NativeAudio.sendPcm(bytes)
             }
+            setVoice(false)
         }, "ts-capture").also { it.start() }
     }
 

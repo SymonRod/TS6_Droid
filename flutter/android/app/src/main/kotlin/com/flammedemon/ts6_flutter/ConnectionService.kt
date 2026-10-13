@@ -28,6 +28,7 @@ class ConnectionService : Service() {
             instance?.refreshNotification()
         }
         @Volatile var engine: AudioEngine? = null
+        @Volatile var onVoiceActivity: ((Boolean) -> Unit)? = null
         /** Set by MainActivity so the notification button can reach Dart. */
         @Volatile var onDisconnectRequested: (() -> Unit)? = null
 
@@ -79,6 +80,7 @@ class ConnectionService : Service() {
                 .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ts6:conn").apply { acquire() }
         }
         val e = engine ?: AudioEngine(applicationContext).also { engine = it }
+        e.onVoiceActivity = { v -> android.util.Log.d("ts6-voice", "voice=$v"); onVoiceActivity?.invoke(v) }
         e.start(hasMic)
         return START_NOT_STICKY
     }

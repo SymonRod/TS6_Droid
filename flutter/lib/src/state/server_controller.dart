@@ -139,6 +139,9 @@ class ServerController extends Notifier<ServerState> {
           await disconnect();
         case 'muteToggleRequested': // notification button
           if (state.status == ConnStatus.connected) await toggleMute();
+        case 'voiceActivity': // capture-thread level detector (visual only)
+          _voice = call.arguments == true;
+          _syncLocalTalking();
       }
     });
     ref.read(settingsStoreProvider).pushToTalk().then((v) {
@@ -415,8 +418,23 @@ class ServerController extends Notifier<ServerState> {
 
   // ------------------------------------------------------------------ audio
 
+  bool _voice = false;
+
+  /// Own "speaking" ring: the server never echoes our audio, so derive it locally.
+  /// PTT: while the mic is open (button held). Open mic: level detector in Kotlin.
+  /// Only touches state on transitions.
+  void _syncLocalTalking() {
+    final me = state.snapshot?.clientId;
+    if (me == null || state.status != ConnStatus.connected) return;
+    final on = !state.muted && !state.deafened && (state.ptt || _voice);
+    if (on == state.talking.contains(me)) return;
+    state = state.copyWith(
+        talking: on ? {...state.talking, me} : ({...state.talking}..remove(me)));
+  }
+
   Future<void> _applyMuted(bool m) async {
     state = state.copyWith(muted: m);
+    _syncLocalTalking();
     try {
       await _audioChannel.invokeMethod('setMuted', {'muted': m});
       await _client?.setInputMuted(muted: m);
@@ -434,6 +452,7 @@ class ServerController extends Notifier<ServerState> {
     final d = !state.deafened;
     if (d) _micWasOnBeforeDeafen = !state.muted;
     state = state.copyWith(deafened: d);
+    _syncLocalTalking();
     try {
       await _audioChannel.invokeMethod('setDeafened', {'deafened': d});
       await _client?.setOutputMuted(muted: d);
@@ -458,6 +477,7 @@ class ServerController extends Notifier<ServerState> {
 
   Future<void> setPushToTalk(bool on) async {
     state = state.copyWith(ptt: on);
+    _syncLocalTalking();
     await ref.read(settingsStoreProvider).setPushToTalk(on);
     await _applyMuted(true);
   }
@@ -480,6 +500,7 @@ class ServerController extends Notifier<ServerState> {
       } catch (_) {}
       c.dispose();
     }
+    _voice = false;
     state = ServerState(ptt: state.ptt);
   }
 
