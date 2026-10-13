@@ -91,6 +91,13 @@ class _StreamScreenState extends State<StreamScreen> {
                 right: 8,
                 child: SafeArea(
                   child: Row(children: [
+                    if (playing && v.hasAudio) ...[
+                      Icon(v.volume == 0 ? Icons.volume_off : Icons.volume_up, color: Colors.white),
+                      SizedBox(
+                        width: 140,
+                        child: Slider(value: v.volume, onChanged: v.setVolume),
+                      ),
+                    ],
                     if (playing)
                       IconButton(
                         color: Colors.white,

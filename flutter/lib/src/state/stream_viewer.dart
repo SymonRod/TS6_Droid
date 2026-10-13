@@ -28,6 +28,24 @@ class StreamViewer extends ChangeNotifier {
   int? ownerId;
   String? streamId;
   final renderer = RTCVideoRenderer();
+  MediaStreamTrack? _audioTrack;
+  double volume = 1;
+
+  bool get hasAudio => _audioTrack != null;
+
+  /// 0..1. The stream's own audio only; voice chat volume is separate.
+  Future<void> setVolume(double v) async {
+    volume = v.clamp(0, 1);
+    notifyListeners();
+    final t = _audioTrack;
+    if (t != null) {
+      try {
+        await Helper.setVolume(volume, t); // native scale 0..10, 1 = unity
+      } catch (e) {
+        debugPrint('stream setVolume failed: $e');
+      }
+    }
+  }
   bool _rendererReady = false;
 
   RTCPeerConnection? _pc;
@@ -122,6 +140,10 @@ class StreamViewer extends ChangeNotifier {
       _outgoing.add(c);
     };
     pc.onTrack = (ev) {
+      if (ev.track.kind == 'audio') {
+        _audioTrack = ev.track;
+        setVolume(volume);
+      }
       if (ev.track.kind == 'video') {
         renderer.srcObject = ev.streams.isNotEmpty ? ev.streams.first : null;
         phase = StreamPhase.playing;
@@ -203,6 +225,7 @@ class StreamViewer extends ChangeNotifier {
     _outgoing.clear();
     _pendingRemote.clear();
     _remoteSet = false;
+    _audioTrack = null;
     final pc = _pc;
     _pc = null;
     if (_rendererReady) renderer.srcObject = null;
