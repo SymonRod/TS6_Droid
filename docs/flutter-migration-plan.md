@@ -23,7 +23,7 @@ deleted. Flutter builds `tslib-frb` from `../tslib` (see
 | 5 P2P screen share viewer (`flutter_webrtc`) | verified: the stream plays on the phone against a real sharer (rotation, fit/fill, long sessions not yet exercised) |
 | polish pass (BBCode, saved chat, avatars/icons, go_router, clean errors, dispose on ConnectionLost, channel passwords, push-to-talk, mute in notification, stripped `.so`, fr/it) | written, `flutter analyze` clean, release APK builds and launches on the S25; behaviour not yet checked by hand |
 | UI restyle (dynamic colour + OLED theme, collapsible channel tree with guides, initials avatars, status badges, current-channel highlight, bottom control bar with mic/deafen/PTT/disconnect, chat bubbles with time) | written, `flutter analyze` clean, release APK installed on the S25 and checked by screenshot (channels, chat, control bar); talking ring, PTT hold and deafen not yet exercised by hand. Deafen is local only (playback gate in `AudioEngine`), it does not set the TS output-muted flag |
-| 6 file manager, myTS login | not started |
+| 6 file manager, myTS login | myTS password login (M1) implemented as a Dart port in `lib/src/myts/` with offline tests; live phone login still untested. File manager not started |
 
 Next, in this order:
 1. Split `flutter/` into its own repo that consumes `ts6-lib` (submodule or
@@ -37,6 +37,16 @@ avatars are fetched from channel 0 and cached in the app cache dir). Chat is
 stored as JSON per server address (last 500 messages). The Gradle task strips
 `libtslib_frb.so` and keeps the unstripped copy in `../tslib/symbols/frb/`.
 Strings live in `flutter/lib/l10n/*.arb` (en, fr, it).
+
+**myTeamSpeak research update (2026-10-14):** password derivation and a
+standalone login are demonstrated; the Flutter M1 password-login module is
+implemented as a Dart port (`lib/src/myts/`, screen at `/myts`, offline
+tests in `test/myts_*_test.dart`) but has not been live-tested from the app.
+Use **[myteamspeak-login-protocol.md](myteamspeak-login-protocol.md)** for the
+exact KDF, protobuf/HTTP fields, reply semantics, synthetic goldens and security
+constraints. [Run40](myteamspeak-login-run40.md) is the research handoff.
+Do not port the legacy Kotlin password encoder/diagnostic; renewal and sync
+key unwrap remain separate work.
 
 Known gaps from the first round: screen share has no stream list (entry is the
 green icon next to the user), `requestStreamInfo` is tried once per owner, no
@@ -130,7 +140,7 @@ Every phase has an exit check. If it fails, stop and fix before the next one.
 ### Phase 6 — File manager, myTeamSpeak
 - File manager: JSON listing parsing from `TsClient.parseFileEntries`.
 - myTS login: password derivation and protobuf schemas are in
-  `docs/myteamspeak-*.md` and `docs/proto/`; prefer moving it into Rust so
+  `docs/myteamspeak-login-protocol.md` and `docs/proto/`; prefer moving it into Rust so
   Dart and Kotlin share one implementation.
 
 ### Phase 7 — Parity pass and switch

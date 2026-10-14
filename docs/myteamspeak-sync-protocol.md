@@ -1,18 +1,27 @@
 # myTeamSpeak — sync protocol reference (system A)
 
+> **Login update (2026-10-14, run40):** see
+> [myteamspeak-login-protocol.md](myteamspeak-login-protocol.md) for the
+> demonstrated password KDF, request/reply fields and successful standalone
+> login. It supersedes historical login/KDF uncertainty below. The old-build
+> schemas/offsets in this document remain historical; sync key unwrap is still
+> unresolved. Flutter is the current implementation target.
+
 > **Status:** Phase-1 static analysis complete; Phase-2 capture done for the
 > login/sync/user/tschat closure (run6, 2026-09-22, client build 2025-07-13).
 > Schemas are **recovered, not inferred**: the binary embeds every
 > `FileDescriptorProto`, extracted and round-trip verified into `docs/proto/`
 > (see its README). Field numbers, types, enum values and RPC names below come
-> from there; `docs/proto/*.proto` is the source of truth when this document
-> and it disagree.
+> from there; `docs/proto/*.proto` is the source of truth for that older-build
+> schema snapshot. Current-build login additions and live validation are
+> documented in `myteamspeak-login-protocol.md`.
 > STATIC = derived from the binary, not yet seen on the wire.
 > CONFIRMED (run6) = observed on the wire by the in-process gdb capture
 > (`tools/myts/gdb_capture.py`, plaintext read before TLS, secrets masked).
 > TBD/HYPOTHESIS = not yet known.
-> **Capture verdict: item payloads are encrypted** (§7, capture Q4) — the KDF
-> (task 1D) is now the critical path, not a schema question.
+> **Capture verdict: item payloads are encrypted** (§7, capture Q4). Run40
+> solved login and the account encryption-value KDF; account-key/item unwrap
+> remains the critical path for sync (M2+).
 
 ## 0. Transport
 
@@ -86,6 +95,13 @@ Go chat lib only: `https://push.teamspeak.com/_matrix/push/v1/notify`
 (system B data plane; not sync).
 
 ## 2. Auth / session (`myteamspeak_login.proto`, `myteamspeak_common.proto`)
+
+**Current implementation reference:**
+[myteamspeak-login-protocol.md](myteamspeak-login-protocol.md). Password login
+now has a demonstrated KDF and successful standalone test. The table below
+is the older committed-schema snapshot; the new build additionally declares
+recovery fields/errors. It is not a specification for a separate auth-token
+preflight before ordinary password login.
 
 `LoginService` (package `…proto.login`), request → reply types in
 `…myteamspeak.proto` unless noted:
@@ -217,6 +233,20 @@ ts_chat_identifier, note, matrix_id}`, `ContactList`, `ContactRequest(List)`,
 
 ## 7. Encryption (task 1D — **now the critical path**; capture Q4 answered)
 
+**Run40 update (2026-10-14):** two password-based producer derivations are now
+demonstrated with native input/output and offline comparisons:
+
+```text
+P = UTF-8 password bytes; E = ASCII-lowercased email bytes
+login credential = Base64(PBKDF2-HMAC-SHA512(P, E || "ts3Login" || P, 10000, 48))
+account encryption value = PBKDF2-HMAC-SHA512(P, E || "ts3Encryption" || P, 10000, 32)
+```
+
+Login was validated standalone. The encryption value is a **32-byte raw
+producer result**, not proof of the account-key or sync-item unwrap format.
+The successful reply's `LoginSession.key` was **61 bytes**, and its wrapping
+still needs tracing. See the login reference §8/§10 for evidence and anchors.
+
 **Capture Q4 answered (run6, 2026-09-22): sync item payloads are encrypted.**
 Two `synchronizeItems` pushes carried `item_blob`s of 458 B (IDENTITY) and
 357 B (CONFIG) at 7.57 / 7.41 bits/byte of entropy that do not parse as
@@ -224,7 +254,7 @@ Two `synchronizeItems` pushes carried `item_blob`s of 458 B (IDENTITY) and
 reimplemented before any item read/write in the app (M2+). The plaintext
 `Item_Data` (§5) is what the client sees *after* decrypting in-process.
 
-Known shape only: `Auth_Token_Package{…, encrypted_encryption_password,
+Historical pre-run40 findings: `Auth_Token_Package{…, encrypted_encryption_password,
 encryption_tag, iv}`, `!salt.empty()` assert, `decrypted_user_private_key`,
 `AEAD_AES_{128,256}_GCM` markers, `Encryption_Impl` + `Encryption_Impl_V2`,
 vendored `teamcrypto/.../libtomcrypt`, assert
@@ -232,15 +262,16 @@ vendored `teamcrypto/.../libtomcrypt`, assert
 (2026-09-09): `pbkdf|hkdf` 0 hits, `scrypt|argon` only vendored OpenSSL
 provider paths — no app-level KDF call found. Working hypothesis: per-item
 encrypted blobs with a recovery-key-derived key; `Auth_Token_Package` wraps
-the encryption password. **No KDF identified yet** (`pbkdf|scrypt|argon|hkdf`
-grep done — negative).
+the encryption password. **Those string-grep negatives did not rule out
+PBKDF2:** run40 subsequently identified and demonstrated the actual producer
+calls described above.
 Key material with known field numbers (2026-09-22, from `docs/proto/`):
 server → client `LoginSession.key=1` (bytes), `BackupKeyData.backupkey=2`
 (bytes, via `getBackupKey(UserLogin{email, password})`), `UserData.key=3` /
 `backupkey=4` (bytes, `user` package); stored locally as
 `Account_Data.encryption_password=5`, `key=52`, `backup_ed_key=53`;
 `MyTeamSpeakIdData.user_private_key{encrypted_user_private_key=1}`. The
-client-side KDF / wrap from these to the item key is still unknown —
+account-key unwrap / derivation from these to the item key is still unknown —
 next step is decompiling `Encryption_Impl_V2` / `Item_Manager` (the
 `!salt.empty()` assert), not more string grepping.
 Capture decided (run6): opaque blobs, so **KDF reversing is the critical
@@ -250,6 +281,12 @@ decompilation alone — the same in-process gdb approach that read the RPC
 bodies can read the plaintext `Item_Data` and the key/iv at the crypto call.
 
 ## 8. Change log
+
+- 2026-10-14 (run40): login KDF demonstrated, standalone password login
+  returned HTTP 200 / protobuf `ERROR_LOGIN_OK=200`, its own session deletion
+  returned 204, and the distinct 32-byte `ts3Encryption` producer derivation
+  matched native output. Added the durable login reference; sync unwrap and
+  renewal remain open. Implementation target is Flutter, not legacy Kotlin.
 
 - 2026-09-09: initial static snapshot (endpoints, message/field names). Tag
   numbers, RPC method names (beyond `requestServerItems`), enum values, KDF,

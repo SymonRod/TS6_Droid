@@ -1,6 +1,14 @@
 # myTeamSpeak integration — overview
 
-> **Status:** plan. No app code changes yet.
+> **Current status (2026-10-14):** password login is demonstrated end to end;
+> read **[myteamspeak-login-protocol.md](myteamspeak-login-protocol.md)** for
+> the exact KDF, HTTP/protobuf framing, successful reply, goldens and limits.
+> [Run40](myteamspeak-login-run40.md) contains the research handoff. The target
+> app is **Flutter** (phase 6, not implemented yet); the Kotlin-only choices
+> and file seams below are the historical original plan, not the current
+> target. Sync key unwrap and token renewal remain open.
+
+> **Original status at planning time:** plan, before app implementation.
 > **Goal:** log in with a myTeamSpeak account in TS6 Droid and import/sync
 > bookmarks + contacts.
 > **Method:** same as screen sharing (static analysis of the desktop client +
@@ -39,7 +47,7 @@ Full inventory lives in the research plan; the load-bearing facts:
   `/authentication`, `/session`, `/synchronization`, `/user`, `/tschat`,
   `/messenger`, `/integration`, `/addon`, `/management`.
 
-## 3. Architecture decision
+## 3. Original architecture decision (historical Kotlin plan)
 
 - **Kotlin-only module** (`data/MyTs*`, new `MyTsViewModel`). The cloud API is
   HTTPS + protobuf; there is nothing for `tsclientlib`/`tslib-core`/JNI to do.
@@ -55,7 +63,7 @@ Full inventory lives in the research plan; the load-bearing facts:
 - Secrets (tokens, server passwords already in `bookmarks_json` plaintext)
   move to encrypted storage; see the build plan.
 
-## 4. Current app seams (exact)
+## 4. Original Kotlin app seams (historical)
 
 - Model: `data/ServerBookmark.kt:3` — no uuid/origin/timestamp; match key is
   `address`.
@@ -84,6 +92,9 @@ Full inventory lives in the research plan; the load-bearing facts:
 
 ## 6. Document map
 
+0. **`myteamspeak-login-protocol.md`** — current implementation-ready password
+   login reference, superseding earlier login/KDF uncertainty. Flutter app
+   work follows `flutter-migration-plan.md`; research state is in run40.
 1. `myteamspeak-research-plan.md` — Phase 1 (finish static extraction) +
    Phase 2 (mitmproxy capture recipe, incl. background-task harness reuse from
    `screenshare-handoff.md`) + what counts as evidence.

@@ -62,5 +62,38 @@
   "audioSpeaker": "Speaker",
   "audioEarpiece": "Earpiece",
   "audioDeviceFallback": "Audio device",
-  "more": "More"
+  "more": "More",
+  "mytsTitle": "myTeamSpeak",
+  "mytsEmail": "Email",
+  "mytsAccountPassword": "Account password",
+  "mytsOtp": "One-time code",
+  "mytsOtpHint": "Your account needs a one-time code.",
+  "mytsLogin": "Sign in",
+  "mytsLogout": "Sign out",
+  "mytsLoggedInAs": "Signed in as {username}",
+  "@mytsLoggedInAs": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "mytsEmailPasswordRequired": "Email and password are required",
+  "mytsErrorCredentials": "Wrong email or password",
+  "mytsErrorOffline": "Login service unavailable, try again later",
+  "mytsErrorEmailPending": "This email address is awaiting confirmation",
+  "mytsErrorOtpRequired": "This account needs a one-time code",
+  "mytsErrorOtpInvalid": "Wrong one-time code",
+  "mytsErrorNetwork": "Network error, check your connection",
+  "mytsErrorHttp": "Login failed (HTTP {status})",
+  "@mytsErrorHttp": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "mytsErrorMalformed": "Unexpected server reply",
+  "mytsErrorPaced": "Wait a few seconds before retrying",
+  "mytsErrorOther": "Login failed"
 }

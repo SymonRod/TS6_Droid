@@ -178,4 +178,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get more => 'More';
+
+  @override
+  String get mytsTitle => 'myTeamSpeak';
+
+  @override
+  String get mytsEmail => 'Email';
+
+  @override
+  String get mytsAccountPassword => 'Account password';
+
+  @override
+  String get mytsOtp => 'One-time code';
+
+  @override
+  String get mytsOtpHint => 'Your account needs a one-time code.';
+
+  @override
+  String get mytsLogin => 'Sign in';
+
+  @override
+  String get mytsLogout => 'Sign out';
+
+  @override
+  String mytsLoggedInAs(String username) {
+    return 'Signed in as $username';
+  }
+
+  @override
+  String get mytsEmailPasswordRequired => 'Email and password are required';
+
+  @override
+  String get mytsErrorCredentials => 'Wrong email or password';
+
+  @override
+  String get mytsErrorOffline => 'Login service unavailable, try again later';
+
+  @override
+  String get mytsErrorEmailPending => 'This email address is awaiting confirmation';
+
+  @override
+  String get mytsErrorOtpRequired => 'This account needs a one-time code';
+
+  @override
+  String get mytsErrorOtpInvalid => 'Wrong one-time code';
+
+  @override
+  String get mytsErrorNetwork => 'Network error, check your connection';
+
+  @override
+  String mytsErrorHttp(String status) {
+    return 'Login failed (HTTP $status)';
+  }
+
+  @override
+  String get mytsErrorMalformed => 'Unexpected server reply';
+
+  @override
+  String get mytsErrorPaced => 'Wait a few seconds before retrying';
+
+  @override
+  String get mytsErrorOther => 'Login failed';
 }

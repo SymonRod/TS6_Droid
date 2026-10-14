@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../data/server_bookmark.dart';
@@ -92,7 +93,16 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
     final l = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('TS6 Droid')),
+      appBar: AppBar(
+        title: const Text('TS6 Droid'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.account_circle),
+            tooltip: l.mytsTitle,
+            onPressed: () => context.push('/myts'),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

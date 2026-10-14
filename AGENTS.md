@@ -157,3 +157,19 @@ instead of listening in `tslib-core`.
 
 `client_is_streaming`, the client property that says *who* is sharing, reaches
 the UI as `User.isStreaming` and shows as a green screen icon in `UserItem`.
+
+### myTeamSpeak login
+
+The current implementation target is **Flutter**, not the legacy Kotlin app.
+Start with **[docs/myteamspeak-login-protocol.md](docs/myteamspeak-login-protocol.md)**
+for the demonstrated password derivation, HTTP/protobuf contract, synthetic
+goldens and security requirements. **[docs/myteamspeak-login-run40.md](docs/myteamspeak-login-run40.md)**
+is the latest research handoff (2026-10-14).
+
+Password login succeeded standalone: PBKDF2-HMAC-SHA512, 10,000 iterations,
+48 bytes, salt = ASCII-lowercased UTF-8 email + `ts3Login` + UTF-8 password,
+then standard Base64; login `sync_version=V1_1`. The legacy Kotlin SHA-512-hex
+encoder/diagnostic is incorrect and must not be ported. Flutter's myTeamSpeak
+module remains unimplemented; account-key/sync unwrap and token renewal are
+separate open tasks. Real-account tests require explicit authorization;
+credentials, salts, derived values and captures must stay out of logs/docs/git.

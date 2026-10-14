@@ -16,6 +16,10 @@ app/src/main/jniLibs/
 *.keystore
 *.jks
 
+# Local credentials
+.env
+.env.*
+
 # OS
 .DS_Store
 Thumbs.db

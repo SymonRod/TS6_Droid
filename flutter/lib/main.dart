@@ -7,6 +7,7 @@ import 'l10n/app_localizations.dart';
 import 'src/rust/frb_generated.dart';
 import 'src/state/server_controller.dart';
 import 'src/ui/connection_screen.dart';
+import 'src/ui/myts_login_screen.dart';
 import 'src/ui/server_screen.dart';
 import 'src/ui/stream_screen.dart';
 import 'src/ui/theme.dart';
@@ -28,13 +29,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final connected = ref.read(serverProvider).status == ConnStatus.connected;
       final loc = state.matchedLocation;
-      if (!connected) return loc == '/' ? null : '/';
+      // The myTeamSpeak login screen is usable while disconnected.
+      if (!connected) return (loc == '/' || loc == '/myts') ? null : '/';
       if (loc == '/') return '/server';
       if (loc == '/server/stream' && ref.read(serverProvider.notifier).viewer == null) return '/server';
       return null;
     },
     routes: [
       GoRoute(path: '/', builder: (_, _) => const ConnectionScreen()),
+      GoRoute(path: '/myts', builder: (_, _) => const MyTsLoginScreen()),
       GoRoute(
         path: '/server',
         builder: (_, _) => const ServerScreen(),

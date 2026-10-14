@@ -1,5 +1,14 @@
 # myTeamSpeak — build plan (system A: login + bookmark/contact import)
 
+> **Current target (2026-10-14): Flutter.** The Kotlin paths/dependencies below
+> describe the original plan; translate milestones into Flutter's architecture
+> using `flutter-migration-plan.md`, not another Kotlin implementation.
+> **M1 password-login protocol inputs are now established:** see
+> [myteamspeak-login-protocol.md](myteamspeak-login-protocol.md) for the proven
+> KDF, live request/reply, secure-session requirements and acceptance tests.
+> Missing renewal tokens in the tested mode are a real case to handle. M2+
+> still requires account-key and item decryption; login success does not solve it.
+
 > **After:** capture stop criteria met (`myteamspeak-research-plan.md` §2.4:
 > login/session/bookmark/contact round trips decoded, blob-vs-cleartext
 > decided, renewal path known).

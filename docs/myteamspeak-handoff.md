@@ -1,5 +1,14 @@
 # myTeamSpeak — handoff (2026-09-22, updated after run7 static KDF dig)
 
+> **Latest session (2026-10-14): read
+> [myteamspeak-login-run40.md](myteamspeak-login-run40.md) first.** The supplied
+> `../teamspeak-client` is a different build. Run40 demonstrated the login KDF
+> (PBKDF2-HMAC-SHA512, 10,000 iterations, 48 bytes, Base64) and a successful
+> standalone `/authentication login` with `sync_version=V1_1`. Flutter is the
+> target app; no application changes were made. Do not reuse the historical
+> offsets or separate-Beast-login conclusion for this build. Research clients
+> and debug ports are closed; sync decryption and renewal remain open.
+
 > Read with: `myteamspeak-sync-protocol.md` (wire reference),
 > `myteamspeak-research-plan.md` (method, stop criteria),
 > `myteamspeak-build-plan.md` (milestones), `docs/proto/README.md`.

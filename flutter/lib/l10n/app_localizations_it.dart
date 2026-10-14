@@ -179,4 +179,65 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get more => 'Altro';
+
+  @override
+  String get mytsTitle => 'myTeamSpeak';
+
+  @override
+  String get mytsEmail => 'Email';
+
+  @override
+  String get mytsAccountPassword => 'Password dell\'account';
+
+  @override
+  String get mytsOtp => 'Codice monouso';
+
+  @override
+  String get mytsOtpHint => 'Il tuo account richiede un codice monouso.';
+
+  @override
+  String get mytsLogin => 'Accedi';
+
+  @override
+  String get mytsLogout => 'Esci';
+
+  @override
+  String mytsLoggedInAs(String username) {
+    return 'Connesso come $username';
+  }
+
+  @override
+  String get mytsEmailPasswordRequired => 'Email e password sono obbligatorie';
+
+  @override
+  String get mytsErrorCredentials => 'Email o password errati';
+
+  @override
+  String get mytsErrorOffline => 'Servizio di login non disponibile, riprova più tardi';
+
+  @override
+  String get mytsErrorEmailPending => 'Questo indirizzo email è in attesa di conferma';
+
+  @override
+  String get mytsErrorOtpRequired => 'Questo account richiede un codice monouso';
+
+  @override
+  String get mytsErrorOtpInvalid => 'Codice monouso errato';
+
+  @override
+  String get mytsErrorNetwork => 'Errore di rete, controlla la connessione';
+
+  @override
+  String mytsErrorHttp(String status) {
+    return 'Accesso fallito (HTTP $status)';
+  }
+
+  @override
+  String get mytsErrorMalformed => 'Risposta inattesa dal server';
+
+  @override
+  String get mytsErrorPaced => 'Attendi qualche secondo prima di riprovare';
+
+  @override
+  String get mytsErrorOther => 'Accesso fallito';
 }

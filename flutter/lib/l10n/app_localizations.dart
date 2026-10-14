@@ -435,6 +435,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More'**
   String get more;
+
+  /// No description provided for @mytsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'myTeamSpeak'**
+  String get mytsTitle;
+
+  /// No description provided for @mytsEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get mytsEmail;
+
+  /// No description provided for @mytsAccountPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Account password'**
+  String get mytsAccountPassword;
+
+  /// No description provided for @mytsOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time code'**
+  String get mytsOtp;
+
+  /// No description provided for @mytsOtpHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account needs a one-time code.'**
+  String get mytsOtpHint;
+
+  /// No description provided for @mytsLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get mytsLogin;
+
+  /// No description provided for @mytsLogout.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get mytsLogout;
+
+  /// No description provided for @mytsLoggedInAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {username}'**
+  String mytsLoggedInAs(String username);
+
+  /// No description provided for @mytsEmailPasswordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Email and password are required'**
+  String get mytsEmailPasswordRequired;
+
+  /// No description provided for @mytsErrorCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong email or password'**
+  String get mytsErrorCredentials;
+
+  /// No description provided for @mytsErrorOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Login service unavailable, try again later'**
+  String get mytsErrorOffline;
+
+  /// No description provided for @mytsErrorEmailPending.
+  ///
+  /// In en, this message translates to:
+  /// **'This email address is awaiting confirmation'**
+  String get mytsErrorEmailPending;
+
+  /// No description provided for @mytsErrorOtpRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This account needs a one-time code'**
+  String get mytsErrorOtpRequired;
+
+  /// No description provided for @mytsErrorOtpInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong one-time code'**
+  String get mytsErrorOtpInvalid;
+
+  /// No description provided for @mytsErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error, check your connection'**
+  String get mytsErrorNetwork;
+
+  /// No description provided for @mytsErrorHttp.
+  ///
+  /// In en, this message translates to:
+  /// **'Login failed (HTTP {status})'**
+  String mytsErrorHttp(String status);
+
+  /// No description provided for @mytsErrorMalformed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unexpected server reply'**
+  String get mytsErrorMalformed;
+
+  /// No description provided for @mytsErrorPaced.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait a few seconds before retrying'**
+  String get mytsErrorPaced;
+
+  /// No description provided for @mytsErrorOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Login failed'**
+  String get mytsErrorOther;
 }
 
 class _AppLocalizationsDelegate

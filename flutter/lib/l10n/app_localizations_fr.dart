@@ -178,4 +178,65 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get more => 'Plus';
+
+  @override
+  String get mytsTitle => 'myTeamSpeak';
+
+  @override
+  String get mytsEmail => 'E-mail';
+
+  @override
+  String get mytsAccountPassword => 'Mot de passe du compte';
+
+  @override
+  String get mytsOtp => 'Code à usage unique';
+
+  @override
+  String get mytsOtpHint => 'Votre compte exige un code à usage unique.';
+
+  @override
+  String get mytsLogin => 'Se connecter';
+
+  @override
+  String get mytsLogout => 'Se déconnecter';
+
+  @override
+  String mytsLoggedInAs(String username) {
+    return 'Connecté en tant que $username';
+  }
+
+  @override
+  String get mytsEmailPasswordRequired => 'L\'e-mail et le mot de passe sont requis';
+
+  @override
+  String get mytsErrorCredentials => 'E-mail ou mot de passe incorrect';
+
+  @override
+  String get mytsErrorOffline => 'Service de connexion indisponible, réessayez plus tard';
+
+  @override
+  String get mytsErrorEmailPending => 'Cette adresse e-mail est en attente de confirmation';
+
+  @override
+  String get mytsErrorOtpRequired => 'Ce compte exige un code à usage unique';
+
+  @override
+  String get mytsErrorOtpInvalid => 'Code à usage unique incorrect';
+
+  @override
+  String get mytsErrorNetwork => 'Erreur réseau, vérifiez votre connexion';
+
+  @override
+  String mytsErrorHttp(String status) {
+    return 'Échec de la connexion (HTTP $status)';
+  }
+
+  @override
+  String get mytsErrorMalformed => 'Réponse inattendue du serveur';
+
+  @override
+  String get mytsErrorPaced => 'Attendez quelques secondes avant de réessayer';
+
+  @override
+  String get mytsErrorOther => 'Échec de la connexion';
 }

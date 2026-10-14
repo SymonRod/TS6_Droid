@@ -1,5 +1,14 @@
 # docs/proto
 
+> **Current-build login update (2026-10-14):** these committed files are still
+> the older verified schema snapshot below. Run39 extracted newer descriptors
+> (MD5 `7eb9fdb8…`) into ignored captures, but they have not been rendered and
+> round-trip verified here. Current login fields, recovery additions/errors,
+> demonstrated KDF and successful standalone decoding are documented in
+> **[../myteamspeak-login-protocol.md](../myteamspeak-login-protocol.md)**.
+> Do not overwrite generated schemas by hand or treat the old file's missing
+> recovery fields as evidence that the current server lacks them.
+
 myTeamSpeak `.proto` files **recovered, not reconstructed**: the desktop client
 links full protobuf reflection, so each generated file embeds its serialized
 `FileDescriptorProto`. `extract_descriptors.py` pulls them out of the binary,
