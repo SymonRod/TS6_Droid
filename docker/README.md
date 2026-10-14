@@ -133,8 +133,10 @@ WSL2 does not see Windows USB ports by itself.
   (`/opt/flutter` in the container); Flutter rewrites it on the next run on
   either side.
 - CMake (used by `audiopus_sys`/Opus) needs `ANDROID_NDK`; `docker-compose.yml`
-  sets it. If you change the NDK version, update it there, in `ANDROID_NDK` in
-  the `Dockerfile`, and `ndkVersion` expectations in the Gradle files.
+  sets it. If you change the NDK version, update `ARG ANDROID_NDK` in the
+  `Dockerfile` (it also drives `ANDROID_NDK_HOME`) and `ANDROID_NDK` in
+  `docker-compose.yml`. The NDK Flutter expects is `flutter.ndkVersion` of the
+  pinned Flutter; keep them in sync.
 
 ## Updating the toolchain
 
