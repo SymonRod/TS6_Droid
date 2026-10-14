@@ -1,0 +1,32 @@
+# Usage: see docker/dev.sh (or `docker compose -f docker/docker-compose.yml run --rm dev ...`).
+services:
+  dev:
+    build:
+      context: .
+      args:
+        USER_UID: ${HOST_UID:-1000}
+        USER_GID: ${HOST_GID:-1000}
+    image: ts6droid-dev
+    working_dir: /workspace/TS6_Droid/flutter
+    # Host network: the container's adb client reaches an adb server already
+    # running on the host (127.0.0.1:5037) and wireless `adb connect` works.
+    network_mode: host
+    environment:
+      # CMake's Android platform module (audiopus_sys) looks for this one.
+      ANDROID_NDK: /opt/android-sdk/ndk/28.2.13676358
+    stdin_open: true
+    tty: true
+    volumes:
+      - ..:/workspace/TS6_Droid
+      # Rust library checkout (SymonRod/ts6-lib); override with TSLIB_DIR.
+      - ${TSLIB_DIR:-../../ts6-lib}:/workspace/tslib
+      - gradle-cache:/home/dev/.gradle
+      - pub-cache:/home/dev/.pub-cache
+      - cargo-registry:/home/dev/.cargo/registry
+      - cargo-git:/home/dev/.cargo/git
+
+volumes:
+  gradle-cache:
+  pub-cache:
+  cargo-registry:
+  cargo-git:
