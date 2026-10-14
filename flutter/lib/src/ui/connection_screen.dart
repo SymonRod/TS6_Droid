@@ -165,7 +165,7 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
     } else {
       await n.add(b);
     }
-    _clear();
+    if (mounted) Navigator.of(context).pop();
   }
 
   void _edit(ServerBookmark b, int i) {
@@ -173,7 +173,101 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
     _nickname.text = b.nickname;
     _password.text = b.password ?? '';
     _channel.text = b.channel ?? '';
-    setState(() => _editing = i);
+    _editing = i;
+    _openSheet();
+  }
+
+  Future<void> _openSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      useSafeArea: true,
+      builder: (context) => _serverSheet(context),
+    );
+    _clear();
+  }
+
+  Widget _serverSheet(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final connecting = ref.read(serverProvider).status == ConnStatus.connecting;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              _editing >= 0 ? l.editServer : l.newServer,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _address,
+              decoration: InputDecoration(
+                labelText: l.serverAddress,
+                prefixIcon: const Icon(Icons.dns_outlined),
+              ),
+              keyboardType: TextInputType.url,
+              textInputAction: TextInputAction.next,
+              autofocus: true,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _nickname,
+              decoration: InputDecoration(
+                labelText: l.nickname,
+                prefixIcon: const Icon(Icons.person_outline),
+              ),
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _password,
+              decoration: InputDecoration(
+                labelText: l.serverPassword,
+                prefixIcon: const Icon(Icons.lock_outline),
+              ),
+              obscureText: true,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _channel,
+              decoration: InputDecoration(
+                labelText: l.channelOptional,
+                prefixIcon: const Icon(Icons.tag),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(children: [
+              Expanded(
+                child: FilledButton.icon(
+                  icon: const Icon(Icons.login),
+                  onPressed: connecting
+                      ? null
+                      : () {
+                          final b = _fromFields();
+                          Navigator.of(context).pop();
+                          _connect(b);
+                        },
+                  label: Text(l.connect),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.bookmark_add_outlined),
+                  onPressed: _save,
+                  label: Text(_editing >= 0 ? l.updateBookmark : l.saveBookmark),
+                ),
+              ),
+            ]),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -183,6 +277,7 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
     final imported = ref.watch(importedBookmarksProvider).value ?? const [];
     final connecting = s.status == ConnStatus.connecting;
     final l = AppLocalizations.of(context);
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -195,89 +290,99 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _openSheet,
+        icon: const Icon(Icons.add),
+        label: Text(l.newServer),
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
         children: [
-          TextField(
-            controller: _address,
-            decoration: InputDecoration(labelText: l.serverAddress),
-            keyboardType: TextInputType.url,
-          ),
-          TextField(controller: _nickname, decoration: InputDecoration(labelText: l.nickname)),
-          TextField(
-            controller: _password,
-            decoration: InputDecoration(labelText: l.serverPassword),
-            obscureText: true,
-          ),
-          TextField(
-            controller: _channel,
-            decoration: InputDecoration(labelText: l.channelOptional),
-          ),
-          const SizedBox(height: 12),
           if (s.error != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(s.error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-            ),
-          Row(children: [
-            Expanded(
-              child: FilledButton(
-                onPressed: connecting ? null : () => _connect(_fromFields()),
-                child: connecting
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                    : Text(l.connect),
+            Card(
+              color: cs.errorContainer,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(children: [
+                  Icon(Icons.error_outline, color: cs.onErrorContainer),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(s.error!, style: TextStyle(color: cs.onErrorContainer)),
+                  ),
+                ]),
               ),
             ),
-            const SizedBox(width: 8),
-            OutlinedButton(
-              onPressed: _save,
-              child: Text(_editing >= 0 ? l.updateBookmark : l.saveBookmark),
-            ),
-            if (_editing >= 0) TextButton(onPressed: _clear, child: Text(l.cancel)),
-          ]),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(l.reconnectLast),
-            value: _autoReconnect,
-            onChanged: (v) async {
-              await ref.read(bookmarkStoreProvider).setAutoReconnect(v);
-              setState(() => _autoReconnect = v);
-            },
+          if (connecting) const Padding(
+            padding: EdgeInsets.only(bottom: 8),
+            child: LinearProgressIndicator(),
           ),
-          const Divider(),
+          Card(
+            child: SwitchListTile(
+              secondary: const Icon(Icons.history),
+              title: Text(l.reconnectLast),
+              value: _autoReconnect,
+              onChanged: (v) async {
+                await ref.read(bookmarkStoreProvider).setAutoReconnect(v);
+                setState(() => _autoReconnect = v);
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 20, 8, 8),
+            child: Text(
+              l.savedServers,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(color: cs.primary),
+            ),
+          ),
           if (bookmarks.isEmpty && imported.isEmpty)
-            Padding(padding: const EdgeInsets.all(16), child: Text(l.noBookmarks)),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 48),
+              child: Column(children: [
+                Icon(Icons.dns_outlined, size: 48, color: cs.outline),
+                const SizedBox(height: 12),
+                Text(l.noBookmarks, style: TextStyle(color: cs.outline)),
+              ]),
+            ),
           for (final entry in imported)
-            ListTile(
-              leading: const Icon(Icons.cloud_download_outlined),
-              title: Text(entry.bookmark.name),
-              subtitle: Text(
-                '${entry.bookmark.nickname.isEmpty ? '' : '${entry.bookmark.nickname} @ '}'
-                '${entry.bookmark.address}\n'
-                '${l.importedFromAccount} · '
-                '${entry.usesLocalIdentityFile ? l.identityChosen(l.identityLocal) : entry.identityLabel != null ? l.identityChosen(entry.identityLabel!) : l.identityNotChosen}',
-              ),
-              isThreeLine: true,
-              onTap: connecting ? null : () => _connect(entry.bookmark),
-              trailing: IconButton(
-                icon: const Icon(Icons.swap_horiz),
-                tooltip: l.identityChange,
-                onPressed: connecting ? null : () => _changeIdentity(entry.bookmark),
+            Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: const Icon(Icons.cloud_download_outlined),
+                title: Text(entry.bookmark.name),
+                subtitle: Text(
+                  '${entry.bookmark.nickname.isEmpty ? '' : '${entry.bookmark.nickname} @ '}'
+                  '${entry.bookmark.address}\n'
+                  '${l.importedFromAccount} · '
+                  '${entry.usesLocalIdentityFile ? l.identityChosen(l.identityLocal) : entry.identityLabel != null ? l.identityChosen(entry.identityLabel!) : l.identityNotChosen}',
+                ),
+                isThreeLine: true,
+                onTap: connecting ? null : () => _connect(entry.bookmark),
+                trailing: IconButton(
+                  icon: const Icon(Icons.swap_horiz),
+                  tooltip: l.identityChange,
+                  onPressed: connecting ? null : () => _changeIdentity(entry.bookmark),
+                ),
               ),
             ),
           for (var i = 0; i < bookmarks.length; i++)
-            ListTile(
-              leading: const Icon(Icons.dns),
-              title: Text(bookmarks[i].serverName ?? bookmarks[i].name),
-              subtitle: Text('${bookmarks[i].nickname} @ ${bookmarks[i].address}'),
-              onTap: connecting ? null : () => _connect(bookmarks[i]),
-              trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                IconButton(icon: const Icon(Icons.edit), onPressed: () => _edit(bookmarks[i], i)),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () => ref.read(bookmarksProvider.notifier).remove(i),
-                ),
-              ]),
+            Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: const Icon(Icons.dns),
+                title: Text(bookmarks[i].serverName ?? bookmarks[i].name),
+                subtitle: Text('${bookmarks[i].nickname} @ ${bookmarks[i].address}'),
+                onTap: connecting ? null : () => _connect(bookmarks[i]),
+                trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined),
+                    onPressed: () => _edit(bookmarks[i], i),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    onPressed: () => ref.read(bookmarksProvider.notifier).remove(i),
+                  ),
+                ]),
+              ),
             ),
         ],
       ),

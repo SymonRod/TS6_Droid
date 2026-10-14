@@ -160,6 +160,24 @@ abstract class AppLocalizations {
   /// **'No bookmarks yet'**
   String get noBookmarks;
 
+  /// No description provided for @newServer.
+  ///
+  /// In en, this message translates to:
+  /// **'New server'**
+  String get newServer;
+
+  /// No description provided for @editServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit server'**
+  String get editServer;
+
+  /// No description provided for @savedServers.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved servers'**
+  String get savedServers;
+
   /// No description provided for @errAddrNick.
   ///
   /// In en, this message translates to:

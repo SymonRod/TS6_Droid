@@ -39,6 +39,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get noBookmarks => 'Nessun preferito';
 
   @override
+  String get newServer => 'Nuovo server';
+
+  @override
+  String get editServer => 'Modifica server';
+
+  @override
+  String get savedServers => 'Server salvati';
+
+  @override
   String get errAddrNick => 'Indirizzo e nickname sono obbligatori';
 
   @override
