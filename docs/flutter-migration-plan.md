@@ -7,6 +7,13 @@ ends with something runnable, and gaps are written down instead of blocking.
 The Kotlin app stays in the repo and keeps shipping until the Flutter app
 reaches parity on the "must have" list below. No big-bang switch.
 
+**Long-term product direction (2026-10-14):** Kotlin parity is an initial
+migration target, not the product ceiling. See
+[product-direction.md](product-direction.md) for near desktop feature parity,
+first-launch myTeamSpeak Sign in/Skip, automatic identity/bookmark import on
+an empty app, and future contacts/account chat. These are agreed requirements,
+not claims of completed implementation.
+
 ## Status (2026-10-13)
 
 Phases 0-5 are written and committed on `main`. Library is now
@@ -23,7 +30,7 @@ deleted. Flutter builds `tslib-frb` from `../tslib` (see
 | 5 P2P screen share viewer (`flutter_webrtc`) | verified: the stream plays on the phone against a real sharer (rotation, fit/fill, long sessions not yet exercised) |
 | polish pass (BBCode, saved chat, avatars/icons, go_router, clean errors, dispose on ConnectionLost, channel passwords, push-to-talk, mute in notification, stripped `.so`, fr/it) | written, `flutter analyze` clean, release APK builds and launches on the S25; behaviour not yet checked by hand |
 | UI restyle (dynamic colour + OLED theme, collapsible channel tree with guides, initials avatars, status badges, current-channel highlight, bottom control bar with mic/deafen/PTT/disconnect, chat bubbles with time) | written, `flutter analyze` clean, release APK installed on the S25 and checked by screenshot (channels, chat, control bar); talking ring, PTT hold and deafen not yet exercised by hand. Deafen is local only (playback gate in `AudioEngine`), it does not set the TS output-muted flag |
-| 6 file manager, myTS login | myTS password login (M1) implemented as a Dart port in `lib/src/myts/` with offline tests; live phone login still untested. File manager not started |
+| 6 file manager, myTS login | myTS password login (M1) works live on a phone. KDF, framing, protobuf codec and reply classification now live in the Rust crate `tslib-myts` (sans-IO, exposed by `tslib-frb`); Dart keeps the HTTPS POST, session store and UI. File manager not started |
 
 Next, in this order:
 1. Split `flutter/` into its own repo that consumes `ts6-lib` (submodule or
@@ -40,8 +47,10 @@ Strings live in `flutter/lib/l10n/*.arb` (en, fr, it).
 
 **myTeamSpeak research update (2026-10-14):** password derivation and a
 standalone login are demonstrated; the Flutter M1 password-login module is
-implemented as a Dart port (`lib/src/myts/`, screen at `/myts`, offline
-tests in `test/myts_*_test.dart`) but has not been live-tested from the app.
+moved into Rust (`crates/tslib-myts` in ts6-lib; sans-IO, so the caller does
+the HTTPS POST). Dart (`lib/src/myts/`, screen at `/myts`) only performs the POST
+and holds the secure session store; Dart tests need `TSLIB_FRB_LIB` (host build of
+`libtslib_frb.so`, see `test/myts_rust.dart`). Live login from the app was verified.
 Use **[myteamspeak-login-protocol.md](myteamspeak-login-protocol.md)** for the
 exact KDF, protobuf/HTTP fields, reply semantics, synthetic goldens and security
 constraints. [Run40](myteamspeak-login-run40.md) is the research handoff.
@@ -86,7 +95,7 @@ myTeamSpeak login + sync, BBCode rendering polish, fr/it translations review.
 | `bridge/AudioBridge` (AudioRecord/AudioTrack) | See "Audio" below |
 | `service/TsConnectionService` | Foreground service, see "Background" below |
 | `bridge/StreamViewer`, `ScreenShareView` | `flutter_webrtc`, phase 5 |
-| `bridge/MyTsApi`, `MyTsSessionStore`, `MyTsViewModel` | Dart port or move to Rust, phase 6 |
+| `bridge/MyTsApi`, `MyTsSessionStore`, `MyTsViewModel` | Moved to Rust (`tslib-myts`); Dart keeps transport/session store |
 | `res/values*/strings.xml` | `.arb` files with `intl` (converted by script, not by hand) |
 
 ## Phases

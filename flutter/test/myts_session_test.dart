@@ -31,4 +31,26 @@ void main() {
     await backend.write(MyTsSessionStore.kSession, '');
     expect(await MyTsSessionStore(backend).load(), isNull);
   });
+
+  test('wrapped key round trip; absent or unreadable key loads as empty', () async {
+    final backend = MemoryMyTsSecureBackend();
+    final store = MyTsSessionStore(backend);
+    await store.save(session: 's', uuid: 'u', username: 'b', email: 'a@b', wrappedKey: [1, 2, 3]);
+    expect((await store.load())!.wrappedKey, [1, 2, 3]);
+    await backend.write(MyTsSessionStore.kWrappedKey, '***not base64***');
+    expect((await store.load())!.wrappedKey, isEmpty);
+    await store.save(session: 's', uuid: 'u', username: 'b', email: 'a@b');
+    expect((await store.load())!.wrappedKey, isEmpty);
+  });
+
+  test('clear removes only the session keys, never imported data', () async {
+    final backend = MemoryMyTsSecureBackend();
+    await backend.write('ts6_account_vault_v1', 'imported identities and passwords');
+    final store = MyTsSessionStore(backend);
+    await store.save(session: 's', uuid: 'u', username: 'b', email: 'a@b', wrappedKey: [9]);
+    await store.clear();
+    expect(await store.load(), isNull);
+    expect(await backend.read(MyTsSessionStore.kWrappedKey), isNull);
+    expect(await backend.read('ts6_account_vault_v1'), 'imported identities and passwords');
+  });
 }

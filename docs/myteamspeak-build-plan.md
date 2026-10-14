@@ -1,5 +1,13 @@
 # myTeamSpeak — build plan (system A: login + bookmark/contact import)
 
+> **Product decision (2026-10-14):** read
+> [product-direction.md](product-direction.md) first. Fresh setup now offers
+> Sign in/Skip, with automatic identity + bookmark import on an empty app.
+> The manual-preview-only M2 flow and late identity-import gate in M5 below
+> are historical, not current requirements. Existing identities still require
+> protection; cloud write-back remains separate. Account chat is a future
+> product goal implemented through system B, not a permanent non-goal.
+
 > **Current target (2026-10-14): Flutter.** The Kotlin paths/dependencies below
 > describe the original plan; translate milestones into Flutter's architecture
 > using `flutter-migration-plan.md`, not another Kotlin implementation.

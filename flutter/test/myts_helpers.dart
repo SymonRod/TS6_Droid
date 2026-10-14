@@ -1,6 +1,6 @@
 // Independent protobuf builders/scanner for myTS tests.
 //
-// Deliberately hand-rolled here (not via lib/src/myts/proto.dart) so the
+// Deliberately hand-rolled here (not via the Rust codec) so the
 // tests verify the app codec against the documented field numbers instead
 // of echoing its own implementation.
 import 'dart:convert';
@@ -28,14 +28,21 @@ Uint8List tstring(int field, String s) {
 
 Uint8List tvarintField(int field, int v) => _field(field, 0, tvarint(v));
 
+Uint8List tbytes(int field, List<int> value) {
+  if (value.isEmpty) return Uint8List(0);
+  return _field(field, 2, [...tvarint(value.length), ...value]);
+}
+
 /// Bare `LoginSession` reply body (no method prefix on HTTP 200).
 Uint8List loginSessionReply({
   required int error,
   String session = '',
   String uuid = '',
   String username = '',
+  List<int> key = const [],
 }) {
   final b = BytesBuilder()
+    ..add(tbytes(1, key))
     ..add(tvarintField(5, error))
     ..add(tstring(2, session))
     ..add(tstring(4, uuid))

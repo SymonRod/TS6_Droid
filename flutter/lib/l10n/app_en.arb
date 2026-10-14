@@ -95,5 +95,74 @@
   },
   "mytsErrorMalformed": "Unexpected server reply",
   "mytsErrorPaced": "Wait a few seconds before retrying",
-  "mytsErrorOther": "Login failed"
+  "mytsErrorOther": "Login failed",
+  "setupWelcome": "Welcome to TS6 Droid",
+  "setupIntro": "Choose how to set up your TeamSpeak client.",
+  "setupAccountTitle": "Your myTeamSpeak account",
+  "setupAccountHint": "Account setup will automatically import supported cloud identities and server bookmarks, keeping each bookmark linked to its identity. Data saved only on your desktop cannot be restored from the cloud.",
+  "setupImportPending": "Signing in downloads your identities and bookmarks and keeps them securely on this device. The account is only read; nothing is changed in the cloud.",
+  "setupSignIn": "Sign in with myTeamSpeak",
+  "setupSkip": "Skip sign-in",
+  "setupSkipHint": "Create a local identity and use server connections without an account. You can sign in later; your local data will be preserved.",
+  "setupBack": "Back to setup",
+  "setupRetry": "Retry",
+  "setupReadError": "Could not safely read your local setup. Your data has not been replaced. Check storage access and try again.",
+  "setupWriteError": "Could not finish local setup. Try skipping sign-in again; any identity already saved will be reused.",
+  "mytsImportPendingTitle": "Import your account data",
+  "mytsSetupImportPending": "You are signed in, but nothing has been imported yet, so setup is not complete. Enter your account password to download your identities and bookmarks, or return to setup to use a local identity.",
+  "mytsExistingDataHint": "Signing in never replaces your local identities or bookmarks. Importing only adds what is missing and asks you first.",
+  "mytsShowPassword": "Show password",
+  "mytsHidePassword": "Hide password",
+  "mytsImportAction": "Import account data",
+  "mytsImportPasswordNote": "The password unlocks your account key for this import only and is not stored.",
+  "mytsImportWorking": "Downloading and checking your account data…",
+  "mytsImportConfirmTitle": "Add your account data to this device?",
+  "mytsImportConfirm": "Import",
+  "mytsImportContinue": "Continue",
+  "mytsImportAdded": "Added {identities} identities and {bookmarks} bookmarks.",
+  "@mytsImportAdded": {
+    "placeholders": {
+      "identities": {
+        "type": "int"
+      },
+      "bookmarks": {
+        "type": "int"
+      }
+    }
+  },
+  "mytsImportUpToDate": "Everything from your account is already on this device. Nothing was changed.",
+  "mytsImportSkipped": "Skipped {count} items that are invalid, duplicated or different from the copy already on this device. Nothing existing was replaced.",
+  "@mytsImportSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mytsImportNothing": "Your account has no identities or bookmarks to import. Nothing was changed and setup is not complete; you can go back and skip sign-in to create a local identity.",
+  "mytsImportChooseIdentityNote": "You will choose which identity each bookmark uses the first time you connect.",
+  "mytsImportErrNoSession": "You are not signed in. Sign in again to import.",
+  "mytsImportErrUnlock": "Your account key could not be unlocked. Check the password and sign in again. Nothing was changed on this device.",
+  "mytsImportErrNetwork": "Network error while downloading. Nothing was changed on this device.",
+  "mytsImportErrService": "The service did not accept the request. Nothing was changed on this device.",
+  "mytsImportErrExpired": "Your sign-in expired. Sign out and sign in again. Nothing was changed on this device.",
+  "mytsImportErrData": "The reply was unexpected or too large. Nothing was changed on this device.",
+  "mytsImportErrIntegrity": "The downloaded data failed its integrity check. Nothing was changed on this device.",
+  "mytsImportErrStorage": "Could not read or save local data safely. Nothing existing was replaced.",
+  "identityChooseTitle": "Choose an identity",
+  "identityChooseBody": "Pick the identity to connect with. Your choice is remembered on this device only and does not change your account.",
+  "identityLocal": "Local identity of this device",
+  "identityCreate": "Create a new local identity",
+  "identityUnavailable": "The identity could not be opened. Nothing was changed.",
+  "importedFromAccount": "From your account",
+  "identityNotChosen": "Identity: not chosen yet",
+  "identityChosen": "Identity: {label}",
+  "@identityChosen": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "identityChange": "Change identity"
 }

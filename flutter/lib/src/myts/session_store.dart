@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// OS-backed persistence for the myTeamSpeak session.
@@ -12,12 +15,13 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// no-device-ID mode) is fully supported: renewal tokens are simply absent.
 
 /// Key-value backend so unit tests can substitute a memory map for the
-/// platform secure storage (which needs method channels).
+/// platform secure storage (which needs method channels). There is no
+/// delete-all operation on purpose: the same store also holds imported
+/// identities and bookmark passwords, which signing out must never wipe.
 abstract class MyTsSecureBackend {
   Future<String?> read(String key);
   Future<void> write(String key, String value);
   Future<void> delete(String key);
-  Future<void> deleteAll();
 }
 
 class FlutterMyTsSecureBackend implements MyTsSecureBackend {
@@ -33,9 +37,6 @@ class FlutterMyTsSecureBackend implements MyTsSecureBackend {
 
   @override
   Future<void> delete(String key) => _storage.delete(key: key);
-
-  @override
-  Future<void> deleteAll() => _storage.deleteAll();
 }
 
 class MemoryMyTsSecureBackend implements MyTsSecureBackend {
@@ -53,11 +54,6 @@ class MemoryMyTsSecureBackend implements MyTsSecureBackend {
   Future<void> delete(String key) async {
     _map.remove(key);
   }
-
-  @override
-  Future<void> deleteAll() async {
-    _map.clear();
-  }
 }
 
 class MyTsStoredSession {
@@ -66,11 +62,17 @@ class MyTsStoredSession {
   final String username;
   final String email;
 
+  /// Binary `LoginSession.key` exactly as the service sent it. It is the
+  /// *wrapped* account key: ciphertext that is useless without the account
+  /// password, so a later import can unwrap it again. Empty when absent.
+  final Uint8List wrappedKey;
+
   const MyTsStoredSession({
     required this.session,
     required this.uuid,
     required this.username,
     required this.email,
+    required this.wrappedKey,
   });
 }
 
@@ -79,6 +81,8 @@ class MyTsSessionStore {
   static const kUuid = 'myts_uuid';
   static const kUsername = 'myts_username';
   static const kEmail = 'myts_email';
+  static const kWrappedKey = 'myts_wrapped_key';
+  static const _keys = [kSession, kUuid, kUsername, kEmail, kWrappedKey];
 
   final MyTsSecureBackend _backend;
 
@@ -90,11 +94,13 @@ class MyTsSessionStore {
     required String uuid,
     required String username,
     required String email,
+    List<int> wrappedKey = const [],
   }) async {
     await _backend.write(kSession, session);
     await _backend.write(kUuid, uuid);
     await _backend.write(kUsername, username);
     await _backend.write(kEmail, email);
+    await _backend.write(kWrappedKey, base64.encode(wrappedKey));
   }
 
   /// Null when no session was stored, or when the stored session is empty
@@ -107,10 +113,26 @@ class MyTsSessionStore {
       uuid: await _backend.read(kUuid) ?? '',
       username: await _backend.read(kUsername) ?? '',
       email: await _backend.read(kEmail) ?? '',
+      wrappedKey: _decodeKey(await _backend.read(kWrappedKey)),
     );
   }
 
-  /// Local wipe. Server-side deletion is attempted first by the controller
-  /// but logout always ends here, offline or not.
-  Future<void> clear() => _backend.deleteAll();
+  static Uint8List _decodeKey(String? stored) {
+    if (stored == null || stored.isEmpty) return Uint8List(0);
+    try {
+      return base64.decode(stored);
+    } on FormatException {
+      return Uint8List(0); // Unreadable key: unwrap then fails closed.
+    }
+  }
+
+  /// Local wipe of the session keys only. Server-side deletion is attempted
+  /// first by the controller but logout always ends here, offline or not.
+  /// Never `deleteAll()`: the secure storage also holds imported identities
+  /// and bookmark passwords, which signing out must not destroy.
+  Future<void> clear() async {
+    for (final key in _keys) {
+      await _backend.delete(key);
+    }
+  }
 }

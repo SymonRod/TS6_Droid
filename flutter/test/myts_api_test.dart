@@ -1,5 +1,6 @@
 // Transport + error-mapping tests (no real network):
 // docs/myteamspeak-login-protocol.md, sections 4-7 acceptance items 3-4.
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -8,12 +9,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ts6_flutter/src/myts/api.dart';
 
 import 'myts_helpers.dart';
+import 'myts_rust.dart';
 
 class _Call {
   final Uri uri;
   final Map<String, String> headers;
   final Uint8List body;
-  _Call(this.uri, this.headers, this.body);
+  final int maxBytes;
+  _Call(this.uri, this.headers, this.body, this.maxBytes);
 }
 
 class _FakeTransport {
@@ -21,8 +24,13 @@ class _FakeTransport {
   final calls = <_Call>[];
   _FakeTransport(this.handler);
 
-  Future<MyTsHttpResponse> post(Uri uri, Map<String, String> headers, Uint8List body) {
-    final c = _Call(uri, headers, body);
+  Future<MyTsHttpResponse> post(
+    Uri uri,
+    Map<String, String> headers,
+    Uint8List body,
+    int maxBytes,
+  ) {
+    final c = _Call(uri, headers, body, maxBytes);
     calls.add(c);
     return handler(c);
   }
@@ -44,6 +52,8 @@ MyTsApi apiWith(_FakeTransport t, {String deviceName = 'Test device'}) =>
     MyTsApi(post: t.post, deviceName: deviceName);
 
 void main() {
+  setUpAll(initRustForTests);
+
   test('successful login: endpoint, headers, framing, reply decoding', () async {
     late _Call seen;
     final t = _FakeTransport((c) async {
@@ -78,6 +88,17 @@ void main() {
     expect(scannedVarint(f, 5), 1);
     expect(scannedString(f, 9), 'Test device');
     expect(f.containsKey(6), isFalse); // no OTP on the first step
+  });
+
+  test('wire password sent is the Rust-derived KDF golden', () async {
+    late Uint8List body;
+    final t = _FakeTransport((c) async {
+      body = c.body;
+      return MyTsHttpResponse(200, loginSessionReply(error: 200, session: 's'));
+    });
+    await apiWith(t).login(email: 'A@B', password: 'pw');
+    expect(scannedString(scanFields(body.sublist(6)), 2),
+        'jj4pMIxs3fEOw+NaR3mKjAY3hjGWUkBjkdvAzdLVa8X3G1XYWQ8gnz13hTOilOsi');
   });
 
   test('OTP is only sent on the explicit second step', () async {

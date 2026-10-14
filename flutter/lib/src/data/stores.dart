@@ -12,6 +12,23 @@ class BookmarkStore {
   static const _kLast = 'last_bookmark_address';
   static const _kAutoReconnect = 'auto_reconnect';
 
+  /// First setup must distinguish absent data from unreadable saved data.
+  /// Unlike [load], this deliberately propagates malformed storage errors.
+  Future<bool> hasSavedBookmarks() async {
+    final p = await SharedPreferences.getInstance();
+    final raw = p.getString(_kBookmarks);
+    if (raw == null) return false;
+    final list = jsonDecode(raw) as List;
+    for (final item in list) {
+      if (item is! Map<String, dynamic> ||
+          item['address'] is! String ||
+          (item['address'] as String).trim().isEmpty) {
+        throw const FormatException('Invalid saved bookmark');
+      }
+    }
+    return list.isNotEmpty;
+  }
+
   Future<List<ServerBookmark>> load() async {
     final p = await SharedPreferences.getInstance();
     try {
@@ -65,8 +82,43 @@ class SettingsStore {
 
 /// Identity kept as the exported string in the app's files dir.
 class IdentityStore {
+  final Future<Directory> Function() _supportDirectory;
+
+  IdentityStore({Future<Directory> Function()? supportDirectory})
+    : _supportDirectory = supportDirectory ?? getApplicationSupportDirectory;
+
+  /// Inspect without generating an identity. Invalid existing data is an
+  /// error, never evidence that the app is empty.
+  Future<bool> hasIdentity() async {
+    final dir = await _supportDirectory();
+    final f = File('${dir.path}/identity.txt');
+    if (!await f.exists()) return false;
+    await TsIdentity.fromString(data: await f.readAsString());
+    return true;
+  }
+
+  /// The identity file's identity, or null when there is none. Never creates
+  /// anything; unreadable data throws instead of looking absent.
+  Future<TsIdentity?> loadExisting() async {
+    final dir = await _supportDirectory();
+    final f = File('${dir.path}/identity.txt');
+    if (!await f.exists()) return null;
+    return TsIdentity.fromString(data: await f.readAsString());
+  }
+
+  /// Creates the identity file's identity on an explicit user request. Refuses
+  /// to touch an existing file.
+  Future<TsIdentity> create() async {
+    final dir = await _supportDirectory();
+    final f = File('${dir.path}/identity.txt');
+    if (await f.exists()) throw StateError('Identity file already exists');
+    final id = await TsIdentity.create();
+    await f.writeAsString(id.exportString());
+    return id;
+  }
+
   Future<TsIdentity> getOrCreate() async {
-    final dir = await getApplicationSupportDirectory();
+    final dir = await _supportDirectory();
     final f = File('${dir.path}/identity.txt');
     if (await f.exists()) {
       return TsIdentity.fromString(data: await f.readAsString());

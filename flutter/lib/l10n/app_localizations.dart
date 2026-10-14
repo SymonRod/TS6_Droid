@@ -549,6 +549,276 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Login failed'**
   String get mytsErrorOther;
+
+  /// No description provided for @setupWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to TS6 Droid'**
+  String get setupWelcome;
+
+  /// No description provided for @setupIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how to set up your TeamSpeak client.'**
+  String get setupIntro;
+
+  /// No description provided for @setupAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your myTeamSpeak account'**
+  String get setupAccountTitle;
+
+  /// No description provided for @setupAccountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Account setup will automatically import supported cloud identities and server bookmarks, keeping each bookmark linked to its identity. Data saved only on your desktop cannot be restored from the cloud.'**
+  String get setupAccountHint;
+
+  /// No description provided for @setupImportPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in downloads your identities and bookmarks and keeps them securely on this device. The account is only read; nothing is changed in the cloud.'**
+  String get setupImportPending;
+
+  /// No description provided for @setupSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with myTeamSpeak'**
+  String get setupSignIn;
+
+  /// No description provided for @setupSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip sign-in'**
+  String get setupSkip;
+
+  /// No description provided for @setupSkipHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a local identity and use server connections without an account. You can sign in later; your local data will be preserved.'**
+  String get setupSkipHint;
+
+  /// No description provided for @setupBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to setup'**
+  String get setupBack;
+
+  /// No description provided for @setupRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get setupRetry;
+
+  /// No description provided for @setupReadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not safely read your local setup. Your data has not been replaced. Check storage access and try again.'**
+  String get setupReadError;
+
+  /// No description provided for @setupWriteError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not finish local setup. Try skipping sign-in again; any identity already saved will be reused.'**
+  String get setupWriteError;
+
+  /// No description provided for @mytsImportPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import your account data'**
+  String get mytsImportPendingTitle;
+
+  /// No description provided for @mytsSetupImportPending.
+  ///
+  /// In en, this message translates to:
+  /// **'You are signed in, but nothing has been imported yet, so setup is not complete. Enter your account password to download your identities and bookmarks, or return to setup to use a local identity.'**
+  String get mytsSetupImportPending;
+
+  /// No description provided for @mytsExistingDataHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in never replaces your local identities or bookmarks. Importing only adds what is missing and asks you first.'**
+  String get mytsExistingDataHint;
+
+  /// No description provided for @mytsShowPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get mytsShowPassword;
+
+  /// No description provided for @mytsHidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get mytsHidePassword;
+
+  /// No description provided for @mytsImportAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Import account data'**
+  String get mytsImportAction;
+
+  /// No description provided for @mytsImportPasswordNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The password unlocks your account key for this import only and is not stored.'**
+  String get mytsImportPasswordNote;
+
+  /// No description provided for @mytsImportWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading and checking your account data…'**
+  String get mytsImportWorking;
+
+  /// No description provided for @mytsImportConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your account data to this device?'**
+  String get mytsImportConfirmTitle;
+
+  /// No description provided for @mytsImportConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get mytsImportConfirm;
+
+  /// No description provided for @mytsImportContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get mytsImportContinue;
+
+  /// No description provided for @mytsImportAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {identities} identities and {bookmarks} bookmarks.'**
+  String mytsImportAdded(int identities, int bookmarks);
+
+  /// No description provided for @mytsImportUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything from your account is already on this device. Nothing was changed.'**
+  String get mytsImportUpToDate;
+
+  /// No description provided for @mytsImportSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped {count} items that are invalid, duplicated or different from the copy already on this device. Nothing existing was replaced.'**
+  String mytsImportSkipped(int count);
+
+  /// No description provided for @mytsImportNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has no identities or bookmarks to import. Nothing was changed and setup is not complete; you can go back and skip sign-in to create a local identity.'**
+  String get mytsImportNothing;
+
+  /// No description provided for @mytsImportChooseIdentityNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You will choose which identity each bookmark uses the first time you connect.'**
+  String get mytsImportChooseIdentityNote;
+
+  /// No description provided for @mytsImportErrNoSession.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not signed in. Sign in again to import.'**
+  String get mytsImportErrNoSession;
+
+  /// No description provided for @mytsImportErrUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account key could not be unlocked. Check the password and sign in again. Nothing was changed on this device.'**
+  String get mytsImportErrUnlock;
+
+  /// No description provided for @mytsImportErrNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error while downloading. Nothing was changed on this device.'**
+  String get mytsImportErrNetwork;
+
+  /// No description provided for @mytsImportErrService.
+  ///
+  /// In en, this message translates to:
+  /// **'The service did not accept the request. Nothing was changed on this device.'**
+  String get mytsImportErrService;
+
+  /// No description provided for @mytsImportErrExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your sign-in expired. Sign out and sign in again. Nothing was changed on this device.'**
+  String get mytsImportErrExpired;
+
+  /// No description provided for @mytsImportErrData.
+  ///
+  /// In en, this message translates to:
+  /// **'The reply was unexpected or too large. Nothing was changed on this device.'**
+  String get mytsImportErrData;
+
+  /// No description provided for @mytsImportErrIntegrity.
+  ///
+  /// In en, this message translates to:
+  /// **'The downloaded data failed its integrity check. Nothing was changed on this device.'**
+  String get mytsImportErrIntegrity;
+
+  /// No description provided for @mytsImportErrStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read or save local data safely. Nothing existing was replaced.'**
+  String get mytsImportErrStorage;
+
+  /// No description provided for @identityChooseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an identity'**
+  String get identityChooseTitle;
+
+  /// No description provided for @identityChooseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the identity to connect with. Your choice is remembered on this device only and does not change your account.'**
+  String get identityChooseBody;
+
+  /// No description provided for @identityLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Local identity of this device'**
+  String get identityLocal;
+
+  /// No description provided for @identityCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new local identity'**
+  String get identityCreate;
+
+  /// No description provided for @identityUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The identity could not be opened. Nothing was changed.'**
+  String get identityUnavailable;
+
+  /// No description provided for @importedFromAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'From your account'**
+  String get importedFromAccount;
+
+  /// No description provided for @identityNotChosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity: not chosen yet'**
+  String get identityNotChosen;
+
+  /// No description provided for @identityChosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity: {label}'**
+  String identityChosen(String label);
+
+  /// No description provided for @identityChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change identity'**
+  String get identityChange;
 }
 
 class _AppLocalizationsDelegate

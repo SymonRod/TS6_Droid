@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
+import 'myts.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Main entrypoint of the Rust API
@@ -64,7 +65,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 1297849788;
+  int get rustContentHash => 944502803;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -194,11 +195,61 @@ abstract class RustLibApi extends BaseApi {
 
   String crateApiTsIdentityExportString({required TsIdentity that});
 
+  Future<TsIdentity> crateApiTsIdentityFromDesktopString({
+    required String data,
+  });
+
   Future<TsIdentity> crateApiTsIdentityFromString({required String data});
+
+  BigInt crateApiTsIdentityKeyOffset({required TsIdentity that});
 
   int crateApiTsIdentitySecurityLevel({required TsIdentity that});
 
   String crateApiTsIdentityUniqueId({required TsIdentity that});
+
+  Uint8List? crateMytsMyTsBuildDeleteSession({required String session});
+
+  Uint8List? crateMytsMyTsBuildInitialPull({required String session});
+
+  Future<Uint8List?> crateMytsMyTsBuildLogin({
+    required String email,
+    required String password,
+    String? otp,
+    required String deviceName,
+  });
+
+  MyTsEndpoint crateMytsMyTsEndpoint();
+
+  bool crateMytsMyTsParseDeleteSession({
+    required int httpStatus,
+    required List<int> body,
+  });
+
+  MyTsLoginOutcome crateMytsMyTsParseLogin({
+    required int httpStatus,
+    required List<int> body,
+  });
+
+  Future<MyTsPullOutcome> crateMytsMyTsParsePull({
+    required MyTsAccountKey key,
+    required int httpStatus,
+    required List<int> body,
+  });
+
+  Future<MyTsAccountKey> crateMytsMyTsUnlockAccountKey({
+    required String email,
+    required String password,
+    required List<int> wrappedKey,
+  });
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_MyTsAccountKey;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_MyTsAccountKey;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_MyTsAccountKeyPtr;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_TsClient;
@@ -1126,7 +1177,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<TsIdentity> crateApiTsIdentityFromString({required String data}) {
+  Future<TsIdentity> crateApiTsIdentityFromDesktopString({
+    required String data,
+  }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -1136,6 +1189,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             generalizedFrbRustBinding,
             serializer,
             funcId: 25,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsIdentity,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiTsIdentityFromDesktopStringConstMeta,
+        argValues: [data],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiTsIdentityFromDesktopStringConstMeta =>
+      const TaskConstMeta(
+        debugName: "TsIdentity_from_desktop_string",
+        argNames: ["data"],
+      );
+
+  @override
+  Future<TsIdentity> crateApiTsIdentityFromString({required String data}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(data, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 26,
             port: port_,
           );
         },
@@ -1158,6 +1243,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  BigInt crateApiTsIdentityKeyOffset({required TsIdentity that}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsIdentity(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 27)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_u_64,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiTsIdentityKeyOffsetConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiTsIdentityKeyOffsetConstMeta =>
+      const TaskConstMeta(
+        debugName: "TsIdentity_key_offset",
+        argNames: ["that"],
+      );
+
+  @override
   int crateApiTsIdentitySecurityLevel({required TsIdentity that}) {
     return handler.executeSync(
       SyncTask(
@@ -1167,7 +1281,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 26)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 28)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_u_8,
@@ -1196,7 +1310,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 27)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 29)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -1213,6 +1327,262 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     debugName: "TsIdentity_unique_id",
     argNames: ["that"],
   );
+
+  @override
+  Uint8List? crateMytsMyTsBuildDeleteSession({required String session}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(session, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 30)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_list_prim_u_8_strict,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateMytsMyTsBuildDeleteSessionConstMeta,
+        argValues: [session],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsBuildDeleteSessionConstMeta =>
+      const TaskConstMeta(
+        debugName: "my_ts_build_delete_session",
+        argNames: ["session"],
+      );
+
+  @override
+  Uint8List? crateMytsMyTsBuildInitialPull({required String session}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(session, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 31)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_list_prim_u_8_strict,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateMytsMyTsBuildInitialPullConstMeta,
+        argValues: [session],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsBuildInitialPullConstMeta =>
+      const TaskConstMeta(
+        debugName: "my_ts_build_initial_pull",
+        argNames: ["session"],
+      );
+
+  @override
+  Future<Uint8List?> crateMytsMyTsBuildLogin({
+    required String email,
+    required String password,
+    String? otp,
+    required String deviceName,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(email, serializer);
+          sse_encode_String(password, serializer);
+          sse_encode_opt_String(otp, serializer);
+          sse_encode_String(deviceName, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 32,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_list_prim_u_8_strict,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateMytsMyTsBuildLoginConstMeta,
+        argValues: [email, password, otp, deviceName],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsBuildLoginConstMeta => const TaskConstMeta(
+    debugName: "my_ts_build_login",
+    argNames: ["email", "password", "otp", "deviceName"],
+  );
+
+  @override
+  MyTsEndpoint crateMytsMyTsEndpoint() {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 33)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_my_ts_endpoint,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateMytsMyTsEndpointConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsEndpointConstMeta =>
+      const TaskConstMeta(debugName: "my_ts_endpoint", argNames: []);
+
+  @override
+  bool crateMytsMyTsParseDeleteSession({
+    required int httpStatus,
+    required List<int> body,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_16(httpStatus, serializer);
+          sse_encode_list_prim_u_8_loose(body, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 34)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateMytsMyTsParseDeleteSessionConstMeta,
+        argValues: [httpStatus, body],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsParseDeleteSessionConstMeta =>
+      const TaskConstMeta(
+        debugName: "my_ts_parse_delete_session",
+        argNames: ["httpStatus", "body"],
+      );
+
+  @override
+  MyTsLoginOutcome crateMytsMyTsParseLogin({
+    required int httpStatus,
+    required List<int> body,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_16(httpStatus, serializer);
+          sse_encode_list_prim_u_8_loose(body, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 35)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_my_ts_login_outcome,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateMytsMyTsParseLoginConstMeta,
+        argValues: [httpStatus, body],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsParseLoginConstMeta => const TaskConstMeta(
+    debugName: "my_ts_parse_login",
+    argNames: ["httpStatus", "body"],
+  );
+
+  @override
+  Future<MyTsPullOutcome> crateMytsMyTsParsePull({
+    required MyTsAccountKey key,
+    required int httpStatus,
+    required List<int> body,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey(
+            key,
+            serializer,
+          );
+          sse_encode_u_16(httpStatus, serializer);
+          sse_encode_list_prim_u_8_loose(body, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 36,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_my_ts_pull_outcome,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateMytsMyTsParsePullConstMeta,
+        argValues: [key, httpStatus, body],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsParsePullConstMeta => const TaskConstMeta(
+    debugName: "my_ts_parse_pull",
+    argNames: ["key", "httpStatus", "body"],
+  );
+
+  @override
+  Future<MyTsAccountKey> crateMytsMyTsUnlockAccountKey({
+    required String email,
+    required String password,
+    required List<int> wrappedKey,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(email, serializer);
+          sse_encode_String(password, serializer);
+          sse_encode_list_prim_u_8_loose(wrappedKey, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 37,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateMytsMyTsUnlockAccountKeyConstMeta,
+        argValues: [email, password, wrappedKey],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsUnlockAccountKeyConstMeta =>
+      const TaskConstMeta(
+        debugName: "my_ts_unlock_account_key",
+        argNames: ["email", "password", "wrappedKey"],
+      );
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_MyTsAccountKey => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_MyTsAccountKey => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_TsClient => wire
@@ -1237,6 +1607,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MyTsAccountKey
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return MyTsAccountKeyImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   TsClient
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
     dynamic raw,
@@ -1255,6 +1634,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MyTsAccountKey
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return MyTsAccountKeyImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   TsClient
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
     dynamic raw,
@@ -1270,6 +1658,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return TsIdentityImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  MyTsAccountKey
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return MyTsAccountKeyImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -1321,6 +1718,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MyTsImportBatch dco_decode_box_autoadd_my_ts_import_batch(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_my_ts_import_batch(raw);
+  }
+
+  @protected
+  MyTsLoginFailure dco_decode_box_autoadd_my_ts_login_failure(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_my_ts_login_failure(raw);
+  }
+
+  @protected
+  MyTsLoginSuccess dco_decode_box_autoadd_my_ts_login_success(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_my_ts_login_success(raw);
+  }
+
+  @protected
+  MyTsPullFailure dco_decode_box_autoadd_my_ts_pull_failure(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_my_ts_pull_failure(raw);
+  }
+
+  @protected
   int dco_decode_box_autoadd_u_16(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
@@ -1345,9 +1766,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<String> dco_decode_list_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_String).toList();
+  }
+
+  @protected
+  List<MyTsCloudBookmark> dco_decode_list_my_ts_cloud_bookmark(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_my_ts_cloud_bookmark).toList();
+  }
+
+  @protected
+  List<MyTsCloudIdentity> dco_decode_list_my_ts_cloud_identity(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_my_ts_cloud_identity).toList();
+  }
+
+  @protected
   Int64List dco_decode_list_prim_i_64_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dcoDecodeInt64List(raw);
+  }
+
+  @protected
+  List<int> dco_decode_list_prim_u_8_loose(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as List<int>;
   }
 
   @protected
@@ -1375,6 +1820,140 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MyTsCloudBookmark dco_decode_my_ts_cloud_bookmark(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 15)
+      throw Exception('unexpected arr length: expect 15 but see ${arr.length}');
+    return MyTsCloudBookmark(
+      cloudId: dco_decode_String(arr[0]),
+      itemVersion: dco_decode_String(arr[1]),
+      name: dco_decode_opt_String(arr[2]),
+      address: dco_decode_String(arr[3]),
+      port: dco_decode_opt_box_autoadd_u_32(arr[4]),
+      nickname: dco_decode_opt_String(arr[5]),
+      identity: dco_decode_opt_String(arr[6]),
+      serverPassword: dco_decode_opt_String(arr[7]),
+      defaultChannel: dco_decode_opt_String(arr[8]),
+      defaultChannelPassword: dco_decode_opt_String(arr[9]),
+      serverUid: dco_decode_opt_String(arr[10]),
+      autoconnect: dco_decode_opt_box_autoadd_bool(arr[11]),
+      connectMuted: dco_decode_opt_box_autoadd_bool(arr[12]),
+      parent: dco_decode_opt_String(arr[13]),
+      sortOrder: dco_decode_opt_String(arr[14]),
+    );
+  }
+
+  @protected
+  MyTsCloudIdentity dco_decode_my_ts_cloud_identity(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 11)
+      throw Exception('unexpected arr length: expect 11 but see ${arr.length}');
+    return MyTsCloudIdentity(
+      cloudId: dco_decode_String(arr[0]),
+      itemVersion: dco_decode_String(arr[1]),
+      desktopString: dco_decode_String(arr[2]),
+      uid: dco_decode_String(arr[3]),
+      counter: dco_decode_u_64(arr[4]),
+      idName: dco_decode_opt_String(arr[5]),
+      nickname: dco_decode_opt_String(arr[6]),
+      phoneticNickname: dco_decode_opt_String(arr[7]),
+      isDefault: dco_decode_opt_box_autoadd_bool(arr[8]),
+      parent: dco_decode_opt_String(arr[9]),
+      sortOrder: dco_decode_opt_String(arr[10]),
+    );
+  }
+
+  @protected
+  MyTsEndpoint dco_decode_my_ts_endpoint(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 8)
+      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    return MyTsEndpoint(
+      host: dco_decode_String(arr[0]),
+      authPath: dco_decode_String(arr[1]),
+      contentType: dco_decode_String(arr[2]),
+      userAgent: dco_decode_String(arr[3]),
+      defaultDeviceName: dco_decode_String(arr[4]),
+      syncPath: dco_decode_String(arr[5]),
+      loginReplyLimit: dco_decode_u_32(arr[6]),
+      pullReplyLimit: dco_decode_u_32(arr[7]),
+    );
+  }
+
+  @protected
+  MyTsImportBatch dco_decode_my_ts_import_batch(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return MyTsImportBatch(
+      identities: dco_decode_list_my_ts_cloud_identity(arr[0]),
+      bookmarks: dco_decode_list_my_ts_cloud_bookmark(arr[1]),
+      invalidIdentityIds: dco_decode_list_String(arr[2]),
+      invalidBookmarkIds: dco_decode_list_String(arr[3]),
+      tombstones: dco_decode_u_32(arr[4]),
+      unsupportedItems: dco_decode_u_32(arr[5]),
+    );
+  }
+
+  @protected
+  MyTsLoginFailure dco_decode_my_ts_login_failure(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return MyTsLoginFailure.values[raw as int];
+  }
+
+  @protected
+  MyTsLoginOutcome dco_decode_my_ts_login_outcome(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return MyTsLoginOutcome(
+      success: dco_decode_opt_box_autoadd_my_ts_login_success(arr[0]),
+      failure: dco_decode_opt_box_autoadd_my_ts_login_failure(arr[1]),
+      httpStatus: dco_decode_opt_box_autoadd_u_16(arr[2]),
+      appError: dco_decode_opt_box_autoadd_u_32(arr[3]),
+    );
+  }
+
+  @protected
+  MyTsLoginSuccess dco_decode_my_ts_login_success(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return MyTsLoginSuccess(
+      session: dco_decode_String(arr[0]),
+      uuid: dco_decode_String(arr[1]),
+      username: dco_decode_String(arr[2]),
+      wrappedKey: dco_decode_list_prim_u_8_strict(arr[3]),
+    );
+  }
+
+  @protected
+  MyTsPullFailure dco_decode_my_ts_pull_failure(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return MyTsPullFailure.values[raw as int];
+  }
+
+  @protected
+  MyTsPullOutcome dco_decode_my_ts_pull_outcome(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return MyTsPullOutcome(
+      batch: dco_decode_opt_box_autoadd_my_ts_import_batch(arr[0]),
+      failure: dco_decode_opt_box_autoadd_my_ts_pull_failure(arr[1]),
+      httpStatus: dco_decode_opt_box_autoadd_u_16(arr[2]),
+      serverStatus: dco_decode_opt_box_autoadd_u_32(arr[3]),
+    );
+  }
+
+  @protected
   String? dco_decode_opt_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_String(raw);
@@ -1393,6 +1972,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MyTsImportBatch? dco_decode_opt_box_autoadd_my_ts_import_batch(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_my_ts_import_batch(raw);
+  }
+
+  @protected
+  MyTsLoginFailure? dco_decode_opt_box_autoadd_my_ts_login_failure(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_my_ts_login_failure(raw);
+  }
+
+  @protected
+  MyTsLoginSuccess? dco_decode_opt_box_autoadd_my_ts_login_success(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_my_ts_login_success(raw);
+  }
+
+  @protected
+  MyTsPullFailure? dco_decode_opt_box_autoadd_my_ts_pull_failure(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_my_ts_pull_failure(raw);
+  }
+
+  @protected
   int? dco_decode_opt_box_autoadd_u_16(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_u_16(raw);
@@ -1402,6 +2009,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_u_32(raw);
+  }
+
+  @protected
+  Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_list_prim_u_8_strict(raw);
   }
 
   @protected
@@ -1719,6 +2332,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MyTsAccountKey
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return MyTsAccountKeyImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   TsClient
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
     SseDeserializer deserializer,
@@ -1743,6 +2368,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MyTsAccountKey
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return MyTsAccountKeyImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   TsClient
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
     SseDeserializer deserializer,
@@ -1761,6 +2398,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return TsIdentityImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  MyTsAccountKey
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return MyTsAccountKeyImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -1824,6 +2473,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MyTsImportBatch sse_decode_box_autoadd_my_ts_import_batch(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_my_ts_import_batch(deserializer));
+  }
+
+  @protected
+  MyTsLoginFailure sse_decode_box_autoadd_my_ts_login_failure(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_my_ts_login_failure(deserializer));
+  }
+
+  @protected
+  MyTsLoginSuccess sse_decode_box_autoadd_my_ts_login_success(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_my_ts_login_success(deserializer));
+  }
+
+  @protected
+  MyTsPullFailure sse_decode_box_autoadd_my_ts_pull_failure(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_my_ts_pull_failure(deserializer));
+  }
+
+  @protected
   int sse_decode_box_autoadd_u_16(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_u_16(deserializer));
@@ -1848,10 +2529,57 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <String>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_String(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<MyTsCloudBookmark> sse_decode_list_my_ts_cloud_bookmark(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <MyTsCloudBookmark>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_my_ts_cloud_bookmark(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<MyTsCloudIdentity> sse_decode_list_my_ts_cloud_identity(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <MyTsCloudIdentity>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_my_ts_cloud_identity(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   Int64List sse_decode_list_prim_i_64_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getInt64List(len_);
+  }
+
+  @protected
+  List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getUint8List(len_);
   }
 
   @protected
@@ -1898,6 +2626,189 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MyTsCloudBookmark sse_decode_my_ts_cloud_bookmark(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_cloudId = sse_decode_String(deserializer);
+    var var_itemVersion = sse_decode_String(deserializer);
+    var var_name = sse_decode_opt_String(deserializer);
+    var var_address = sse_decode_String(deserializer);
+    var var_port = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_nickname = sse_decode_opt_String(deserializer);
+    var var_identity = sse_decode_opt_String(deserializer);
+    var var_serverPassword = sse_decode_opt_String(deserializer);
+    var var_defaultChannel = sse_decode_opt_String(deserializer);
+    var var_defaultChannelPassword = sse_decode_opt_String(deserializer);
+    var var_serverUid = sse_decode_opt_String(deserializer);
+    var var_autoconnect = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_connectMuted = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_parent = sse_decode_opt_String(deserializer);
+    var var_sortOrder = sse_decode_opt_String(deserializer);
+    return MyTsCloudBookmark(
+      cloudId: var_cloudId,
+      itemVersion: var_itemVersion,
+      name: var_name,
+      address: var_address,
+      port: var_port,
+      nickname: var_nickname,
+      identity: var_identity,
+      serverPassword: var_serverPassword,
+      defaultChannel: var_defaultChannel,
+      defaultChannelPassword: var_defaultChannelPassword,
+      serverUid: var_serverUid,
+      autoconnect: var_autoconnect,
+      connectMuted: var_connectMuted,
+      parent: var_parent,
+      sortOrder: var_sortOrder,
+    );
+  }
+
+  @protected
+  MyTsCloudIdentity sse_decode_my_ts_cloud_identity(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_cloudId = sse_decode_String(deserializer);
+    var var_itemVersion = sse_decode_String(deserializer);
+    var var_desktopString = sse_decode_String(deserializer);
+    var var_uid = sse_decode_String(deserializer);
+    var var_counter = sse_decode_u_64(deserializer);
+    var var_idName = sse_decode_opt_String(deserializer);
+    var var_nickname = sse_decode_opt_String(deserializer);
+    var var_phoneticNickname = sse_decode_opt_String(deserializer);
+    var var_isDefault = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_parent = sse_decode_opt_String(deserializer);
+    var var_sortOrder = sse_decode_opt_String(deserializer);
+    return MyTsCloudIdentity(
+      cloudId: var_cloudId,
+      itemVersion: var_itemVersion,
+      desktopString: var_desktopString,
+      uid: var_uid,
+      counter: var_counter,
+      idName: var_idName,
+      nickname: var_nickname,
+      phoneticNickname: var_phoneticNickname,
+      isDefault: var_isDefault,
+      parent: var_parent,
+      sortOrder: var_sortOrder,
+    );
+  }
+
+  @protected
+  MyTsEndpoint sse_decode_my_ts_endpoint(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_host = sse_decode_String(deserializer);
+    var var_authPath = sse_decode_String(deserializer);
+    var var_contentType = sse_decode_String(deserializer);
+    var var_userAgent = sse_decode_String(deserializer);
+    var var_defaultDeviceName = sse_decode_String(deserializer);
+    var var_syncPath = sse_decode_String(deserializer);
+    var var_loginReplyLimit = sse_decode_u_32(deserializer);
+    var var_pullReplyLimit = sse_decode_u_32(deserializer);
+    return MyTsEndpoint(
+      host: var_host,
+      authPath: var_authPath,
+      contentType: var_contentType,
+      userAgent: var_userAgent,
+      defaultDeviceName: var_defaultDeviceName,
+      syncPath: var_syncPath,
+      loginReplyLimit: var_loginReplyLimit,
+      pullReplyLimit: var_pullReplyLimit,
+    );
+  }
+
+  @protected
+  MyTsImportBatch sse_decode_my_ts_import_batch(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_identities = sse_decode_list_my_ts_cloud_identity(deserializer);
+    var var_bookmarks = sse_decode_list_my_ts_cloud_bookmark(deserializer);
+    var var_invalidIdentityIds = sse_decode_list_String(deserializer);
+    var var_invalidBookmarkIds = sse_decode_list_String(deserializer);
+    var var_tombstones = sse_decode_u_32(deserializer);
+    var var_unsupportedItems = sse_decode_u_32(deserializer);
+    return MyTsImportBatch(
+      identities: var_identities,
+      bookmarks: var_bookmarks,
+      invalidIdentityIds: var_invalidIdentityIds,
+      invalidBookmarkIds: var_invalidBookmarkIds,
+      tombstones: var_tombstones,
+      unsupportedItems: var_unsupportedItems,
+    );
+  }
+
+  @protected
+  MyTsLoginFailure sse_decode_my_ts_login_failure(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return MyTsLoginFailure.values[inner];
+  }
+
+  @protected
+  MyTsLoginOutcome sse_decode_my_ts_login_outcome(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_success = sse_decode_opt_box_autoadd_my_ts_login_success(
+      deserializer,
+    );
+    var var_failure = sse_decode_opt_box_autoadd_my_ts_login_failure(
+      deserializer,
+    );
+    var var_httpStatus = sse_decode_opt_box_autoadd_u_16(deserializer);
+    var var_appError = sse_decode_opt_box_autoadd_u_32(deserializer);
+    return MyTsLoginOutcome(
+      success: var_success,
+      failure: var_failure,
+      httpStatus: var_httpStatus,
+      appError: var_appError,
+    );
+  }
+
+  @protected
+  MyTsLoginSuccess sse_decode_my_ts_login_success(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_session = sse_decode_String(deserializer);
+    var var_uuid = sse_decode_String(deserializer);
+    var var_username = sse_decode_String(deserializer);
+    var var_wrappedKey = sse_decode_list_prim_u_8_strict(deserializer);
+    return MyTsLoginSuccess(
+      session: var_session,
+      uuid: var_uuid,
+      username: var_username,
+      wrappedKey: var_wrappedKey,
+    );
+  }
+
+  @protected
+  MyTsPullFailure sse_decode_my_ts_pull_failure(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return MyTsPullFailure.values[inner];
+  }
+
+  @protected
+  MyTsPullOutcome sse_decode_my_ts_pull_outcome(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_batch = sse_decode_opt_box_autoadd_my_ts_import_batch(deserializer);
+    var var_failure = sse_decode_opt_box_autoadd_my_ts_pull_failure(
+      deserializer,
+    );
+    var var_httpStatus = sse_decode_opt_box_autoadd_u_16(deserializer);
+    var var_serverStatus = sse_decode_opt_box_autoadd_u_32(deserializer);
+    return MyTsPullOutcome(
+      batch: var_batch,
+      failure: var_failure,
+      httpStatus: var_httpStatus,
+      serverStatus: var_serverStatus,
+    );
+  }
+
+  @protected
   String? sse_decode_opt_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -1931,6 +2842,58 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MyTsImportBatch? sse_decode_opt_box_autoadd_my_ts_import_batch(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_my_ts_import_batch(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  MyTsLoginFailure? sse_decode_opt_box_autoadd_my_ts_login_failure(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_my_ts_login_failure(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  MyTsLoginSuccess? sse_decode_opt_box_autoadd_my_ts_login_success(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_my_ts_login_success(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  MyTsPullFailure? sse_decode_opt_box_autoadd_my_ts_pull_failure(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_my_ts_pull_failure(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   int? sse_decode_opt_box_autoadd_u_16(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -1947,6 +2910,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
     if (sse_decode_bool(deserializer)) {
       return (sse_decode_box_autoadd_u_32(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  Uint8List? sse_decode_opt_list_prim_u_8_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_list_prim_u_8_strict(deserializer));
     } else {
       return null;
     }
@@ -2367,6 +3341,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey(
+    MyTsAccountKey self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as MyTsAccountKeyImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
     TsClient self,
     SseSerializer serializer,
@@ -2393,6 +3380,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey(
+    MyTsAccountKey self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as MyTsAccountKeyImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
     TsClient self,
     SseSerializer serializer,
@@ -2413,6 +3413,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as TsIdentityImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey(
+    MyTsAccountKey self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as MyTsAccountKeyImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -2488,6 +3501,42 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_my_ts_import_batch(
+    MyTsImportBatch self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_my_ts_import_batch(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_my_ts_login_failure(
+    MyTsLoginFailure self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_my_ts_login_failure(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_my_ts_login_success(
+    MyTsLoginSuccess self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_my_ts_login_success(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_my_ts_pull_failure(
+    MyTsPullFailure self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_my_ts_pull_failure(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_u_16(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_16(self, serializer);
@@ -2512,6 +3561,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_String(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_my_ts_cloud_bookmark(
+    List<MyTsCloudBookmark> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_my_ts_cloud_bookmark(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_my_ts_cloud_identity(
+    List<MyTsCloudIdentity> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_my_ts_cloud_identity(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_prim_i_64_strict(
     Int64List self,
     SseSerializer serializer,
@@ -2519,6 +3601,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putInt64List(self);
+  }
+
+  @protected
+  void sse_encode_list_prim_u_8_loose(
+    List<int> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putUint8List(
+      self is Uint8List ? self : Uint8List.fromList(self),
+    );
   }
 
   @protected
@@ -2565,6 +3659,129 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_my_ts_cloud_bookmark(
+    MyTsCloudBookmark self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.cloudId, serializer);
+    sse_encode_String(self.itemVersion, serializer);
+    sse_encode_opt_String(self.name, serializer);
+    sse_encode_String(self.address, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.port, serializer);
+    sse_encode_opt_String(self.nickname, serializer);
+    sse_encode_opt_String(self.identity, serializer);
+    sse_encode_opt_String(self.serverPassword, serializer);
+    sse_encode_opt_String(self.defaultChannel, serializer);
+    sse_encode_opt_String(self.defaultChannelPassword, serializer);
+    sse_encode_opt_String(self.serverUid, serializer);
+    sse_encode_opt_box_autoadd_bool(self.autoconnect, serializer);
+    sse_encode_opt_box_autoadd_bool(self.connectMuted, serializer);
+    sse_encode_opt_String(self.parent, serializer);
+    sse_encode_opt_String(self.sortOrder, serializer);
+  }
+
+  @protected
+  void sse_encode_my_ts_cloud_identity(
+    MyTsCloudIdentity self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.cloudId, serializer);
+    sse_encode_String(self.itemVersion, serializer);
+    sse_encode_String(self.desktopString, serializer);
+    sse_encode_String(self.uid, serializer);
+    sse_encode_u_64(self.counter, serializer);
+    sse_encode_opt_String(self.idName, serializer);
+    sse_encode_opt_String(self.nickname, serializer);
+    sse_encode_opt_String(self.phoneticNickname, serializer);
+    sse_encode_opt_box_autoadd_bool(self.isDefault, serializer);
+    sse_encode_opt_String(self.parent, serializer);
+    sse_encode_opt_String(self.sortOrder, serializer);
+  }
+
+  @protected
+  void sse_encode_my_ts_endpoint(MyTsEndpoint self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.host, serializer);
+    sse_encode_String(self.authPath, serializer);
+    sse_encode_String(self.contentType, serializer);
+    sse_encode_String(self.userAgent, serializer);
+    sse_encode_String(self.defaultDeviceName, serializer);
+    sse_encode_String(self.syncPath, serializer);
+    sse_encode_u_32(self.loginReplyLimit, serializer);
+    sse_encode_u_32(self.pullReplyLimit, serializer);
+  }
+
+  @protected
+  void sse_encode_my_ts_import_batch(
+    MyTsImportBatch self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_my_ts_cloud_identity(self.identities, serializer);
+    sse_encode_list_my_ts_cloud_bookmark(self.bookmarks, serializer);
+    sse_encode_list_String(self.invalidIdentityIds, serializer);
+    sse_encode_list_String(self.invalidBookmarkIds, serializer);
+    sse_encode_u_32(self.tombstones, serializer);
+    sse_encode_u_32(self.unsupportedItems, serializer);
+  }
+
+  @protected
+  void sse_encode_my_ts_login_failure(
+    MyTsLoginFailure self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_my_ts_login_outcome(
+    MyTsLoginOutcome self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_box_autoadd_my_ts_login_success(self.success, serializer);
+    sse_encode_opt_box_autoadd_my_ts_login_failure(self.failure, serializer);
+    sse_encode_opt_box_autoadd_u_16(self.httpStatus, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.appError, serializer);
+  }
+
+  @protected
+  void sse_encode_my_ts_login_success(
+    MyTsLoginSuccess self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.session, serializer);
+    sse_encode_String(self.uuid, serializer);
+    sse_encode_String(self.username, serializer);
+    sse_encode_list_prim_u_8_strict(self.wrappedKey, serializer);
+  }
+
+  @protected
+  void sse_encode_my_ts_pull_failure(
+    MyTsPullFailure self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_my_ts_pull_outcome(
+    MyTsPullOutcome self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_box_autoadd_my_ts_import_batch(self.batch, serializer);
+    sse_encode_opt_box_autoadd_my_ts_pull_failure(self.failure, serializer);
+    sse_encode_opt_box_autoadd_u_16(self.httpStatus, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.serverStatus, serializer);
+  }
+
+  @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -2598,6 +3815,58 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_box_autoadd_my_ts_import_batch(
+    MyTsImportBatch? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_my_ts_import_batch(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_my_ts_login_failure(
+    MyTsLoginFailure? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_my_ts_login_failure(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_my_ts_login_success(
+    MyTsLoginSuccess? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_my_ts_login_success(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_my_ts_pull_failure(
+    MyTsPullFailure? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_my_ts_pull_failure(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_opt_box_autoadd_u_16(int? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -2614,6 +3883,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_box_autoadd_u_32(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_list_prim_u_8_strict(
+    Uint8List? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_list_prim_u_8_strict(self, serializer);
     }
   }
 
@@ -2945,6 +4227,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 }
 
 @sealed
+class MyTsAccountKeyImpl extends RustOpaque implements MyTsAccountKey {
+  // Not to be used by end users
+  MyTsAccountKeyImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  MyTsAccountKeyImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_MyTsAccountKey,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_MyTsAccountKey,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_MyTsAccountKeyPtr,
+  );
+}
+
+@sealed
 class TsClientImpl extends RustOpaque implements TsClient {
   // Not to be used by end users
   TsClientImpl.frbInternalDcoDecode(List<dynamic> wire)
@@ -3119,6 +4421,10 @@ class TsIdentityImpl extends RustOpaque implements TsIdentity {
 
   String exportString() =>
       RustLib.instance.api.crateApiTsIdentityExportString(that: this);
+
+  /// Hash-cash counter ("key offset") of the identity.
+  BigInt keyOffset() =>
+      RustLib.instance.api.crateApiTsIdentityKeyOffset(that: this);
 
   int securityLevel() =>
       RustLib.instance.api.crateApiTsIdentitySecurityLevel(that: this);

@@ -215,7 +215,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mytsErrorOffline => 'Login service unavailable, try again later';
 
   @override
-  String get mytsErrorEmailPending => 'This email address is awaiting confirmation';
+  String get mytsErrorEmailPending =>
+      'This email address is awaiting confirmation';
 
   @override
   String get mytsErrorOtpRequired => 'This account needs a one-time code';
@@ -239,4 +240,166 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mytsErrorOther => 'Login failed';
+
+  @override
+  String get setupWelcome => 'Welcome to TS6 Droid';
+
+  @override
+  String get setupIntro => 'Choose how to set up your TeamSpeak client.';
+
+  @override
+  String get setupAccountTitle => 'Your myTeamSpeak account';
+
+  @override
+  String get setupAccountHint =>
+      'Account setup will automatically import supported cloud identities and server bookmarks, keeping each bookmark linked to its identity. Data saved only on your desktop cannot be restored from the cloud.';
+
+  @override
+  String get setupImportPending =>
+      'Signing in downloads your identities and bookmarks and keeps them securely on this device. The account is only read; nothing is changed in the cloud.';
+
+  @override
+  String get setupSignIn => 'Sign in with myTeamSpeak';
+
+  @override
+  String get setupSkip => 'Skip sign-in';
+
+  @override
+  String get setupSkipHint =>
+      'Create a local identity and use server connections without an account. You can sign in later; your local data will be preserved.';
+
+  @override
+  String get setupBack => 'Back to setup';
+
+  @override
+  String get setupRetry => 'Retry';
+
+  @override
+  String get setupReadError =>
+      'Could not safely read your local setup. Your data has not been replaced. Check storage access and try again.';
+
+  @override
+  String get setupWriteError =>
+      'Could not finish local setup. Try skipping sign-in again; any identity already saved will be reused.';
+
+  @override
+  String get mytsImportPendingTitle => 'Import your account data';
+
+  @override
+  String get mytsSetupImportPending =>
+      'You are signed in, but nothing has been imported yet, so setup is not complete. Enter your account password to download your identities and bookmarks, or return to setup to use a local identity.';
+
+  @override
+  String get mytsExistingDataHint =>
+      'Signing in never replaces your local identities or bookmarks. Importing only adds what is missing and asks you first.';
+
+  @override
+  String get mytsShowPassword => 'Show password';
+
+  @override
+  String get mytsHidePassword => 'Hide password';
+
+  @override
+  String get mytsImportAction => 'Import account data';
+
+  @override
+  String get mytsImportPasswordNote =>
+      'The password unlocks your account key for this import only and is not stored.';
+
+  @override
+  String get mytsImportWorking => 'Downloading and checking your account data…';
+
+  @override
+  String get mytsImportConfirmTitle => 'Add your account data to this device?';
+
+  @override
+  String get mytsImportConfirm => 'Import';
+
+  @override
+  String get mytsImportContinue => 'Continue';
+
+  @override
+  String mytsImportAdded(int identities, int bookmarks) {
+    return 'Added $identities identities and $bookmarks bookmarks.';
+  }
+
+  @override
+  String get mytsImportUpToDate =>
+      'Everything from your account is already on this device. Nothing was changed.';
+
+  @override
+  String mytsImportSkipped(int count) {
+    return 'Skipped $count items that are invalid, duplicated or different from the copy already on this device. Nothing existing was replaced.';
+  }
+
+  @override
+  String get mytsImportNothing =>
+      'Your account has no identities or bookmarks to import. Nothing was changed and setup is not complete; you can go back and skip sign-in to create a local identity.';
+
+  @override
+  String get mytsImportChooseIdentityNote =>
+      'You will choose which identity each bookmark uses the first time you connect.';
+
+  @override
+  String get mytsImportErrNoSession =>
+      'You are not signed in. Sign in again to import.';
+
+  @override
+  String get mytsImportErrUnlock =>
+      'Your account key could not be unlocked. Check the password and sign in again. Nothing was changed on this device.';
+
+  @override
+  String get mytsImportErrNetwork =>
+      'Network error while downloading. Nothing was changed on this device.';
+
+  @override
+  String get mytsImportErrService =>
+      'The service did not accept the request. Nothing was changed on this device.';
+
+  @override
+  String get mytsImportErrExpired =>
+      'Your sign-in expired. Sign out and sign in again. Nothing was changed on this device.';
+
+  @override
+  String get mytsImportErrData =>
+      'The reply was unexpected or too large. Nothing was changed on this device.';
+
+  @override
+  String get mytsImportErrIntegrity =>
+      'The downloaded data failed its integrity check. Nothing was changed on this device.';
+
+  @override
+  String get mytsImportErrStorage =>
+      'Could not read or save local data safely. Nothing existing was replaced.';
+
+  @override
+  String get identityChooseTitle => 'Choose an identity';
+
+  @override
+  String get identityChooseBody =>
+      'Pick the identity to connect with. Your choice is remembered on this device only and does not change your account.';
+
+  @override
+  String get identityLocal => 'Local identity of this device';
+
+  @override
+  String get identityCreate => 'Create a new local identity';
+
+  @override
+  String get identityUnavailable =>
+      'The identity could not be opened. Nothing was changed.';
+
+  @override
+  String get importedFromAccount => 'From your account';
+
+  @override
+  String get identityNotChosen => 'Identity: not chosen yet';
+
+  @override
+  String identityChosen(String label) {
+    return 'Identity: $label';
+  }
+
+  @override
+  String get identityChange => 'Change identity';
 }

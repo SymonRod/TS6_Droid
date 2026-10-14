@@ -112,8 +112,17 @@ abstract class TsIdentity implements RustOpaqueInterface {
 
   String exportString();
 
+  /// Strict validation of a myTeamSpeak cloud identity (`<counter>V<base64>`).
+  /// Preserves the counter, never improves or regenerates the key, and fails
+  /// with a fixed secret-free message.
+  static Future<TsIdentity> fromDesktopString({required String data}) =>
+      RustLib.instance.api.crateApiTsIdentityFromDesktopString(data: data);
+
   static Future<TsIdentity> fromString({required String data}) =>
       RustLib.instance.api.crateApiTsIdentityFromString(data: data);
+
+  /// Hash-cash counter ("key offset") of the identity.
+  BigInt keyOffset();
 
   int securityLevel();
 

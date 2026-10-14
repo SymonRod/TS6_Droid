@@ -41,6 +41,18 @@ To pull upstream changes use `git subtree pull --prefix=vendor/tsclientlib`.
 The Flutter port lives in `flutter/` (see `docs/flutter-migration-plan.md`) and
 uses the `tslib-frb` crate of the same library.
 
+## Product direction
+
+Read **[docs/product-direction.md](docs/product-direction.md)** before planning
+onboarding, identities or myTeamSpeak work. The agreed goal is near desktop
+feature parity, including contacts and account chat in future deliveries.
+First setup offers myTeamSpeak Sign in or Skip; sign-in on an empty app
+automatically imports supported identities and bookmarks, preserving their
+relationships. Existing local data must not be silently replaced. Multiple
+identities are part of the first import design, not a late manual-only feature.
+This product decision supersedes conflicting historical milestone/non-goal
+wording; it does not imply that import, ongoing sync or account chat already work.
+
 ## Build
 
 ```bash
@@ -168,13 +180,42 @@ the UI as `User.isStreaming` and shows as a green screen icon in `UserItem`.
 The current implementation target is **Flutter**, not the legacy Kotlin app.
 Start with **[docs/myteamspeak-login-protocol.md](docs/myteamspeak-login-protocol.md)**
 for the demonstrated password derivation, HTTP/protobuf contract, synthetic
-goldens and security requirements. **[docs/myteamspeak-login-run40.md](docs/myteamspeak-login-run40.md)**
-is the latest research handoff (2026-10-14).
+goldens and security requirements. Current crypto follow-ups (2026-10-14):
+**[docs/myteamspeak-key-unwrap-protocol.md](docs/myteamspeak-key-unwrap-protocol.md)**
+and **[docs/myteamspeak-bookmark-decryption-protocol.md](docs/myteamspeak-bookmark-decryption-protocol.md)**.
+Run41b is the valid offline capture; run41 failed before login.
+
+Password login now works live from the Flutter app. Its protocol logic (KDF,
+`application/ts3cloud` framing, protobuf codec, reply classification) lives in the
+Rust crate `tslib-myts` in ts6-lib, exposed through `tslib-frb` (`api` module
+`myts`); it is sans-IO, so Dart (`flutter/lib/src/myts/api.dart`) performs the POST.
+Anything else myTS-related (sync, unwrap, renewal) should be added to that crate.
 
 Password login succeeded standalone: PBKDF2-HMAC-SHA512, 10,000 iterations,
 48 bytes, salt = ASCII-lowercased UTF-8 email + `ts3Login` + UTF-8 password,
 then standard Base64; login `sync_version=V1_1`. The legacy Kotlin SHA-512-hex
-encoder/diagnostic is incorrect and must not be ported. Flutter's myTeamSpeak
-module remains unimplemented; account-key/sync unwrap and token renewal are
-separate open tasks. Real-account tests require explicit authorization;
+encoder/diagnostic is incorrect and must not be ported. Version-2 account-key
+GCM unwrap and all five captured bookmark decryptions are demonstrated offline.
+Items use the raw account key, AES-256-CTR-128LE and an exposed unkeyed SHA-512
+plaintext digest, not the account GCM framing or an authenticity guarantee.
+The Rust item primitive, version-2 account-key unwrap and bounded read-only sync
+decoder are in `tslib-myts`; see **[docs/myteamspeak-rust-import-engine.md](docs/myteamspeak-rust-import-engine.md)**
+for the synthetic/offline evidence and scope limits. Synthetic desktop-format
+identity encoding/UID compatibility is now independently verified; see
+**[docs/myteamspeak-identity-format.md](docs/myteamspeak-identity-format.md)** for
+the offline desktop oracle and vendored private-scalar padding fix. One explicitly
+authorized read-only live check accepted the unchanged Rust initial pull and
+validated two cloud identities (strict format, independent Python UID/counter
+comparison) plus five bookmarks in memory. All bookmark references were explicitly
+empty and both identities flagged default: nonempty matching and effective-default
+selection remain unresolved. See the Rust-engine handoff's live section; no real
+desktop comparison, app persistence or cloud write was performed. The Flutter
+import path (FRB unlock/pull/validation, bounded transport, secure vault,
+automatic empty-app import, confirmed import into existing data, local identity
+choice before connecting) is implemented and verified offline with synthetic
+data; see the last section of the Rust-engine handoff. It has not been run
+against the real service from the app. Token renewal, ongoing sync, nonempty
+reference matching and effective-default rules remain open.
+On this machine the Rust checkout is `../ts6-lib`, not `../tslib`.
+Real-account tests require explicit authorization;
 credentials, salts, derived values and captures must stay out of logs/docs/git.

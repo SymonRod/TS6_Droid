@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../data/account_vault.dart';
 import '../data/message_store.dart';
 import '../data/server_bookmark.dart';
 import '../data/stores.dart';
@@ -24,6 +25,7 @@ const _audioChannel = MethodChannel('ts6/audio');
 final bookmarkStoreProvider = Provider((_) => BookmarkStore());
 final settingsStoreProvider = Provider((_) => SettingsStore());
 final identityStoreProvider = Provider((_) => IdentityStore());
+final accountVaultProvider = Provider<AccountVault>((_) => AccountVault());
 final messageStoreProvider = Provider((_) => MessageStore());
 
 AppLocalizations _l10n() {
@@ -206,11 +208,13 @@ class ServerController extends Notifier<ServerState> {
     return const ServerState();
   }
 
-  Future<bool> connect(ServerBookmark b) async {
+  /// Connects with an identity the caller already settled (see
+  /// `IdentityResolver`). There is deliberately no fallback that creates or
+  /// picks one here.
+  Future<bool> connect(ServerBookmark b, {required TsIdentity identity}) async {
     await disconnect();
     state = const ServerState(status: ConnStatus.connecting);
     try {
-      final identity = await ref.read(identityStoreProvider).getOrCreate();
       final client = await TsClient.connect(
         address: b.address,
         identity: identity,

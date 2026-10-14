@@ -1,5 +1,27 @@
 # myTeamSpeak — sync protocol reference (system A)
 
+> **Product policy (2026-10-14):**
+> [product-direction.md](product-direction.md) supersedes historical manual-only
+> identity-import/M5 policy below. Automatic identity + bookmark import is
+> required on fresh-app myTeamSpeak sign-in, with protection for existing local
+> data. This changes product policy, not the schemas or system A/B boundary.
+
+> **Offline item update (2026-10-14):** all five run41b bookmarks are now
+> independently decrypted and integrity-checked, with exact native equality.
+> Item format: `IV[16] || AES256-CTR-128LE(account_key, plaintext) ||
+> SHA512(plaintext)[64]`, **no version byte or extra KDF**. The digest is
+> unkeyed, not a MAC/AEAD guarantee. See the
+> [bookmark/item reference](myteamspeak-bookmark-decryption-protocol.md) for
+> provider trace, eight-item evidence and synthetic/Rust tests. Flutter import,
+> account-key lifecycle and renewal remain separate; older unresolved claims
+> below describe their historical research state.
+
+> **Run41 update (2026-10-14):** version-2 `LoginSession.key` unwrap is now
+> demonstrated: [account-key reference](myteamspeak-key-unwrap-protocol.md).
+> The remaining critical path is the account-key-to-item decrypt/integrity
+> chain, not another password-KDF or account-key guessing round. Historical
+> statements below about unresolved account unwrap describe earlier runs.
+
 > **Login update (2026-10-14, run40):** see
 > [myteamspeak-login-protocol.md](myteamspeak-login-protocol.md) for the
 > demonstrated password KDF, request/reply fields and successful standalone
@@ -231,7 +253,22 @@ ts_chat_identifier, note, matrix_id}`, `ContactList`, `ContactRequest(List)`,
 `/tschat` + Matrix homeserver + libolm. The sync `Contact` (§5) carries
 **none** of `matrix_id`/`ts_chat_identifier`/devices/keys. Roster ≠ identity.
 
-## 7. Encryption (task 1D — **now the critical path**; capture Q4 answered)
+## 7. Encryption (demonstrated account unwrap and item provider)
+
+**Offline item follow-up:** the account key is directly installed into the
+item AES provider; AES-256-CTR with a full-width little-endian counter opens
+all eight captured items. A trailing exposed SHA-512 digest of exact plaintext
+is checked before protobuf decode. This format is not GCM and is not
+authenticated encryption. The [item reference](myteamspeak-bookmark-decryption-protocol.md)
+supersedes historical uncertainty below about the tested provider. No new
+login or cloud operation was performed.
+
+**Run41 update:** `LoginSession.key` for the tested flow is
+`0x02 || tag[16] || nonce[12] || ciphertext[32]`. AES-256-GCM using the
+32-byte `ts3Encryption` result and empty AAD authenticates it and yields a
+32-byte account key, identical to the desktop output. See the dedicated
+[reference](myteamspeak-key-unwrap-protocol.md) for native/server correlation,
+synthetic tests and limits. **This is not yet the sync-item decoder.**
 
 **Run40 update (2026-10-14):** two password-based producer derivations are now
 demonstrated with native input/output and offline comparisons:
@@ -281,6 +318,20 @@ decompilation alone — the same in-process gdb approach that read the RPC
 bodies can read the plaintext `Item_Data` and the key/iv at the crypto call.
 
 ## 8. Change log
+
+- 2026-10-14 (offline run41b item follow-up): independently decrypted five
+  bookmarks, two identities and one config item using the unwrapped account
+  key, with exact native/plaintext/digest and server-blob correlation. Added
+  synthetic tests and a sans-IO Rust item primitive in `../ts6-lib/crates/tslib-myts`.
+  26 Python and 26 Rust tests pass. Documented the exposed unkeyed-digest
+  authenticity limitation. No network/login/session/cloud mutation.
+
+- 2026-10-14 (run41): version-2 account-key unwrap demonstrated with one
+  authorized isolated desktop login through the owner's tunnel gateway and
+  an independent authenticated AES-256-GCM comparison. Added offline
+  reference/goldens; 15 login/unwrap tests pass. The research session was
+  explicitly deleted (204). Item-key derivation/framing/integrity and token
+  renewal remain open; no application source changes.
 
 - 2026-10-14 (run40): login KDF demonstrated, standalone password login
   returned HTTP 200 / protobuf `ERROR_LOGIN_OK=200`, its own session deletion

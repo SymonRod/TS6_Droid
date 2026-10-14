@@ -1,11 +1,20 @@
 # myTeamSpeak login — implementation reference
 
 **Status: password login demonstrated end to end (2026-10-14, runs 39–40).**
+**Run41 update:** the version-2 account-key unwrap is also demonstrated; see
+[account-key unwrap reference](myteamspeak-key-unwrap-protocol.md). Individual
+sync-item decryption and application integration were separate work at run41.
+**Offline item follow-up:** [bookmark decryption](myteamspeak-bookmark-decryption-protocol.md)
+now reproduces all five captured bookmarks with integrity verification and a
+Rust item primitive. Its CTR + unkeyed SHA-512 format is distinct from the
+GCM account-key envelope. Application import and token renewal remain open.
 This is the durable protocol/implementation reference, not a session log.
-The Flutter app now has an M1 password-login Dart port
-(`flutter/lib/src/myts/`, `flutter/lib/src/ui/myts_login_screen.dart`,
-`flutter/test/myts_*_test.dart`); the legacy Kotlin code is **not** a
-correct encoder to port. No app code was changed in run40.
+The current Flutter login uses the Rust `tslib-myts` protocol through
+`tslib-frb`; Dart owns HTTPS transport (`flutter/lib/src/myts/api.dart`).
+App login is confirmed by the owner/AGENTS.md; this offline item follow-up did
+not repeat it. Earlier references to a Dart crypto port and an untested phone
+login describe the prior M1 state. The legacy Kotlin code is **not** a correct
+encoder to port. No app code was changed in run40.
 
 Related documents:
 
@@ -30,8 +39,10 @@ Related documents:
 | A distinct 32-byte encryption derivation exists | Native producer input/output plus offline match | Demonstrated; **not** a sync decryptor |
 | OTP, recovery-key and renewal fields exist | Embedded protobuf descriptors, bridge callback enum | Schema-confirmed, **not live-tested** in those modes |
 | Non-ASCII password goldens match Python's UTF-8 implementation | Synthetic offline tests | No real desktop/phone test with such a password |
-| Flutter login, secure persistence and device behavior work | — | **Implemented as a Dart port (offline tests only); live phone login, OTP and renewal still untested** |
-| Account-key wrapping, bookmark decryption, token renewal work | — | **Unresolved** |
+| Flutter password login works | Owner/AGENTS.md confirmation; protocol now in `tslib-myts` | Existing app result, not retested in this offline follow-up; OTP/renewal remain untested |
+| Version-2 account-key unwrap works | Native input/output and independent authenticated AES-256-GCM comparison (run41) | Demonstrated for the tested flow; see the unwrap reference |
+| Bookmark decryption works offline | Five run41b bookmarks, native equality and plaintext digest checks | Demonstrated; [item reference](myteamspeak-bookmark-decryption-protocol.md); Flutter import still open |
+| Token renewal works | — | **Unresolved** |
 
 Reference binary: `../teamspeak-client/TeamSpeak`, **79,757,920 bytes**, MD5
 `7eb9fdb89d3da783d3db55845c5066ca`. Native addresses in §10 refer only to this
@@ -253,7 +264,7 @@ The standalone HTTP 200 reply was **1101 bytes** and decoded as:
 | `error` | 5 / enum | **200 = ERROR_LOGIN_OK** |
 | `session` | 2 / string | Present, 36 characters |
 | `uuid` | 4 / string | Present, 36 characters |
-| `key` | 1 / bytes | Present, **61 bytes**; wrapping format unresolved |
+| `key` | 1 / bytes | Present, **61 bytes**; version-2 wrapping demonstrated in run41 |
 | `limits` | 3 / repeated `Limits` | Present |
 | `purge` | 6 / int64 | Present, nonzero; don't invent an expiry duration |
 | `username` | 8 / string | Present |
@@ -403,17 +414,22 @@ native input/output matched that calculation. For the first synthetic vector:
 This value is **not sent as `LoginData.password`**. It enters desktop account
 state through a different setter. It is a useful anchor for future sync
 research, **not** proof that `LoginSession.key` is ready-to-use AES key material
-or that bookmark ciphertext can already be decrypted. Cipher, framing,
-nonce/IV, tag, account-key unwrap and per-item derivations remain unresolved.
+or that bookmark ciphertext can already be decrypted. Run41 subsequently
+established the account-key unwrap as `0x02 || tag[16] || nonce[12] ||
+ciphertext[32]`, authenticated with AES-256-GCM using this derivation and empty
+AAD. See [the unwrap reference](myteamspeak-key-unwrap-protocol.md) for evidence
+and goldens. The [offline item follow-up](myteamspeak-bookmark-decryption-protocol.md)
+subsequently established direct account-key AES-256-CTR-128LE and the exposed
+unkeyed SHA-512 plaintext digest for captured items.
 
 Login can be implemented without guessing any of those formats. Keep login,
 renewal and sync/import as separately testable milestones.
 
 ## 9. Implementation/security requirements for Flutter
 
-- Follow `flutter-migration-plan.md` phase 6: a Dart port or a shared Rust
-  implementation is still a design choice. The protocol itself requires no
-  changes to TeamSpeak voice command declarations.
+- Protocol/crypto belongs in the existing shared Rust `tslib-myts` crate,
+  exposed through `tslib-frb`, not a new Dart or Kotlin implementation.
+  The protocol requires no changes to TeamSpeak voice command declarations.
 - Port the **demonstrated** KDF, not the legacy Kotlin SHA-512-hex encoder
   or its temporary multi-encoding diagnostic. Do not submit speculative
   plaintext/SHA256/SHA512 alternatives to the account.
@@ -487,17 +503,17 @@ goldens use synthetic credentials.
 
 ## 11. Known limits and next unanswered questions
 
-1. The Flutter M1 password-login Dart port exists
-   (`flutter/lib/src/myts/`, `flutter/test/myts_*_test.dart`) with offline
-   goldens, but a **phone-app login has not been demonstrated**: successful
-   **Python standalone login** must not be reported as a phone-app login
-   until an authorized live test runs from the app.
+1. The owner now confirms Flutter password login works with the shared Rust
+   implementation. This document's run40 evidence is still a Python/native
+   result, not a phone capture; the offline item follow-up did not retest app
+   login, secure storage or device-specific lifecycle behavior.
 2. OTP/device-ID/recovery/renewal modes are declared, not live-validated here.
 3. `purge` is an int64 server field; the run40 check established nonzero
    presence, not a full unit/timezone/expiry policy analysis. Validate its
    semantics before building renewal/expiration scheduling around it.
-4. Account encryption-value derivation is known, but the server's 61-byte
-   account key and encrypted sync payload formats remain to be traced.
+4. Account encryption-value derivation, version-2 account-key unwrap and the
+   captured item provider are now known; see the [item reference](myteamspeak-bookmark-decryption-protocol.md).
+   Typed Flutter import/key lifecycle and other key versions/modes remain open.
 5. Internationalized email normalization requires a deliberate compatibility
    test; don't generalize one ASCII account to all Unicode addresses.
 6. New-build schema regeneration/verification remains outstanding. Old schemas

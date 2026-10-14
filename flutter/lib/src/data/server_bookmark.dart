@@ -7,6 +7,13 @@ class ServerBookmark {
   final String? serverName;
   final int iconId;
 
+  /// Vault ID of a bookmark imported from the account; null for the app's own
+  /// bookmarks. Imported bookmarks keep their password in secure storage and
+  /// need a locally chosen identity before connecting.
+  final String? vaultId;
+
+  bool get imported => vaultId != null;
+
   const ServerBookmark({
     this.name = '',
     required this.address,
@@ -15,7 +22,19 @@ class ServerBookmark {
     this.channel,
     this.serverName,
     this.iconId = 0,
+    this.vaultId,
   });
+
+  ServerBookmark withNickname(String nickname) => ServerBookmark(
+        name: name,
+        address: address,
+        nickname: nickname,
+        password: password,
+        channel: channel,
+        serverName: serverName,
+        iconId: iconId,
+        vaultId: vaultId,
+      );
 
   // Same JSON shape as the Kotlin app's bookmarks, so an export/import is easy later.
   factory ServerBookmark.fromJson(Map<String, dynamic> j) {

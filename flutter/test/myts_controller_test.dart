@@ -8,6 +8,7 @@ import 'package:ts6_flutter/src/myts/controller.dart';
 import 'package:ts6_flutter/src/myts/session_store.dart';
 
 import 'myts_helpers.dart';
+import 'myts_rust.dart';
 
 ProviderContainer containerWith({
   required Future<MyTsHttpResponse> Function(Uri, Map<String, String>, Uint8List) post,
@@ -16,7 +17,7 @@ ProviderContainer containerWith({
   final mem = backend ?? MemoryMyTsSecureBackend();
   return ProviderContainer(overrides: [
     myTsApiProvider.overrideWithValue(MyTsApi(
-      post: (uri, headers, body) => post(uri, headers, body),
+      post: (uri, headers, body, _) => post(uri, headers, body),
       deviceName: 'Test device',
     )),
     myTsSessionStoreProvider.overrideWithValue(MyTsSessionStore(mem)),
@@ -24,6 +25,8 @@ ProviderContainer containerWith({
 }
 
 void main() {
+  setUpAll(initRustForTests);
+
   test('login persists the session and signs in', () async {
     final c = containerWith(
       post: (_, _, _) async => MyTsHttpResponse(

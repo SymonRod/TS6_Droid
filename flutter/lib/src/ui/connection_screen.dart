@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../data/account_vault.dart';
 import '../data/server_bookmark.dart';
+import '../state/identity_resolver.dart';
+import '../state/imported_bookmarks.dart';
 import '../state/server_controller.dart';
 
 class ConnectionScreen extends ConsumerStatefulWidget {
@@ -35,7 +38,9 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
     final last = await store.lastAddress();
     final list = await ref.read(bookmarksProvider.future);
     final b = list.where((b) => b.address == last).firstOrNull;
-    if (b != null && mounted) _connect(b);
+    // Background reconnect never asks which identity to use: without a
+    // settled identity it simply does not connect.
+    if (b != null && mounted) _connect(b, interactive: false);
   }
 
   ServerBookmark _fromFields() => ServerBookmark(
@@ -54,15 +59,101 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
     setState(() => _editing = -1);
   }
 
-  Future<void> _connect(ServerBookmark b) async {
-    if (b.address.isEmpty || b.nickname.isEmpty) {
+  void _snack(String text) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+
+  Future<void> _connect(ServerBookmark b, {bool interactive = true}) async {
+    final l = AppLocalizations.of(context);
+    if (b.address.isEmpty || (b.nickname.isEmpty && !b.imported)) {
       ref.read(serverProvider.notifier).clearError();
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).errAddrNick)));
+      _snack(l.errAddrNick);
+      return;
+    }
+    final ResolvedIdentity? resolved;
+    try {
+      resolved = await ref.read(identityResolverProvider).resolve(
+            b,
+            ask: (options, {required canCreate}) => _askIdentity(options, canCreate),
+            interactive: interactive,
+          );
+    } catch (_) {
+      if (mounted && interactive) _snack(l.identityUnavailable);
+      return;
+    }
+    if (resolved == null || !mounted) return;
+    ref.invalidate(importedBookmarksProvider);
+    final nickname = b.nickname.isNotEmpty ? b.nickname : (resolved.nicknameHint ?? '').trim();
+    if (nickname.isEmpty) {
+      ref.read(serverProvider.notifier).clearError();
+      _snack(l.errAddrNick);
       return;
     }
     await ref.read(bookmarkStoreProvider).setLastAddress(b.address);
-    await ref.read(serverProvider.notifier).connect(b);
+    await ref
+        .read(serverProvider.notifier)
+        .connect(b.withNickname(nickname), identity: resolved.identity);
+  }
+
+  /// The user's own identity choice. Nothing is preselected and nothing is
+  /// chosen for them; the cloud reference is not consulted.
+  Future<String?> _askIdentity(List<IdentityOption> options, bool canCreate) {
+    final l = AppLocalizations.of(context);
+    return showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text(l.identityChooseTitle),
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+            child: Text(l.identityChooseBody),
+          ),
+          for (final o in options)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, o.id),
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.badge_outlined),
+                title: Text(o.id == AccountVault.legacyIdentityId ? l.identityLocal : o.label),
+                subtitle: Text(o.uid, maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
+            ),
+          if (canCreate)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, IdentityResolver.createLocal),
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.add),
+                title: Text(l.identityCreate),
+              ),
+            ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l.cancel),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Change the stored choice for an imported bookmark.
+  Future<void> _changeIdentity(ServerBookmark b) async {
+    final l = AppLocalizations.of(context);
+    try {
+      final options = await ref.read(identityResolverProvider).options();
+      if (!mounted) return;
+      final choice = await _askIdentity(options, false);
+      if (choice == null || !options.any((o) => o.id == choice)) return;
+      await ref.read(identityResolverProvider).choose(b.vaultId!, choice);
+      ref.read(identityLinkRevision.notifier).bump();
+    } catch (_) {
+      if (mounted) _snack(l.identityUnavailable);
+    }
   }
 
   Future<void> _save() async {
@@ -89,6 +180,7 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
   Widget build(BuildContext context) {
     final s = ref.watch(serverProvider);
     final bookmarks = ref.watch(bookmarksProvider).value ?? const [];
+    final imported = ref.watch(importedBookmarksProvider).value ?? const [];
     final connecting = s.status == ConnStatus.connecting;
     final l = AppLocalizations.of(context);
 
@@ -153,7 +245,26 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
             },
           ),
           const Divider(),
-          if (bookmarks.isEmpty) Padding(padding: const EdgeInsets.all(16), child: Text(l.noBookmarks)),
+          if (bookmarks.isEmpty && imported.isEmpty)
+            Padding(padding: const EdgeInsets.all(16), child: Text(l.noBookmarks)),
+          for (final entry in imported)
+            ListTile(
+              leading: const Icon(Icons.cloud_download_outlined),
+              title: Text(entry.bookmark.name),
+              subtitle: Text(
+                '${entry.bookmark.nickname.isEmpty ? '' : '${entry.bookmark.nickname} @ '}'
+                '${entry.bookmark.address}\n'
+                '${l.importedFromAccount} · '
+                '${entry.usesLocalIdentityFile ? l.identityChosen(l.identityLocal) : entry.identityLabel != null ? l.identityChosen(entry.identityLabel!) : l.identityNotChosen}',
+              ),
+              isThreeLine: true,
+              onTap: connecting ? null : () => _connect(entry.bookmark),
+              trailing: IconButton(
+                icon: const Icon(Icons.swap_horiz),
+                tooltip: l.identityChange,
+                onPressed: connecting ? null : () => _changeIdentity(entry.bookmark),
+              ),
+            ),
           for (var i = 0; i < bookmarks.length; i++)
             ListTile(
               leading: const Icon(Icons.dns),

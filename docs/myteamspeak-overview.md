@@ -1,5 +1,12 @@
 # myTeamSpeak integration — overview
 
+> **Product direction (2026-10-14):**
+> [product-direction.md](product-direction.md) defines the agreed first-launch
+> Sign in/Skip flow, automatic fresh-app identity/bookmark import and long-term
+> near desktop parity, including contacts and account chat. The original scope
+> and identity-import restrictions below are historical, not permanent product
+> exclusions. Existing local data must still be protected.
+
 > **Current status (2026-10-14):** password login is demonstrated end to end;
 > read **[myteamspeak-login-protocol.md](myteamspeak-login-protocol.md)** for
 > the exact KDF, HTTP/protobuf framing, successful reply, goldens and limits.

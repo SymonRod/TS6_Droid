@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api.dart';
+import 'import_controller.dart';
 import 'session_store.dart';
 
-/// myTeamSpeak sign-in state (phase 6, milestone M1: password login only).
-/// Sync, bookmark import, renewal and account-key unwrap are separate work.
+/// myTeamSpeak sign-in state. A successful sign-in hands the still-available
+/// password to [MyTsImportController] for the read-only account import;
+/// ongoing sync and token renewal are separate work.
 
 enum MyTsStatus {
   /// No stored session.
@@ -111,9 +113,16 @@ class MyTsController extends Notifier<MyTsState> {
             uuid: ok.uuid,
             username: ok.username,
             email: email,
+            wrappedKey: ok.wrappedKey,
           );
       if (!ref.mounted) return;
       state = MyTsState(status: MyTsStatus.signedIn, username: ok.username, email: email);
+      // The password is only borrowed for the key unwrap and never stored.
+      await ref.read(myTsImportProvider.notifier).startAfterLogin(
+            email: email,
+            password: password,
+            login: ok,
+          );
       return;
     }
     state = MyTsState(
@@ -146,6 +155,8 @@ class MyTsController extends Notifier<MyTsState> {
       }
     }
     await ref.read(myTsSessionStoreProvider).clear();
+    // Pending downloaded data is dropped; already imported data stays.
+    ref.read(myTsImportProvider.notifier).reset();
     _lastAttemptStart = null;
     if (ref.mounted) state = const MyTsState();
   }

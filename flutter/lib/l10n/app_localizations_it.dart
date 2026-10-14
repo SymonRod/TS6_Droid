@@ -213,13 +213,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get mytsErrorCredentials => 'Email o password errati';
 
   @override
-  String get mytsErrorOffline => 'Servizio di login non disponibile, riprova più tardi';
+  String get mytsErrorOffline =>
+      'Servizio di login non disponibile, riprova più tardi';
 
   @override
-  String get mytsErrorEmailPending => 'Questo indirizzo email è in attesa di conferma';
+  String get mytsErrorEmailPending =>
+      'Questo indirizzo email è in attesa di conferma';
 
   @override
-  String get mytsErrorOtpRequired => 'Questo account richiede un codice monouso';
+  String get mytsErrorOtpRequired =>
+      'Questo account richiede un codice monouso';
 
   @override
   String get mytsErrorOtpInvalid => 'Codice monouso errato';
@@ -240,4 +243,167 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get mytsErrorOther => 'Accesso fallito';
+
+  @override
+  String get setupWelcome => 'Benvenuto in TS6 Droid';
+
+  @override
+  String get setupIntro => 'Scegli come configurare il tuo client TeamSpeak.';
+
+  @override
+  String get setupAccountTitle => 'Il tuo account myTeamSpeak';
+
+  @override
+  String get setupAccountHint =>
+      'La configurazione con account importerà automaticamente le identità e i preferiti server supportati dal cloud, mantenendo ogni preferito collegato alla sua identità. I dati salvati solo sul desktop non possono essere recuperati dal cloud.';
+
+  @override
+  String get setupImportPending =>
+      'Accedendo scarichi le tue identità e i tuoi preferiti e li conservi in modo sicuro su questo dispositivo. L’account viene solo letto; nel cloud non cambia nulla.';
+
+  @override
+  String get setupSignIn => 'Accedi con myTeamSpeak';
+
+  @override
+  String get setupSkip => 'Salta l’accesso';
+
+  @override
+  String get setupSkipHint =>
+      'Crea un’identità locale e connettiti ai server senza account. Potrai accedere in seguito; i tuoi dati locali saranno conservati.';
+
+  @override
+  String get setupBack => 'Torna alla configurazione';
+
+  @override
+  String get setupRetry => 'Riprova';
+
+  @override
+  String get setupReadError =>
+      'Impossibile leggere in sicurezza la configurazione locale. I tuoi dati non sono stati sostituiti. Controlla l’accesso allo spazio di archiviazione e riprova.';
+
+  @override
+  String get setupWriteError =>
+      'Impossibile completare la configurazione locale. Prova di nuovo a saltare l’accesso; qualsiasi identità già salvata verrà riutilizzata.';
+
+  @override
+  String get mytsImportPendingTitle => 'Importa i dati dell’account';
+
+  @override
+  String get mytsSetupImportPending =>
+      'Hai effettuato l’accesso, ma non è stato ancora importato nulla, quindi la configurazione non è completa. Inserisci la password dell’account per scaricare identità e preferiti, oppure torna alla configurazione per usare un’identità locale.';
+
+  @override
+  String get mytsExistingDataHint =>
+      'L’accesso non sostituisce mai le identità o i preferiti locali. L’importazione aggiunge solo ciò che manca e prima ti chiede conferma.';
+
+  @override
+  String get mytsShowPassword => 'Mostra password';
+
+  @override
+  String get mytsHidePassword => 'Nascondi password';
+
+  @override
+  String get mytsImportAction => 'Importa i dati dell’account';
+
+  @override
+  String get mytsImportPasswordNote =>
+      'La password sblocca la chiave dell’account solo per questa importazione e non viene salvata.';
+
+  @override
+  String get mytsImportWorking => 'Download e verifica dei dati dell’account…';
+
+  @override
+  String get mytsImportConfirmTitle =>
+      'Aggiungere i dati dell’account a questo dispositivo?';
+
+  @override
+  String get mytsImportConfirm => 'Importa';
+
+  @override
+  String get mytsImportContinue => 'Continua';
+
+  @override
+  String mytsImportAdded(int identities, int bookmarks) {
+    return 'Aggiunte $identities identità e $bookmarks preferiti.';
+  }
+
+  @override
+  String get mytsImportUpToDate =>
+      'Tutto ciò che è nel tuo account è già su questo dispositivo. Non è stato modificato nulla.';
+
+  @override
+  String mytsImportSkipped(int count) {
+    return 'Saltati $count elementi non validi, duplicati o diversi dalla copia già presente su questo dispositivo. Nulla di esistente è stato sostituito.';
+  }
+
+  @override
+  String get mytsImportNothing =>
+      'Il tuo account non ha identità o preferiti da importare. Non è stato modificato nulla e la configurazione non è completa; puoi tornare indietro e saltare l’accesso per creare un’identità locale.';
+
+  @override
+  String get mytsImportChooseIdentityNote =>
+      'Sceglierai quale identità usa ogni preferito la prima volta che ti colleghi.';
+
+  @override
+  String get mytsImportErrNoSession =>
+      'Non hai effettuato l’accesso. Accedi di nuovo per importare.';
+
+  @override
+  String get mytsImportErrUnlock =>
+      'Impossibile sbloccare la chiave dell’account. Controlla la password e accedi di nuovo. Su questo dispositivo non è stato modificato nulla.';
+
+  @override
+  String get mytsImportErrNetwork =>
+      'Errore di rete durante il download. Su questo dispositivo non è stato modificato nulla.';
+
+  @override
+  String get mytsImportErrService =>
+      'Il servizio non ha accettato la richiesta. Su questo dispositivo non è stato modificato nulla.';
+
+  @override
+  String get mytsImportErrExpired =>
+      'L’accesso è scaduto. Esci e accedi di nuovo. Su questo dispositivo non è stato modificato nulla.';
+
+  @override
+  String get mytsImportErrData =>
+      'La risposta era inattesa o troppo grande. Su questo dispositivo non è stato modificato nulla.';
+
+  @override
+  String get mytsImportErrIntegrity =>
+      'I dati scaricati non hanno superato il controllo di integrità. Su questo dispositivo non è stato modificato nulla.';
+
+  @override
+  String get mytsImportErrStorage =>
+      'Impossibile leggere o salvare i dati locali in modo sicuro. Nulla di esistente è stato sostituito.';
+
+  @override
+  String get identityChooseTitle => 'Scegli un’identità';
+
+  @override
+  String get identityChooseBody =>
+      'Scegli l’identità con cui collegarti. La scelta resta solo su questo dispositivo e non modifica il tuo account.';
+
+  @override
+  String get identityLocal => 'Identità locale di questo dispositivo';
+
+  @override
+  String get identityCreate => 'Crea una nuova identità locale';
+
+  @override
+  String get identityUnavailable =>
+      'Impossibile aprire l’identità. Non è stato modificato nulla.';
+
+  @override
+  String get importedFromAccount => 'Dal tuo account';
+
+  @override
+  String get identityNotChosen => 'Identità: non ancora scelta';
+
+  @override
+  String identityChosen(String label) {
+    return 'Identità: $label';
+  }
+
+  @override
+  String get identityChange => 'Cambia identità';
 }
