@@ -52,6 +52,11 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 Requirements: JDK 17, Android NDK 27.x (`ANDROID_NDK_HOME` or auto-detected
 under `$ANDROID_HOME/ndk`), Rust with `cargo-ndk` (see `app/new.sh`).
 
+Optionally, the Flutter app can be built in a Docker container (JDK, Flutter,
+Android SDK/NDK, Rust and `adb` preinstalled) instead of a local toolchain, e.g.
+`docker/dev.sh apk debug`. See [docker/README.md](docker/README.md), including
+how to reach a phone from WSL2. Using it is a convenience, not a requirement.
+
 `buildRustLibs` keeps unstripped copies of the `.so` files in `../tslib/symbols/`
 for `ndk-stack`, then strips the ones packaged into the APK.
 
