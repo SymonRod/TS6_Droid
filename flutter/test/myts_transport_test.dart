@@ -1,6 +1,6 @@
 // The production HTTP transport against a loopback server: no redirects, no
-// body read for non-200, receive cap enforced while streaming, no compression,
-// deadline. (TLS verification is dart:io's default: no badCertificateCallback.)
+// body read for non-200, receive cap enforced while streaming (on decompressed
+// bytes), deadline. (TLS verification is dart:io's default: no badCertificateCallback.)
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
@@ -96,13 +96,23 @@ void main() {
     expect((await post(cap: 1000)).body.length, 1000);
   });
 
-  test('content encodings are refused (no decompression bombs)', () async {
+  test('a gzip reply is decoded, so a compressing service still works', () async {
     handler = (req) async {
       req.response.headers.set(HttpHeaders.contentEncodingHeader, 'gzip');
-      req.response.add(gzip.encode(List.filled(100, 1)));
+      req.response.add(gzip.encode(List.filled(100, 7)));
       await req.response.close();
     };
-    await expectLater(post(), throwsA(isA<MyTsResponseRejected>()));
+    final r = await post();
+    expect((r.status, r.body.length), (200, 100));
+  });
+
+  test('a gzip bomb is cut off at the cap on decompressed bytes', () async {
+    handler = (req) async {
+      req.response.headers.set(HttpHeaders.contentEncodingHeader, 'gzip');
+      req.response.add(gzip.encode(List.filled(1000000, 0)));
+      await req.response.close();
+    };
+    await expectLater(post(cap: 1000), throwsA(isA<MyTsResponseRejected>()));
   });
 
   test('a stalled reply hits the overall deadline', () async {

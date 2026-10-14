@@ -255,7 +255,7 @@ merge into a secure vault -> setup marker.
 ### Dart
 
 - Transport (`MyTsApi`, `myTsHttpPost`): verified TLS (no `badCertificateCallback`),
-  no redirects or retries, compression disabled and content encodings refused,
+  no redirects or retries, the cap counts decompressed bytes,
   non-200 bodies not read, declared and streamed size caps, 15 s connect timeout,
   45 s overall deadline.
 - `AccountVault`: one secure-storage entry holding imported identities

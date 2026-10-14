@@ -144,8 +144,8 @@ class MyTsHttpResponse {
 }
 
 /// A reply exceeded the receive cap (checked against the declared length and
-/// again while streaming) or used a content encoding. The rest of the body is
-/// never read.
+/// again, on decompressed bytes, while streaming). The rest of the body is never
+/// read.
 class MyTsResponseRejected implements Exception {
   const MyTsResponseRejected();
 }
@@ -153,8 +153,8 @@ class MyTsResponseRejected implements Exception {
 /// Injectable transport for tests: exact URI, headers and framed body in,
 /// status plus raw body out. [maxBytes] is the receive cap the transport must
 /// enforce while the reply streams in. The default implementation uses
-/// `dart:io` with verified TLS, redirects disabled, no compression and an
-/// overall deadline.
+/// `dart:io` with verified TLS, redirects disabled, a cap on decompressed
+/// bytes and an overall deadline.
 typedef MyTsPost = Future<MyTsHttpResponse> Function(
   Uri uri,
   Map<String, String> headers,
@@ -181,10 +181,9 @@ Future<MyTsHttpResponse> myTsHttpPost(
   Duration deadline = _requestDeadline,
 }) async {
   // Normal certificate and hostname verification: no badCertificateCallback.
-  // Compression is off so a small reply cannot expand past the cap.
-  final client = HttpClient()
-    ..connectionTimeout = _connectTimeout
-    ..autoUncompress = false;
+  // The default transparent gzip decoding stays on (the service may compress);
+  // the cap below counts DECOMPRESSED bytes, so a gzip bomb is cut off.
+  final client = HttpClient()..connectionTimeout = _connectTimeout;
   try {
     return await _exchange(client, uri, headers, body, maxBytes).timeout(
       deadline,
@@ -213,10 +212,6 @@ Future<MyTsHttpResponse> _exchange(
   // not read either; a redirect is reported as the HTTP failure it is.
   if (resp.statusCode != HttpStatus.ok) {
     return MyTsHttpResponse(resp.statusCode, Uint8List(0));
-  }
-  final encoding = resp.headers.value(HttpHeaders.contentEncodingHeader);
-  if (encoding != null && encoding.toLowerCase() != 'identity') {
-    throw const MyTsResponseRejected();
   }
   if (resp.contentLength > maxBytes) throw const MyTsResponseRejected();
   final out = BytesBuilder(copy: false);
