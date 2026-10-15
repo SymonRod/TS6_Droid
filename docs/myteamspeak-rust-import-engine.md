@@ -1,13 +1,14 @@
 # myTeamSpeak read-only Rust import engine
 
-**Status (2026-10-14): Rust engine verified offline and in one explicitly
-authorized, bounded read-only real-account check. Login, account-key unwrap,
-initial pull and identity/bookmark decoding succeeded; bookmark-to-identity
-resolution remains unverified.**
-This is step 1 of the identity/bookmark import delivery. The Flutter integration
-(FRB, transport, secure storage, onboarding, identity choice) is described in the
-last section and is verified **offline only**; it has not been run on a phone or
-against the real service.
+**Status (2026-10-15): Rust engine verified offline and in one explicitly
+authorized, bounded read-only real-account check. The owner also reports a
+successful live Flutter app test: login, import of 2 identities and 5 bookmarks,
+server connection after identity selection, and reuse of that choice on the next
+connection. Automatic bookmark-to-identity resolution remains unverified.**
+The Flutter integration (FRB, transport, secure storage, onboarding, identity
+choice) and the scope of the owner's manual test are described in the last
+section. Changing the remembered identity and identity management remain a
+reported UX gap; no implementation changes were requested.
 
 Implementation: `../ts6-lib/crates/tslib-myts/` (the checkout on this machine;
 the project's historical `../tslib` path is absent).
@@ -216,10 +217,11 @@ Do not create/edit cloud bookmarks to manufacture evidence under this grant.
 Resolve that gate and define failure/default policy before secure multi-identity
 persistence, an opaque FRB key/context boundary and typed Flutter import.
 
-## Flutter import integration (implemented, offline-verified)
+## Flutter import integration (implemented, offline-tested and owner-tested live)
 
-Status: implemented and covered by synthetic tests; **not** exercised against the
-real service from the app, and no APK from this work was installed on a device.
+Status: implemented and covered by synthetic tests, with a successful live app
+test reported by the owner on 2026-10-15. See the manual verification below for
+what was observed and what remains unverified.
 
 ### Flow
 
@@ -299,13 +301,17 @@ uses the nickname stored with the chosen identity, else asks for one.
 - Imported bookmarks are listed read-only (connect and change identity); they
   cannot be edited or removed in the app yet. Only server/channel password,
   address, port, nickname, default channel and the cloud reference are used.
+  Despite the implemented change-identity action, the owner could not find a way
+  to change a remembered choice or a menu for managing identities in the tested
+  app. Treat discoverability/availability in that build as an open UX issue,
+  not as a verified usable management flow.
 - The legacy local identity file (`identity.txt`) stays as before (plaintext in
   app storage); only imported identities use secure storage.
 - A mid-import crash cannot leave a half-applied vault (single write), but the
   secure-storage backend's own durability was not tested on a device.
 - Dart/FRB `String` copies of imported secrets are not zeroizable.
 
-### Verification (no real account, no network)
+### Original implementation verification (no real account, no network)
 
 - Rust: 51 `tslib-myts` tests, 6 new `tslib-frb` conversion tests, 6 core identity
   tests, 14 `tsproto-types` tests; `tslib-myts` Clippy `-D warnings` and formatting.
@@ -319,4 +325,24 @@ uses the nickname stored with the chosen identity, else asks for one.
 - Host FRB library for tests: build `tslib-frb` in the dev container with a stub
   `libasound` (soname `libasound.so.2`) and point `TSLIB_FRB_LIB` at it.
 - Debug APK built in the dev container (`flutter build apk --debug`):
-  `flutter/build/app/outputs/flutter-apk/app-debug.apk` (ignored artifact). Not installed.
+  `flutter/build/app/outputs/flutter-apk/app-debug.apk` (ignored artifact). Not
+  installed during that implementation session.
+
+### Owner-reported live app verification (2026-10-15)
+
+The owner manually tested the app with the real service and reported:
+
+- Login succeeds; the app reports **2 identities and 5 bookmarks**, and both
+  appear on the home screen after import.
+- Connecting through an imported bookmark prompts for an identity and then
+  successfully connects to the server.
+- Leaving and reconnecting through the same bookmark does not prompt again;
+  the app reuses the last selected identity, as intended for the local link.
+- No way to change that choice or menu for managing identities was apparent
+  to the owner. Record this as follow-up work only; no UI changes were requested.
+
+This is an owner-reported manual result, not a new agent-run network test. It
+does not establish persistence across app/process/device restart, repeated-import
+deduplication, UID/permission equivalence with desktop, or secure-storage crash
+durability. Automatic cloud-reference matching and effective-default semantics
+remain unresolved. No further real-account testing is authorized by this report.

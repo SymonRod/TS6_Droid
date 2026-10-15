@@ -130,12 +130,17 @@ details do not reopen the agreed first-launch flow or desktop-parity goal.
 
 ## 6. Current evidence and document precedence
 
-As of 2026-10-14, password login works live in Flutter. Version-2 account-key
-unwrap is demonstrated offline; item decryption reproduces five bookmarks,
-two identities and one config item. This is **not** an integrated importer or
-a verified identity-to-server connection flow. Typed decoding, identity-format
-compatibility, secure key lifecycle and app persistence still need integration
-and verification. Contacts/account chat remain future work.
+As of 2026-10-15, the Flutter identity/bookmark importer is implemented and
+tested offline. The owner reports successful live login, import of 2 identities
+and 5 bookmarks visible on the home screen, and a server connection after choosing
+an identity. Reconnecting through the same bookmark reuses that choice. The owner
+could not find a way to change it or a menu for managing identities; this is a
+reported UX follow-up, not a request to implement it now. Restart persistence,
+repeat-import deduplication and desktop UID/permission equivalence were not
+reported as tested. Automatic cloud-reference matching, effective-default rules,
+renewal and ongoing sync remain open; contacts/account chat remain future work.
+See [the import-engine handoff](myteamspeak-rust-import-engine.md) for evidence
+and limitations.
 
 This document is the source of truth for **product intent**. It supersedes older
 planning rules that put every identity import behind a late manual-only gate,

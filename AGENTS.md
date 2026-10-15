@@ -213,9 +213,15 @@ desktop comparison, app persistence or cloud write was performed. The Flutter
 import path (FRB unlock/pull/validation, bounded transport, secure vault,
 automatic empty-app import, confirmed import into existing data, local identity
 choice before connecting) is implemented and verified offline with synthetic
-data; see the last section of the Rust-engine handoff. It has not been run
-against the real service from the app. Token renewal, ongoing sync, nonempty
-reference matching and effective-default rules remain open.
+data. On 2026-10-15 the owner reported successful live app login, import of
+2 identities and 5 bookmarks visible on the home screen, server connection after
+identity selection, and reuse of that choice on reconnecting to the same bookmark.
+The owner could not find how to change the remembered identity or a management
+menu: track this as a UX follow-up, not a verified management flow. No UI change
+was requested. Restart persistence, repeat-import deduplication and desktop
+UID/permission equivalence were not reported as tested. See the last section of
+the Rust-engine handoff. Token renewal, ongoing sync, nonempty reference matching
+and effective-default rules remain open.
 On this machine the Rust checkout is `../ts6-lib`, not `../tslib`.
 Real-account tests require explicit authorization;
 credentials, salts, derived values and captures must stay out of logs/docs/git.
