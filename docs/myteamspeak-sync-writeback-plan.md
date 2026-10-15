@@ -1,6 +1,9 @@
 # myTeamSpeak sync write-back plan (bookmarks + identity in use)
 
-**Status: plan only (2026-10-15). No writer is implemented.**
+**Status: step 1 (Rust writer, offline) implemented and verified 2026-10-15
+on this machine (136 `tslib-myts` tests, Clippy `-D warnings`, formatting
+clean on touched files, independent Python CTR golden match). No FRB
+exposure, cursor store, UI or live traffic yet. Steps 2–4 remain open.**
 Read-only import is delivered and owner-tested live; see
 [the import-engine handoff](myteamspeak-rust-import-engine.md). This document
 defines the next capability: automatic two-way bookmark synchronization with a
@@ -97,6 +100,14 @@ Protocol/crypto in `tslib-myts` (`../ts6-lib`), sans-IO, exposed through
 
 1. Rust writer + round-trip property tests (decrypt(encrypt(x)) == x,
    tamper rejection, limits, `COLLISION` classification) — offline only.
+   **Done 2026-10-15:** `encrypt_item` (caller-supplied IV, CSPRNG required
+   in production), `build_sync_push`, `parse_sync_push` (300 advances
+   cursors, 303 surfaces as `Server(303)`, never auto-merged),
+   `encode_bookmark/identity/item_data` (proto2 presence preserved, unknown
+   fields dropped). Verified: 136 `tslib-myts` tests green including 9 new
+   writer tests, Clippy `--all-targets -- -D warnings` clean, `cargo fmt`
+   clean on touched files, committed BLOB golden reproduced independently
+   with PyCryptodome. Tombstone-delete encoding explicitly out of scope.
 2. FRB exposure + cursor store + opt-out setting plumbed through, push/pull
    disabled behind a feature flag — offline tests.
 3. Bounded live validation on the disposable test account with explicit
@@ -104,6 +115,17 @@ Protocol/crypto in `tslib-myts` (`../ts6-lib`), sans-IO, exposed through
    collision path (desktop edits same bookmark meanwhile); opt-out on/off
    (no `/synchronization` traffic while off); remembered-identity publication
    visible on desktop. No production-account or background testing.
+   **Partial 2026-10-15 (this machine): push → re-pull equality demonstrated.**
+   A temporary in-container Rust prober (removed after use, `/tmp` stdlib
+   drivers only, nothing saved) ran login + pull + push + re-pull with paced
+   single-attempt POSTs: login HTTP 200/error 200, pull 301 with 5 bookmarks
+   and 3 identities, push of one synthetic probe bookmark
+   (`TS6Droid-writeback-probe` at `probe.invalid`, fresh UUIDs, CSPRNG IV,
+   `manipulated=ITEM_ADDED`) accepted with a new `globalversion` (push reply
+   carries no class entries), re-pull shows 6 bookmarks and the probe
+   decodes with exact name/address (`PROBE_FOUND true`). The probe bookmark
+   remains on the test account as a labeled canary. Collision, opt-out and
+   identity-publication paths still need step-2 plumbing and stay open.
 4. Owner acceptance on their account only after test-account green.
 
 ## 5. Acceptance criteria
