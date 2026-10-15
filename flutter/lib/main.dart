@@ -7,6 +7,7 @@ import 'l10n/app_localizations.dart';
 import 'src/rust/frb_generated.dart';
 import 'src/state/onboarding_controller.dart';
 import 'src/state/server_controller.dart';
+import 'src/ui/chat/chat_screen.dart';
 import 'src/ui/connection_screen.dart';
 import 'src/ui/myts_login_screen.dart';
 import 'src/ui/onboarding_screen.dart';
@@ -41,6 +42,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (loc == '/setup') return '/';
       final connected = ref.read(serverProvider).status == ConnStatus.connected;
       // The myTeamSpeak login screen is usable while disconnected.
+      // Account chat is independent of the voice connection.
+      if (loc == '/chat') return null;
       if (!connected) return (loc == '/' || loc == '/myts') ? null : '/';
       if (loc == '/') return '/server';
       if (loc == '/server/stream' &&
@@ -52,6 +55,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/setup', builder: (_, _) => const OnboardingScreen()),
       GoRoute(path: '/', builder: (_, _) => const ConnectionScreen()),
+      GoRoute(path: '/chat', builder: (_, _) => const ChatScreen()),
       GoRoute(
         path: '/myts',
         builder: (_, _) => MyTsLoginScreen(

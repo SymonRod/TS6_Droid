@@ -1,0 +1,217 @@
+{
+  "changed": {
+    "FRIENDDEV": {
+      "algorithms": [
+        "m.olm.v1.curve25519-aes-sha2",
+        "m.megolm.v1.aes-sha2"
+      ],
+      "device_id": "FRIENDDEV",
+      "keys": {
+        "curve25519:FRIENDDEV": "yZcfMRt8FL8JZOA0HG7Bf3nQhM2+rdON8fZzs2xsMDQ",
+        "ed25519:FRIENDDEV": "LCd0a0TLbg5xHN/+2NibDy0hVt3p8tE4CKKhIeUVchA"
+      },
+      "signatures": {
+        "@friend:example.invalid": {
+          "ed25519:FRIENDDEV": "jUeK7Z9FIYrba/VPHKas3OjhY9aHBSyLJhiJc2gmywXPE+r4ie+5t9q/0LuVtkTAQqhrFOgDMumEO4hz657bDQ"
+        }
+      },
+      "user_id": "@friend:example.invalid"
+    }
+  },
+  "comment": "Synthetic libolm peer for flutter tests; regenerate with tools/myts/generate_e2ee_peer_fixture.py. No real account.",
+  "devices": {
+    "FRIENDDEV": {
+      "device_keys": {
+        "algorithms": [
+          "m.olm.v1.curve25519-aes-sha2",
+          "m.megolm.v1.aes-sha2"
+        ],
+        "device_id": "FRIENDDEV",
+        "keys": {
+          "curve25519:FRIENDDEV": "82nCwxoCcILZz92qO9AOF+z7xdS5WKG7RgE63bnVIXM",
+          "ed25519:FRIENDDEV": "CevrLkueyV32kjtTbqDeXEXGfRfuoDA2VsOe4g4iN7g"
+        },
+        "signatures": {
+          "@friend:example.invalid": {
+            "ed25519:FRIENDDEV": "6e5eaoFpYvsK6CmIdOJfLlvV5Uop+1DlrgUVWAgB+q3Ynh42RtPqRih+DY4uP0d40aH5sLemzUZ4U3CNtziuCA"
+          }
+        },
+        "user_id": "@friend:example.invalid"
+      },
+      "fallback_key": {
+        "signed_curve25519:AAAAAQ": {
+          "fallback": true,
+          "key": "xciveelkGY4vyo9+J3bogcznzjnUpqbXAozV7fJ7K0s",
+          "signatures": {
+            "@friend:example.invalid": {
+              "ed25519:FRIENDDEV": "whwHFZSdPoSWaCXqJaUxcznLv0OqypWx/0cCnMQ9vLNfoKxFXpx9onyqyNuMcCUKE67ZZXekxFgux6GdP35JDA"
+            }
+          }
+        }
+      },
+      "one_time_keys": {
+        "signed_curve25519:AAAAAg": {
+          "key": "PDHWRXEh8HlDb2JdLjkMKjwRC/UDnOqDTM0j8UjTXmQ",
+          "signatures": {
+            "@friend:example.invalid": {
+              "ed25519:FRIENDDEV": "xuM52t1syNUcNaNE+PfDFjrhIHbKYK5wtA8ygU5IlhcfmvP0Yd7e65vavqEf6YeljVl0cauUvPwykDcaT1cJCA"
+            }
+          }
+        },
+        "signed_curve25519:AAAAAw": {
+          "key": "HBKn9rHtPuu+xq0BEJ9slxXtTerDcpb4IrWZnMIVaEg",
+          "signatures": {
+            "@friend:example.invalid": {
+              "ed25519:FRIENDDEV": "Gncfk0VnpDYbdXoy0AhxrghrKCbZ6535kXxVRMnGinKV5QPgczACvwrXQY0HCQOYKXfEsSP3EmbmvCpojl5PAQ"
+            }
+          }
+        },
+        "signed_curve25519:AAAABA": {
+          "key": "WGCYu48o9XaPCkRdrCkyt6ddb82uMq4zu71dMWuhBQ4",
+          "signatures": {
+            "@friend:example.invalid": {
+              "ed25519:FRIENDDEV": "sqPtht6Ud5OykzivP1eCnT1H2+Hj+DWEwFNBN1hiH3goKVAa7Kbm0FtVTafHgyjeh7X9tANqQMr++n2oPZF8BQ"
+            }
+          }
+        },
+        "signed_curve25519:AAAABQ": {
+          "key": "65gJHabRq3z1/KyZ9gu1XaBgJvgnSkDrL+ad62092g0",
+          "signatures": {
+            "@friend:example.invalid": {
+              "ed25519:FRIENDDEV": "8dBMNW+FZMotHu+tcWrxtWtGA2Np4XYflqhMBX5/czRqAqgSACmKtazo5yBc1FWUuI0iITcUO6ePsmmuiFlQBA"
+            }
+          }
+        },
+        "signed_curve25519:AAAABg": {
+          "key": "Ddq/Pl5PSpIQdfPovG5jMRKKrx8G0A8/MKzfUKzmOjc",
+          "signatures": {
+            "@friend:example.invalid": {
+              "ed25519:FRIENDDEV": "/9VJ6Hvjfx5t1tiLtia+1wv2mDW+P7vFimflAE4dnARgHmZTEXxDBYjMtJSP1aVnRor4UNV7waassvV0N5HnCg"
+            }
+          }
+        },
+        "signed_curve25519:AAAABw": {
+          "key": "qngbohZQTQLxW/flYEpfI+AzHuTGr9in3irexkUL6UI",
+          "signatures": {
+            "@friend:example.invalid": {
+              "ed25519:FRIENDDEV": "Ub9iioAbDAnzWSdplyXo8gO3SePjLyIT3pVQEfE29kQxKnQ5NquR8p4iDs+VhH1HBt3ReFLWwamAPCcVstRHAQ"
+            }
+          }
+        },
+        "signed_curve25519:AAAACA": {
+          "key": "q1791saV7G+9ztSx8R3GgRFzsvecPIBHWQ8T2WOF+F8",
+          "signatures": {
+            "@friend:example.invalid": {
+              "ed25519:FRIENDDEV": "Vw311LHxGA81T6VYrAM2DWoxWowpSD+19Wtq8c62ZPABDGrf9NVz0Qse2wqLjrcmsY7O4C/AIle1S6mq6oIxAg"
+            }
+          }
+        },
+        "signed_curve25519:AAAACQ": {
+          "key": "e0eV6HeVaklJruUoKRVUcWqh1tspO14tv0OooRCaz0M",
+          "signatures": {
+            "@friend:example.invalid": {
+              "ed25519:FRIENDDEV": "78vZaM7xNaTSQ39whqGi08ksKYPqTqSSaTd+UEgxFB4aytU3zh2tarTTfw77UzTlTROqeCL4Z4EnD4YkNbtiDw"
+            }
+          }
+        }
+      }
+    },
+    "FRIENDDEV2": {
+      "device_keys": {
+        "algorithms": [
+          "m.olm.v1.curve25519-aes-sha2",
+          "m.megolm.v1.aes-sha2"
+        ],
+        "device_id": "FRIENDDEV2",
+        "keys": {
+          "curve25519:FRIENDDEV2": "rOlTZqerCM4KExh+o6kMcnI5R6cQ+JhjCL0A8ffkKFM",
+          "ed25519:FRIENDDEV2": "KnDjRhDM5LJKPoVaMnxk2vzctfymOfJ2AsqkRo5oycc"
+        },
+        "signatures": {
+          "@friend:example.invalid": {
+            "ed25519:FRIENDDEV2": "KdHqzak9RzR9t6BCjZ4BPfJaou6LFOo7JJyAYnc3W6jz3ObUj7Q8dXVs6ump40dTQbQ3PWLMUq/LtEa3LXISDw"
+          }
+        },
+        "user_id": "@friend:example.invalid"
+      },
+      "fallback_key": {
+        "signed_curve25519:AAAAAQ": {
+          "fallback": true,
+          "key": "FUf24lsqEciKx/rX2UH1cFHL8aFLrb7N5fBQUlEY/jk",
+          "signatures": {
+            "@friend:example.invalid": {
+              "ed25519:FRIENDDEV2": "PsSBfWaFLXFkTserF2xdvLPRgVsRfdMUJi+0YPHC74fCzZ+pnc3JI/BxF717TwS3QkImQ2SkICIHUNhzMEBkAw"
+            }
+          }
+        }
+      },
+      "one_time_keys": {
+        "signed_curve25519:AAAAAg": {
+          "key": "BS8ir0JCiIYxVXqdtBu07X5IGRilSWqZzlVctb5DzXU",
+          "signatures": {
+            "@friend:example.invalid": {
+              "ed25519:FRIENDDEV2": "UrUQnmkPjRaedYJ4zb/5ZEIGyRiwDPYkm9hCZj3Knv1CwZMuhH5URvLi6OmWuKGviSrrssYtWLABfYdgMvqlCw"
+            }
+          }
+        },
+        "signed_curve25519:AAAAAw": {
+          "key": "S+BqAd+gCy/8AezZyBoPORuBBhgscDqPPng4HFPLZSI",
+          "signatures": {
+            "@friend:example.invalid": {
+              "ed25519:FRIENDDEV2": "5mLQi2LLpuav806eRvVLK063GDTqy3yhvLlAJUO7bOOB4v8RFSq2yZX0hSanxjDbwCYKGG6W9Flw9morbyewCg"
+            }
+          }
+        },
+        "signed_curve25519:AAAABA": {
+          "key": "MfhBQ7O1uZsDX69muazgA+KSSghKWwPvjEEs7cH5VCo",
+          "signatures": {
+            "@friend:example.invalid": {
+              "ed25519:FRIENDDEV2": "UgLpw0i/n+xvvHpsOqO5z5pixbt+dAIncRXVVSpujhf3vU94s7UaJ8UENA+cQTKEd/Nf1U1cBGoTrPHllIcsDg"
+            }
+          }
+        },
+        "signed_curve25519:AAAABQ": {
+          "key": "6qXjGJFybz2wgVfVsfufVCrxfnvIP/TA7p3X0UgOE3A",
+          "signatures": {
+            "@friend:example.invalid": {
+              "ed25519:FRIENDDEV2": "6vIDuZ6IIM41ytKSk4LI+2Ls3uw8QBuOcFXQlfcmcTwtz1c3RJtanXIgSHKQ/aRJmpT1/FGt0IcYgQJpURygBQ"
+            }
+          }
+        },
+        "signed_curve25519:AAAABg": {
+          "key": "OgGgheJEA1x3FCI2A86cWWuMDzGpT9wX5pzx6c78FlI",
+          "signatures": {
+            "@friend:example.invalid": {
+              "ed25519:FRIENDDEV2": "XVKfCuqrPbNibBevwqIQ5fZjxvEFpGszmoMrlFSm/7o7F261aaCHLpL4FPvbFpdXj6hajegmyW7Kx3kjjMzSDg"
+            }
+          }
+        },
+        "signed_curve25519:AAAABw": {
+          "key": "wimhbxroB6KwmU43E05q//OXAKrGCE2JQktzuhpF0TI",
+          "signatures": {
+            "@friend:example.invalid": {
+              "ed25519:FRIENDDEV2": "k/lkQWYpEWuQGsABVAw2QnpVXxmLiaGXyNiD/yuIK4nVR503SvQKTXbxnDWF5OYQ+bOTqV0cyHqRM3IoIxvMCQ"
+            }
+          }
+        },
+        "signed_curve25519:AAAACA": {
+          "key": "Ja6rvBnd9uYoh9X1e68T4M53p59PE0R6T8PUXL383AE",
+          "signatures": {
+            "@friend:example.invalid": {
+              "ed25519:FRIENDDEV2": "25cMWrRvNZijm2949ECbifNtlOsjfJ5JfA4y3FTpFE9fBI46AGnGkRDH5Nzd6G28OSI3sQqJPyloz2a0WLDbDA"
+            }
+          }
+        },
+        "signed_curve25519:AAAACQ": {
+          "key": "hvUqM1Xcl6ezksMiV8NKjJHlzZQZMC/SxjOzrnApcg0",
+          "signatures": {
+            "@friend:example.invalid": {
+              "ed25519:FRIENDDEV2": "00Dsll3EEhUgm3SxZbgieeRVTnjd+V67OKcq8RvGkexRRt/H49srgp75yNJPBqnvdvjmSTWrGz8w4XGQtQniAw"
+            }
+          }
+        }
+      }
+    }
+  },
+  "peer_user": "@friend:example.invalid"
+}

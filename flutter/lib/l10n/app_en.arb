@@ -1,23 +1,5 @@
 {
   "@@locale": "en",
-  "mytsHistoryTitle": "Account chat history",
-  "mytsHistoryReadOnly": "Read-only text history. No messages, key publication or background sync. Available keys may cover only part of a conversation.",
-  "mytsHistoryUnlock": "Unlock history",
-  "mytsHistoryAllowOwnEmpty": "Also recover my own type-1 backups without sender metadata (identity remains unverified)",
-  "mytsHistoryConnect": "Connect / refresh conversations",
-  "mytsHistoryRefresh": "Refresh history",
-  "mytsHistoryRooms": "Conversations",
-  "mytsHistoryFirstLogin": "The first connection creates one history-reader Matrix device. Later connections reuse it. No encryption keys are published.",
-  "mytsHistoryEmpty": "No conversations loaded. Connect to retrieve joined conversations.",
-  "mytsHistoryNoMessages": "No text messages loaded on this page.",
-  "mytsHistoryOlder": "Load older messages",
-  "mytsHistoryError": "Unable to load history. Check your password, connection and account session. Saved history is preserved. An uncertain Matrix login is not repeated automatically.",
-  "mytsHistoryPartial": "This key does not cover this older message.",
-  "mytsHistoryMissingKey": "Encrypted message: cloud key unavailable or not yet supported. Refresh to retry.",
-  "mytsHistoryInvalid": "Message unavailable: unsupported format or validation failed.",
-  "mytsHistoryPlaintext": "Not end-to-end encrypted",
-  "mytsHistoryUnverified": "Decrypted · sender device identity not verified",
-  "mytsHistoryOwnUnverified": "Decrypted own message · cloud sender metadata absent; identity not verified",
   "serverAddress": "Server address (host:port)",
   "nickname": "Nickname",
   "serverPassword": "Server password (optional)",
@@ -135,7 +117,7 @@
   "mytsShowPassword": "Show password",
   "mytsHidePassword": "Hide password",
   "mytsImportAction": "Import account data",
-  "mytsImportPasswordNote": "The password unlocks your account key for this import only and is not stored.",
+  "mytsImportPasswordNote": "The password unlocks your account key for this import.",
   "mytsImportWorking": "Downloading and checking your account data…",
   "mytsImportConfirmTitle": "Add your account data to this device?",
   "mytsImportConfirm": "Import",
@@ -186,33 +168,137 @@
     }
   },
   "identityChange": "Change identity",
-  "mytsContactsTitle": "Contacts",
-  "mytsContactsReadOnly": "Read-only account contacts. No chat or online status.",
-  "mytsContactsNotLoaded": "Not loaded yet.",
-  "mytsContactsEmpty": "No contacts found.",
-  "mytsContactsPasswordHint": "Account password (optional, to discover chat host)",
-  "mytsContactsRefresh": "Refresh contacts",
-  "mytsContactsStorageError": "Could not read saved contacts.",
-  "mytsContactsLoadError": "Could not load contacts; saved contacts remain.",
-  "mytsChatHost": "Chat host: {host}",
-  "mytsChatProbeHint": "Checks only the unauthenticated Matrix versions endpoint; it does not sign in to chat.",
-  "mytsChatProbe": "Check chat connectivity",
-  "mytsChatProbeOk": "Matrix versions endpoint responded. Chat login is not verified.",
-  "mytsChatProbeHttp": "Connectivity check returned HTTP {status}. Chat login has not been verified; try Account chat history.",
-  "mytsChatProbeNetwork": "Could not reach the chat endpoint.",
-  "mytsChatHostMissing": "Chat host unavailable. Refresh with your account password to read its configuration.",
-  "@mytsChatHost": {
-    "placeholders": {
-      "host": {
-        "type": "String"
-      }
-    }
-  },
-  "@mytsChatProbeHttp": {
+  "chatOpen": "Account chat",
+  "chatTitle": "Chat",
+  "chatTabChats": "Chats",
+  "chatTabContacts": "Contacts",
+  "chatTabProfile": "Profile",
+  "chatSignInRequired": "Sign in to myTeamSpeak to use account chat.",
+  "chatSignIn": "Sign in",
+  "chatUnlockTitle": "Unlock your chat",
+  "chatUnlockBody": "Your conversations and keys are stored encrypted on this device. Enter your myTeamSpeak password to unlock them.",
+  "chatUnlock": "Unlock",
+  "homeChatSignedIn": "Conversations and contacts",
+  "homeChatSignedOut": "Sign in with myTeamSpeak to chat with your contacts",
+  "mytsRememberPassword": "Remember password on this device",
+  "mytsRememberPasswordHint": "Kept in the device's secure storage so you aren't asked each time. Turn off for maximum security.",
+  "mytsImportUsingSaved": "The password saved on this device will be used.",
+  "chatUnlockSavedBody": "Unlocking with the password saved on this device.",
+  "chatUnlockManual": "Enter password manually",
+  "chatErrSavedPasswordRejected": "The saved password no longer works. Enter it again.",
+  "chatAdvanced": "Advanced",
+  "chatAllowOwnEmpty": "Also read my own older messages whose key backup has no sender information (the sender identity can't be verified)",
+  "chatConnecting": "Connecting…",
+  "chatErrWrongPassword": "Wrong password, or the account key couldn't be unlocked.",
+  "chatErrNetwork": "Can't reach the chat server. Saved conversations are still available.",
+  "chatErrAuth": "The chat server rejected the saved chat login. To avoid creating duplicate devices, it is not retried automatically.",
+  "chatErrRateLimited": "Too many requests. Please wait a moment.",
+  "chatErrServer": "The chat server returned an error (HTTP {status}).",
+  "@chatErrServer": {
     "placeholders": {
       "status": {
         "type": "String"
       }
     }
-  }
+  },
+  "chatErrInvalid": "Unexpected response from the chat server.",
+  "chatErrLoginUncertain": "An earlier chat login on this device didn't finish cleanly. Tap retry: the same chat device is reused, no duplicate is created.",
+  "chatErrNotSendable": "This message can't be sent in this conversation.",
+  "chatErrContacts": "Couldn't update your contacts.",
+  "chatRefresh": "Refresh",
+  "chatNoChats": "No conversations yet. Start one from your contacts.",
+  "chatNewChat": "New chat",
+  "chatInvites": "Invitations",
+  "chatInvitedBy": "{name} invited you",
+  "chatAccept": "Accept",
+  "chatDecline": "Decline",
+  "chatYou": "You",
+  "chatLastEncrypted": "Encrypted message",
+  "chatLastUnavailable": "Message unavailable",
+  "chatLastDeleted": "Message deleted",
+  "chatEncryptedRoom": "End-to-end encrypted",
+  "chatPlainRoom": "Not encrypted",
+  "chatSendDisabledEncrypted": "Sending is only available in one-to-one encrypted conversations for now. You can read messages here and reply from the desktop app.",
+  "chatSendDisabledLoading": "Conversation details are still loading…",
+  "chatMessageHint": "Message",
+  "chatSend": "Send",
+  "chatNotSent": "Not sent · tap to retry",
+  "chatDiscard": "Discard",
+  "chatMissingKey": "Encrypted message · key not available",
+  "chatPartial": "Older than the available key",
+  "chatDeleted": "Message deleted",
+  "chatInvalidMessage": "Message couldn't be verified",
+  "chatOlder": "Load older messages",
+  "chatEmptyConversation": "No messages yet. Say hello!",
+  "chatCopy": "Copy",
+  "chatCopied": "Copied",
+  "chatLeave": "Leave conversation",
+  "chatLeaveConfirm": "Leave this conversation? It will disappear from your list.",
+  "chatToday": "Today",
+  "chatYesterday": "Yesterday",
+  "chatFile": "File: {name}",
+  "@chatFile": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatImage": "Photo: {name}",
+  "@chatImage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatStatusAvailable": "Available",
+  "chatStatusAway": "Away",
+  "chatStatusDnd": "Do not disturb",
+  "chatStatusOffline": "Offline",
+  "chatStatusInvisible": "Appear offline",
+  "chatContactsEmpty": "No contacts yet.",
+  "chatAddContact": "Add contact",
+  "chatEditContact": "Edit contact",
+  "chatContactId": "Chat ID (@user:server)",
+  "chatContactNote": "Name or note",
+  "chatSave": "Save",
+  "chatRemove": "Remove",
+  "chatRemoveConfirm": "Remove {name} from your contacts?",
+  "@chatRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatStartChat": "Start chat",
+  "chatStartPlainTitle": "Start an unencrypted chat?",
+  "chatStartPlainBody": "New conversations started here are not end-to-end encrypted: the chat server can read them. For private topics, start the conversation from the desktop app.",
+  "chatStart": "Start",
+  "chatProfileName": "Display name",
+  "chatProfileId": "Chat ID",
+  "chatProfileStatus": "Status",
+  "chatProfileStatusMessage": "Status message",
+  "chatProfileStatusHint": "What are you up to?",
+  "chatProfileSaved": "Saved",
+  "chatProfileAvatarTitle": "Profile picture",
+  "chatProfileAvatarNote": "Changing your picture isn't available in TS6 Droid yet. A picture set in the desktop app shows up here.",
+  "chatLock": "Lock chat",
+  "chatLockHint": "Forgets the unlocked key. Saved conversations stay encrypted on this device.",
+  "chatSecurityNote": "Encrypted messages are read with keys restored from your myTeamSpeak account, and the ones you send use keys of this phone's own chat device. This app does not verify the devices of the people you talk to.",
+  "chatSearch": "Search",
+  "chatErrNotLoggedIn": "The chat login hasn't completed on this device yet, so nothing can be sent or loaded.",
+  "chatRetryLogin": "Retry chat login",
+  "chatEncryptConsentTitle": "Send encrypted messages from this phone?",
+  "chatEncryptConsentBody": "To send end-to-end encrypted messages, TS6 Droid publishes this phone's encryption keys to your myTeamSpeak chat account. It shows up as a new device named “TS6 Droid” in the device list of the desktop app, for you and for your contacts.\n\nRoom keys are shared with every device of the people in the conversation, including devices that haven't been verified. This app can't verify devices yet.",
+  "chatEncryptConsentContinue": "Continue",
+  "chatErrNoRecipients": "The message wasn't sent: none of this contact's devices is available to receive encryption keys. They may need to open their chat app first.",
+  "chatErrUnsupportedRoom": "Messages can't be sent in this conversation yet.",
+  "chatErrLimit": "This phone can't hold more encryption sessions, so the message wasn't sent.",
+  "chatNoticeDeviceChanged": "One of this contact's devices changed its encryption keys unexpectedly. It was left out and can't read new messages.",
+  "chatContactAdded": "Contact added",
+  "mytsResetTitle": "Start from scratch?",
+  "mytsResetBody": "Signing in deletes everything this phone keeps about myTeamSpeak and starts over: the saved session and password, imported identities and bookmarks, chat keys and cache, cached contacts and saved server bookmarks. Your local TeamSpeak identity file and the app settings stay. You'll have to import your account again, and the chat will ask again to publish this phone's encryption keys. This can't be undone.",
+  "mytsResetConfirm": "Delete and sign in"
 }

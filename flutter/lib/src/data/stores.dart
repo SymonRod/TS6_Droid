@@ -29,11 +29,30 @@ class BookmarkStore {
     return list.isNotEmpty;
   }
 
+  /// Whether any bookmark is saved. Unreadable data counts as present.
+  Future<bool> hasAnyBookmarks() async {
+    try {
+      return await hasSavedBookmarks();
+    } catch (_) {
+      return true;
+    }
+  }
+
+  /// Removes the saved bookmarks and the remembered last address.
+  Future<void> clear() async {
+    final p = await SharedPreferences.getInstance();
+    await p.remove(_kBookmarks);
+    await p.remove(_kLast);
+  }
+
   Future<List<ServerBookmark>> load() async {
     final p = await SharedPreferences.getInstance();
     try {
       final list = jsonDecode(p.getString(_kBookmarks) ?? '[]') as List;
-      return [for (final j in list) ServerBookmark.fromJson(j as Map<String, dynamic>)];
+      return [
+        for (final j in list)
+          ServerBookmark.fromJson(j as Map<String, dynamic>),
+      ];
     } catch (_) {
       return [];
     }
@@ -41,7 +60,10 @@ class BookmarkStore {
 
   Future<void> save(List<ServerBookmark> list) async {
     final p = await SharedPreferences.getInstance();
-    await p.setString(_kBookmarks, jsonEncode([for (final b in list) b.toJson()]));
+    await p.setString(
+      _kBookmarks,
+      jsonEncode([for (final b in list) b.toJson()]),
+    );
   }
 
   Future<String> lastAddress() async =>
@@ -70,12 +92,17 @@ class SettingsStore {
       (await SharedPreferences.getInstance()).setBool('push_to_talk', v);
 
   Future<bool> showLinkThumbnails() async =>
-      (await SharedPreferences.getInstance()).getBool('show_link_thumbnails') ?? false;
+      (await SharedPreferences.getInstance()).getBool('show_link_thumbnails') ??
+      false;
   Future<void> setShowLinkThumbnails(bool v) async =>
-      (await SharedPreferences.getInstance()).setBool('show_link_thumbnails', v);
+      (await SharedPreferences.getInstance()).setBool(
+        'show_link_thumbnails',
+        v,
+      );
 
   Future<bool> autoLoadImages() async =>
-      (await SharedPreferences.getInstance()).getBool('auto_load_images') ?? true;
+      (await SharedPreferences.getInstance()).getBool('auto_load_images') ??
+      true;
   Future<void> setAutoLoadImages(bool v) async =>
       (await SharedPreferences.getInstance()).setBool('auto_load_images', v);
 }

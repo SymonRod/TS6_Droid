@@ -78,6 +78,7 @@ class TestMyTsController extends MyTsController {
   final MyTsState initial;
   MyTsState loginResult;
   int loginCalls = 0;
+  bool? lastResetLocalData;
 
   TestMyTsController({
     this.initial = const MyTsState(),
@@ -91,8 +92,14 @@ class TestMyTsController extends MyTsController {
   MyTsState build() => initial;
 
   @override
-  Future<void> login(String rawEmail, String password, {String? otp}) async {
+  Future<void> login(
+    String rawEmail,
+    String password, {
+    String? otp,
+    bool resetLocalData = false,
+  }) async {
     loginCalls++;
+    lastResetLocalData = resetLocalData;
     state = loginResult;
   }
 

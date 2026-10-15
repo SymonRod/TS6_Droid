@@ -6,7 +6,7 @@
 import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `convert_batch`, `pull_outcome`
+// These functions are ignored because they are not marked as `pub`: `convert_batch`, `parse_args`, `pull_outcome`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 MyTsEndpoint myTsEndpoint() => RustLib.instance.api.crateMytsMyTsEndpoint();
@@ -67,6 +67,33 @@ Uint8List? myTsBuildInitialPull({required String session}) =>
 
 Uint8List? myTsBuildContactsRequest({required String session}) =>
     RustLib.instance.api.crateMytsMyTsBuildContactsRequest(session: session);
+
+/// Adds a contact or changes its note.
+Uint8List? myTsBuildContactUpdate({
+  required String session,
+  required String matrixId,
+  required String note,
+}) => RustLib.instance.api.crateMytsMyTsBuildContactUpdate(
+  session: session,
+  matrixId: matrixId,
+  note: note,
+);
+
+Uint8List? myTsBuildContactRemove({
+  required String session,
+  required String matrixId,
+}) => RustLib.instance.api.crateMytsMyTsBuildContactRemove(
+  session: session,
+  matrixId: matrixId,
+);
+
+/// `None` on success, otherwise the service code (0 when unparseable, and 5 for
+/// an expired session).
+int? myTsParseContactAck({required int httpStatus, required List<int> body}) =>
+    RustLib.instance.api.crateMytsMyTsParseContactAck(
+      httpStatus: httpStatus,
+      body: body,
+    );
 
 MyTsContactsOutcome myTsParseContacts({
   required int httpStatus,
@@ -139,36 +166,70 @@ Future<MyTsHistory> myTsHistoryOpen({
   allowOwnEmpty: allowOwnEmpty,
 );
 
+/// `args` is a JSON object (`room`, `older`, `limit`, `text`, `txn`, `user`, ...);
+/// the Rust engine validates every field it uses.
 Future<MyTsHistoryRequest> myTsHistoryRequest({
   required MyTsHistory history,
   required String action,
-  required String room,
-  required bool older,
+  required String args,
 }) => RustLib.instance.api.crateMytsMyTsHistoryRequest(
   history: history,
   action: action,
+  args: args,
+);
+
+/// Next action of an encrypted (or plaintext) send of `txn` to `room`, as the JSON of
+/// `History::send_step`: `{"action", "args", "code"?, "warnings"}`. A pure function of
+/// state; the caller runs `request`/`accept` for the action and asks again until
+/// `done` or `fail`. Needs a fresh `txn` per message.
+Future<String> myTsHistorySendStep({
+  required MyTsHistory history,
+  required String room,
+  required String txn,
+}) => RustLib.instance.api.crateMytsMyTsHistorySendStep(
+  history: history,
   room: room,
-  older: older,
+  txn: txn,
+);
+
+/// Drops a stuck key share and a stuck unacknowledged event of `room` (no HTTP).
+Future<void> myTsHistorySendReset({
+  required MyTsHistory history,
+  required String room,
+}) => RustLib.instance.api.crateMytsMyTsHistorySendReset(
+  history: history,
+  room: room,
 );
 
 Future<void> myTsHistoryAccept({
   required MyTsHistory history,
   required String action,
-  required String room,
-  required bool older,
+  required String args,
   required List<int> body,
 }) => RustLib.instance.api.crateMytsMyTsHistoryAccept(
   history: history,
   action: action,
-  room: room,
-  older: older,
+  args: args,
   body: body,
 );
+
+/// Account ID and whether a Matrix token is stored; cheap, decrypts nothing.
+Future<String> myTsHistoryStatus({required MyTsHistory history}) =>
+    RustLib.instance.api.crateMytsMyTsHistoryStatus(history: history);
+
+Future<List<String>> myTsHistoryRoomIds({required MyTsHistory history}) =>
+    RustLib.instance.api.crateMytsMyTsHistoryRoomIds(history: history);
+
+/// User-confirmed retry after an uncertain login. Keeps the Matrix device ID.
+Future<void> myTsHistoryAllowLoginRetry({required MyTsHistory history}) =>
+    RustLib.instance.api.crateMytsMyTsHistoryAllowLoginRetry(history: history);
 
 Future<Uint8List> myTsHistorySnapshot({required MyTsHistory history}) =>
     RustLib.instance.api.crateMytsMyTsHistorySnapshot(history: history);
 
 /// Only display data crosses this boundary; no session keys, tokens or passwords.
+/// With an empty `room` the conversation list is returned, otherwise that
+/// room's messages: decrypting every room on every refresh would be wasteful.
 Future<String> myTsHistoryView({
   required MyTsHistory history,
   required String room,
@@ -471,26 +532,35 @@ class MyTsEndpoint {
 /// Ephemeral transport envelope, never for logging or persistence.
 class MyTsHistoryRequest {
   final String host;
-  final String path;
+  final String method;
+  final List<String> segments;
   final String query;
   final String headers;
   final Uint8List body;
 
+  /// Building this request changed secret state (keys, ratchets, a pending event):
+  /// seal and save the snapshot BEFORE performing the HTTP call.
+  final bool persist;
+
   const MyTsHistoryRequest({
     required this.host,
-    required this.path,
+    required this.method,
+    required this.segments,
     required this.query,
     required this.headers,
     required this.body,
+    required this.persist,
   });
 
   @override
   int get hashCode =>
       host.hashCode ^
-      path.hashCode ^
+      method.hashCode ^
+      segments.hashCode ^
       query.hashCode ^
       headers.hashCode ^
-      body.hashCode;
+      body.hashCode ^
+      persist.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -498,10 +568,12 @@ class MyTsHistoryRequest {
       other is MyTsHistoryRequest &&
           runtimeType == other.runtimeType &&
           host == other.host &&
-          path == other.path &&
+          method == other.method &&
+          segments == other.segments &&
           query == other.query &&
           headers == other.headers &&
-          body == other.body;
+          body == other.body &&
+          persist == other.persist;
 }
 
 class MyTsImportBatch {

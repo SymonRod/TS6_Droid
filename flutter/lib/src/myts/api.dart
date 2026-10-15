@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -459,6 +458,51 @@ class MyTsApi {
     return result.contacts!;
   }
 
+  /// Adds a contact or changes its note. The request shape comes from the
+  /// recovered schema and is not yet confirmed against a live account.
+  Future<void> updateContact(String session, String matrixId, String note) =>
+      _contactEdit(
+        rs.myTsBuildContactUpdate(
+          session: session,
+          matrixId: matrixId,
+          note: note,
+        ),
+      );
+
+  Future<void> removeContact(String session, String matrixId) => _contactEdit(
+    rs.myTsBuildContactRemove(session: session, matrixId: matrixId),
+  );
+
+  Future<void> _contactEdit(Uint8List? request) async {
+    if (request == null) {
+      throw const ContactRequestFailure(ContactFailure.invalid);
+    }
+    final MyTsHttpResponse resp;
+    try {
+      resp = await _post(_chatUri, _headers, request, 64 * 1024);
+    } on MyTsResponseRejected {
+      throw const ContactRequestFailure(ContactFailure.invalid);
+    } on SocketException {
+      throw const ContactRequestFailure(ContactFailure.network);
+    } on TlsException {
+      throw const ContactRequestFailure(ContactFailure.network);
+    } on TimeoutException {
+      throw const ContactRequestFailure(ContactFailure.network);
+    } on HttpException {
+      throw const ContactRequestFailure(ContactFailure.network);
+    }
+    if (resp.status != 200) throw HttpException('contacts HTTP ${resp.status}');
+    final code = rs.myTsParseContactAck(
+      httpStatus: resp.status,
+      body: resp.body,
+    );
+    if (code != null) {
+      throw ContactRequestFailure(
+        code == 5 ? ContactFailure.expired : ContactFailure.service,
+      );
+    }
+  }
+
   /// Config is decrypted in Rust; only the declared host crosses into Dart.
   Future<String?> chatHost(String session, rs.MyTsAccountKey key) async {
     final request = rs.myTsBuildConfigPull(session: session);
@@ -477,7 +521,7 @@ class MyTsApi {
     );
   }
 
-  /// Bounded encrypted CONFIG response for the opaque Rust history reader.
+  /// Bounded encrypted CONFIG response for the opaque Rust chat engine.
   Future<Uint8List> historyConfig(String session) async {
     final request = rs.myTsBuildConfigPull(session: session);
     if (request == null) throw const FormatException('session unavailable');
@@ -590,34 +634,4 @@ Future<MyTsHttpResponse> myTsHttpGet(
   } finally {
     client.close(force: true);
   }
-}
-
-/// An unauthenticated bounded GET, using the same gateway-compatible User-Agent
-/// as the history reader. Failure here does not establish chat login availability.
-Future<int> checkChatVersions(
-  String host, {
-  Future<MyTsHttpResponse> Function(Uri, int)? get,
-}) async {
-  if (!safePublicHttpsHost(host)) {
-    throw const FormatException('unsafe chat host');
-  }
-  final response =
-      await (get ??
-          (uri, limit) => myTsHttpGet(
-            uri,
-            limit,
-            userAgent: 'Go-http-client/1.1',
-          ))(Uri.https(host, '/_matrix/client/versions'), 64 * 1024);
-  if (response.status == 200) {
-    final decoded = jsonDecode(utf8.decode(response.body));
-    if (decoded is! Map ||
-        decoded['versions'] is! List ||
-        (decoded['versions'] as List).isEmpty ||
-        !(decoded['versions'] as List).every(
-          (v) => v is String && v.isNotEmpty,
-        )) {
-      throw const FormatException('invalid Matrix versions response');
-    }
-  }
-  return response.status;
 }

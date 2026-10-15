@@ -293,6 +293,24 @@ implementation and a phone/5G check; implementation/device verification must
 be recorded separately from these protocol findings. Preserve existing app
 data; do not uninstall/clear data to make a phone test work.
 
+### Account chat GUI (2026-10-15, supersedes the history screen)
+
+See **[docs/myteamspeak-chat-gui.md](docs/myteamspeak-chat-gui.md)**. The research and
+test screens were replaced by a real chat UI (conversations, contacts, profile with
+presence/status/display name). Plaintext send works in unencrypted rooms. **Encrypted
+sending to one-to-one rooms is implemented (Rust `history/e2ee.rs` in `../ts6-lib`,
+Flutter consent + send loop) and verified offline only**: Rust tests with real
+vodozemac peers, a libolm interop test (`tools/myts/test_interop_rust_e2ee.py`) and
+Flutter flow tests. It has **never run against the real TeamSpeak Matrix server or the
+desktop client**; the first live use publishes a new device on the owner's account and
+needs the owner's explicit confirmation (disposable accounts first). Not done: receiving
+new encrypted messages without the desktop's cloud backups (no `/sync` to-device),
+cloud backup publication, encrypted group rooms, own-avatar upload. Contact edits are
+unconfirmed live. Phone login verified (all Matrix calls HTTP 200). Known open bug: raw
+Base32 names in the "New chat" picker. See the "Encrypted sending" section of the chat
+GUI doc for contract, commands and limits. Pre-GUI state is in the first commit of
+branch `feat/chat-gui`; later work is uncommitted.
+
 ### Flutter account-history reader (subsequent 2026-10-15 delivery)
 
 See **[docs/myteamspeak-history-reader.md](docs/myteamspeak-history-reader.md)**.

@@ -158,10 +158,12 @@ no unrelated formatting changes were applied.
   cloud identity validator**: it does not validate the embedded size/X/Y against
   the private scalar. The strict entry point described below now validates the
   demonstrated desktop format; it does not validate a whole cloud import batch.
-- Bookmark references remain opaque: the live sample had five explicitly
-  empty references and both identities flagged default. No nonempty matching
-  key or unique effective default was established. Do not assume UID, item ID,
-  display name, private string or first-default matching from this sample.
+- Bookmark references are resolved: a nonempty `Bookmark_Data.identity` is the
+  cloud `item_uuid` of the referenced identity (established 2026-10-15 on the
+  disposable test account: 2/2 nonempty references matched, no UID/name match).
+  "Use Default" is an explicitly empty string. Empty references still ask the
+  user once with no preselection; the effective-default rule under several
+  `is_default=true` flags is narrowed (the button moves the flag) but unproven.
 - Secure multi-identity persistence, atomic/idempotent merge, default/reference
   policies and an opaque Rust key/context boundary for FRB remain application
   work. Lower-level tsclientlib private-key Debug output is not redacted;

@@ -2,14 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ts6_flutter/l10n/app_localizations.dart';
-import 'package:ts6_flutter/src/myts/history.dart';
+import 'package:ts6_flutter/src/chat/chat_client.dart';
 import 'package:ts6_flutter/src/myts/session_store.dart';
 import 'package:ts6_flutter/src/rust/myts.dart' as rs;
-import 'package:ts6_flutter/src/ui/myts_history_screen.dart';
 
 import 'myts_rust.dart';
 
@@ -66,8 +62,7 @@ void main() {
       await rs.myTsHistoryAccept(
         history: h,
         action: 'rooms',
-        room: '',
-        older: false,
+        args: '{}',
         body: _bytes({
           'joined_rooms': [fixture['room']],
         }),
@@ -75,8 +70,7 @@ void main() {
       await rs.myTsHistoryAccept(
         history: h,
         action: 'messages',
-        room: fixture['room'] as String,
-        older: false,
+        args: jsonEncode({'room': fixture['room']}),
         body: _bytes({'chunk': fixture['events'], 'end': 'older'}),
       );
       final entry = [
@@ -113,7 +107,7 @@ void main() {
         'decrypted',
         'decrypted',
       ]);
-      final store = HistoryStore(MemoryMyTsSecureBackend());
+      final store = ChatStore(MemoryMyTsSecureBackend());
       await store.save(
         'synthetic-account',
         await rs.myTsHistorySnapshot(history: h),
@@ -138,23 +132,4 @@ void main() {
       expect(await store.load('other-account'), isEmpty);
     },
   );
-
-  testWidgets('history page opens locked without network or Matrix login', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const MyTsHistoryScreen(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(find.byType(TextField), findsOneWidget);
-    expect(find.text('Unlock history'), findsOneWidget);
-    expect(find.text('Connect / refresh conversations'), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
 }

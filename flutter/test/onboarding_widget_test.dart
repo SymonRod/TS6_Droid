@@ -9,6 +9,7 @@ import 'package:ts6_flutter/main.dart';
 import 'package:ts6_flutter/src/data/onboarding_store.dart';
 import 'package:ts6_flutter/src/myts/api.dart';
 import 'package:ts6_flutter/src/myts/controller.dart';
+import 'package:ts6_flutter/src/myts/session_store.dart';
 import 'package:ts6_flutter/src/state/onboarding_controller.dart';
 import 'package:ts6_flutter/src/state/server_controller.dart';
 import 'package:ts6_flutter/src/ui/connection_screen.dart';
@@ -28,6 +29,9 @@ Future<ProviderContainer> mountApp(
     overrides: [
       identityStoreProvider.overrideWithValue(identities),
       accountVaultProvider.overrideWithValue(memoryVault()),
+      myTsSessionStoreProvider.overrideWithValue(
+        MyTsSessionStore(MemoryMyTsSecureBackend()),
+      ),
       serverProvider.overrideWith(TestServerController.new),
       myTsProvider.overrideWith(() => account ?? TestMyTsController()),
     ],
@@ -238,7 +242,7 @@ void main() {
   );
 
   testWidgets(
-    'later login and logout preserve existing identity and bookmarks',
+    'later login warns about the reset and keeps the local identity file',
     (tester) async {
       const saved = '[{"address":"synthetic.invalid:9987","nickname":"Test"}]';
       SharedPreferences.setMockInitialValues({'bookmarks_json': saved});
@@ -255,13 +259,12 @@ void main() {
         'synthetic-password',
       );
       await tapVisible(tester, find.text('Sign in'));
+      // Saved bookmarks exist: the sign-in asks before wiping and starting over.
+      expect(find.text('Start from scratch?'), findsOneWidget);
+      await tapVisible(tester, find.text('Delete and sign in'));
       await tapVisible(tester, find.text('Sign out'));
       expect(identities.requests, 0);
       expect(identities.present, true);
-      expect(
-        (await SharedPreferences.getInstance()).getString('bookmarks_json'),
-        saved,
-      );
       expect(c.read(onboardingProvider).requireValue.complete, true);
     },
   );

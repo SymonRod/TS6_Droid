@@ -11,11 +11,10 @@ import 'package:ts6_flutter/src/data/account_vault.dart';
 import 'package:ts6_flutter/src/data/import_plan.dart';
 import 'package:ts6_flutter/src/data/server_bookmark.dart';
 import 'package:ts6_flutter/src/myts/controller.dart';
-import 'package:ts6_flutter/src/myts/contact_store.dart';
-import 'package:ts6_flutter/src/myts/api.dart';
-import 'package:ts6_flutter/src/myts/session_store.dart';
-import 'package:ts6_flutter/src/rust/myts.dart' as rust;
 import 'package:ts6_flutter/src/myts/import_controller.dart';
+import 'package:ts6_flutter/src/myts/session_store.dart';
+import 'package:ts6_flutter/src/ui/chat/chat_screen.dart';
+import 'package:ts6_flutter/src/ui/myts_login_screen.dart';
 import 'package:ts6_flutter/src/rust/api.dart';
 import 'package:ts6_flutter/src/state/identity_resolver.dart';
 import 'package:ts6_flutter/src/state/imported_bookmarks.dart';
@@ -33,7 +32,11 @@ class FakeImport extends MyTsImportController {
   ImportState build() => initial;
 
   @override
-  Future<void> startFromStoredSession(String password) async => calls.add('start:$password');
+  Future<void> startFromStoredSession(String password, {bool fromSaved = false}) async =>
+      calls.add('start:$password');
+
+  @override
+  Future<void> startFromSavedPassword() async => calls.add('start-saved');
 
   @override
   Future<void> confirm() async => calls.add('confirm');
@@ -76,12 +79,6 @@ class RecordingServer extends TestServerController {
   }
 }
 
-class OfflineContactsApi extends MyTsApi {
-  @override
-  Future<List<rust.MyTsContact>> contacts(String session) async =>
-      throw const ContactRequestFailure(ContactFailure.network);
-}
-
 ImportedBookmark importedEntry({String nickname = 'Me', String? label}) => ImportedBookmark(
   ServerBookmark(
     name: 'Server Three',
@@ -97,9 +94,8 @@ Future<(ProviderContainer, FakeImport?, FakeResolver, RecordingServer)> mount(
   ImportState importState = const ImportState(),
   List<ImportedBookmark> imported = const [],
   bool setupDone = true,
-  ContactStore? contacts,
-  MyTsSessionStore? session,
-  MyTsApi? accountApi,
+  MyTsSessionStore? sessions,
+  bool signedIn = true,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final identities = TestIdentityStore()..present = setupDone;
@@ -108,18 +104,21 @@ Future<(ProviderContainer, FakeImport?, FakeResolver, RecordingServer)> mount(
   final server = RecordingServer();
   final c = ProviderContainer(
     overrides: [
+      myTsSessionStoreProvider.overrideWithValue(
+        sessions ?? MyTsSessionStore(MemoryMyTsSecureBackend()),
+      ),
       identityStoreProvider.overrideWithValue(identities),
       accountVaultProvider.overrideWithValue(memoryVault()),
       serverProvider.overrideWith(() => server),
       myTsProvider.overrideWith(
         () => TestMyTsController(
-          initial: const MyTsState(status: MyTsStatus.signedIn, username: 'Synthetic user'),
+          initial: MyTsState(
+            status: signedIn ? MyTsStatus.signedIn : MyTsStatus.signedOut,
+            username: 'Synthetic user',
+          ),
         ),
       ),
       myTsImportProvider.overrideWith(() => import),
-      contactStoreProvider.overrideWithValue(contacts ?? ContactStore(MemoryMyTsSecureBackend())),
-      if (session != null) myTsSessionStoreProvider.overrideWithValue(session),
-      if (accountApi != null) myTsApiProvider.overrideWithValue(accountApi),
       identityResolverProvider.overrideWithValue(resolver),
       importedBookmarksProvider.overrideWith((_) async => imported),
     ],
@@ -148,25 +147,6 @@ Future<void> openAccountScreen(WidgetTester tester, ProviderContainer c) async {
 
 void main() {
   group('account import card', () {
-    testWidgets('cached contacts remain visible on network failure without claiming chat', (tester) async {
-      final store = ContactStore(MemoryMyTsSecureBackend());
-      await store.save('', const ContactSnapshot([
-        StoredContact('synthetic-tag', 'Saved note', '@MY======:example.org'),
-      ], 'chat.example.org'));
-      final session = MyTsSessionStore(MemoryMyTsSecureBackend());
-      await session.save(session: 'synthetic-session', uuid: 'uuid', username: 'Synthetic user', email: '');
-      final (c, _, _, _) = await mount(tester, contacts: store, session: session, accountApi: OfflineContactsApi());
-      await openAccountScreen(tester, c);
-      expect(find.text('Saved note'), findsOneWidget);
-      expect(find.text('@MY======:example.org'), findsOneWidget);
-      expect(find.textContaining('No chat or online status'), findsOneWidget);
-      await tester.ensureVisible(find.text('Refresh contacts'));
-      await tester.tap(find.text('Refresh contacts'));
-      await tester.pumpAndSettle();
-      expect(find.text('Saved note'), findsOneWidget);
-      expect(find.textContaining('Network error'), findsOneWidget);
-    });
-
     testWidgets('idle: asks for the password and starts an import, clearing the field', (tester) async {
       final (c, import, _, _) = await mount(tester);
       await openAccountScreen(tester, c);
@@ -179,6 +159,18 @@ void main() {
       await tester.pumpAndSettle();
       expect(import.calls, ['start:synthetic-password']);
       expect(tester.widget<TextField>(find.byType(TextField).first).controller!.text, isEmpty);
+    });
+
+    testWidgets('with a saved password no field is shown and the import starts directly', (tester) async {
+      final sessions = MyTsSessionStore(MemoryMyTsSecureBackend());
+      await sessions.savePassword('synthetic-password');
+      final (c, import, _, _) = await mount(tester, sessions: sessions);
+      await openAccountScreen(tester, c);
+      expect(find.byType(TextField), findsNothing);
+      expect(find.text('The password saved on this device will be used.'), findsOneWidget);
+      await tester.tap(find.text('Import account data'));
+      await tester.pumpAndSettle();
+      expect(import!.calls, ['start-saved']);
     });
 
     testWidgets('working shows progress', (tester) async {
@@ -271,6 +263,23 @@ void main() {
       expect(find.textContaining('From your account · Identity: not chosen yet'), findsOneWidget);
       expect(find.textContaining('From your account · Identity: Alice'), findsOneWidget);
       expect(find.text('No saved bookmarks yet'), findsNothing);
+    });
+
+    testWidgets('home page has a visible chat entry that opens the chat', (tester) async {
+      await mount(tester);
+      expect(find.text('Account chat'), findsOneWidget);
+      expect(find.text('Conversations and contacts'), findsOneWidget);
+      await tester.tap(find.text('Account chat'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ChatScreen), findsOneWidget);
+    });
+
+    testWidgets('signed out, the home chat entry leads to the sign-in', (tester) async {
+      await mount(tester, signedIn: false);
+      expect(find.text('Sign in with myTeamSpeak to chat with your contacts'), findsOneWidget);
+      await tester.tap(find.text('Account chat'));
+      await tester.pumpAndSettle();
+      expect(find.byType(MyTsLoginScreen), findsOneWidget);
     });
 
     testWidgets('no choice, no connection', (tester) async {

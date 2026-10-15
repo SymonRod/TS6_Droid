@@ -240,3 +240,14 @@ history and devices remain untouched. No new login/refresh was executed against
 the owner's account, and no automatic retry/reset or recovery button was added.
 If a previous attempt saved an uncertain intent, transport correction alone does
 not unblock it. Phone acceptance and any later recovery require separate checks.
+
+Corrected debug APK built successfully and its signature matches the previously
+installed certificate. Artifact SHA-256:
+`5920f3ffa3fad29e6b1172116616c2e8d2a68082f5a4e88af1b33883fdbc5de5`
+(`flutter/build/app/outputs/flutter-apk/app-debug.apk`). The initial combined
+`adb install --no-streaming -r` timed out and metadata still showed the old build;
+success was not assumed. Separate APK push followed by `pm install -r` then
+returned **Success**. Package metadata retained first install time `12:17:37`
+and advanced last update time to **2026-10-15 12:49:27** on the owner's SM-S938B.
+No uninstall, data clear, app launch or authenticated chat operation was performed.
+The owner still needs to retry the unauthenticated connectivity check in this APK.

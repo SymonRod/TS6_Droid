@@ -3,25 +3,39 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ts6_flutter/src/data/onboarding_store.dart';
+import 'package:ts6_flutter/src/data/stores.dart';
+import 'package:ts6_flutter/src/state/onboarding_controller.dart';
 import 'package:ts6_flutter/src/myts/api.dart';
 import 'package:ts6_flutter/src/myts/controller.dart';
 import 'package:ts6_flutter/src/myts/session_store.dart';
 
 import 'myts_helpers.dart';
+import 'onboarding_helpers.dart';
 import 'myts_rust.dart';
 
 ProviderContainer containerWith({
-  required Future<MyTsHttpResponse> Function(Uri, Map<String, String>, Uint8List) post,
+  required Future<MyTsHttpResponse> Function(
+    Uri,
+    Map<String, String>,
+    Uint8List,
+  )
+  post,
   MemoryMyTsSecureBackend? backend,
 }) {
   final mem = backend ?? MemoryMyTsSecureBackend();
-  return ProviderContainer(overrides: [
-    myTsApiProvider.overrideWithValue(MyTsApi(
-      post: (uri, headers, body, _) => post(uri, headers, body),
-      deviceName: 'Test device',
-    )),
-    myTsSessionStoreProvider.overrideWithValue(MyTsSessionStore(mem)),
-  ]);
+  return ProviderContainer(
+    overrides: [
+      myTsApiProvider.overrideWithValue(
+        MyTsApi(
+          post: (uri, headers, body, _) => post(uri, headers, body),
+          deviceName: 'Test device',
+        ),
+      ),
+      myTsSessionStoreProvider.overrideWithValue(MyTsSessionStore(mem)),
+    ],
+  );
 }
 
 void main() {
@@ -31,7 +45,12 @@ void main() {
     final c = containerWith(
       post: (_, _, _) async => MyTsHttpResponse(
         200,
-        loginSessionReply(error: 200, session: 'sess-1', uuid: 'u-1', username: 'bob'),
+        loginSessionReply(
+          error: 200,
+          session: 'sess-1',
+          uuid: 'u-1',
+          username: 'bob',
+        ),
       ),
     );
     addTearDown(c.dispose);
@@ -67,7 +86,8 @@ void main() {
 
   test('OTP requirement moves to the OTP step', () async {
     final c = containerWith(
-      post: (_, _, _) async => MyTsHttpResponse(200, loginSessionReply(error: 208)),
+      post: (_, _, _) async =>
+          MyTsHttpResponse(200, loginSessionReply(error: 208)),
     );
     addTearDown(c.dispose);
 
@@ -88,7 +108,12 @@ void main() {
         }
         return MyTsHttpResponse(
           200,
-          loginSessionReply(error: 200, session: 'sess-9', uuid: 'u', username: 'z'),
+          loginSessionReply(
+            error: 200,
+            session: 'sess-9',
+            uuid: 'u',
+            username: 'z',
+          ),
         );
       },
     );
@@ -100,5 +125,88 @@ void main() {
     expect(deleted, 'sess-9');
     expect(c.read(myTsProvider).status, MyTsStatus.signedOut);
     expect(await c.read(myTsSessionStoreProvider).load(), isNull);
+  });
+
+  group('sign-in that starts from scratch', () {
+    late MemoryMyTsSecureBackend backend;
+
+    ProviderContainer containerFor(int loginError) {
+      SharedPreferences.setMockInitialValues({
+        'bookmarks_json': '[{"address":"ts.example.org"}]',
+      });
+      backend = MemoryMyTsSecureBackend();
+      return ProviderContainer(
+        overrides: [
+          myTsApiProvider.overrideWithValue(
+            MyTsApi(
+              post: (_, _, _, _) async => MyTsHttpResponse(
+                200,
+                loginSessionReply(
+                  error: loginError,
+                  session: 'sess-new',
+                  uuid: 'u',
+                  username: 'z',
+                ),
+              ),
+              deviceName: 'Test device',
+            ),
+          ),
+          myTsSessionStoreProvider.overrideWithValue(MyTsSessionStore(backend)),
+          onboardingStoreProvider.overrideWithValue(
+            OnboardingStore(
+              identities: TestIdentityStore(),
+              bookmarks: BookmarkStore(),
+            ),
+          ),
+        ],
+      );
+    }
+
+    test(
+      'a successful login wipes the old data before storing the new session',
+      () async {
+        final c = containerFor(200);
+        addTearDown(c.dispose);
+        await backend.write('myts_history_v1_old', 'old chat keys');
+        await backend.write('ts6_account_vault_v1', '{}');
+
+        await c
+            .read(myTsProvider.notifier)
+            .login('a@b', 'pw', resetLocalData: true);
+
+        expect(c.read(myTsProvider).status, MyTsStatus.signedIn);
+        expect(await backend.read('myts_history_v1_old'), isNull);
+        expect(await backend.read('ts6_account_vault_v1'), isNull);
+        expect(
+          (await c.read(myTsSessionStoreProvider).load())!.session,
+          'sess-new',
+        );
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getString('bookmarks_json'), isNull);
+      },
+    );
+
+    test('a failed login deletes nothing', () async {
+      final c = containerFor(202);
+      addTearDown(c.dispose);
+      await backend.write('myts_history_v1_old', 'old chat keys');
+
+      await c
+          .read(myTsProvider.notifier)
+          .login('a@b', 'wrong', resetLocalData: true);
+
+      expect(c.read(myTsProvider).status, MyTsStatus.signedOut);
+      expect(await backend.read('myts_history_v1_old'), 'old chat keys');
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('bookmarks_json'), isNotNull);
+    });
+
+    test('without the flag the old data stays', () async {
+      final c = containerFor(200);
+      addTearDown(c.dispose);
+      await backend.write('myts_history_v1_old', 'old chat keys');
+      await c.read(myTsProvider.notifier).login('a@b', 'pw');
+      expect(await backend.read('myts_history_v1_old'), 'old chat keys');
+    });
   });
 }

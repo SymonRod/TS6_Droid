@@ -24,6 +24,12 @@ class CorruptibleBackend implements MyTsSecureBackend {
   Future<void> delete(String key) async {
     entries.remove(key);
   }
+
+  @override
+  Future<Set<String>> keys() async => entries.keys.toSet();
+
+  @override
+  Future<void> deleteAll() async => entries.clear();
 }
 
 void main() {
@@ -101,54 +107,19 @@ void main() {
     },
   );
 
-  test(
-    'connectivity check never treats gateway HTML or 503 as success',
-    () async {
-      expect(safePublicHttpsHost('chat.example.org'), isTrue);
-      for (final host in [
-        'localhost',
-        '127.0.0.1',
-        '192.168.1.1',
-        'host.local',
-        'a..org',
-        'host.internal',
-      ]) {
-        expect(safePublicHttpsHost(host), isFalse);
-      }
-      Uri? seen;
-      final status = await checkChatVersions(
-        'chat.example.org',
-        get: (uri, limit) async {
-          seen = uri;
-          expect(limit, 64 * 1024);
-          return MyTsHttpResponse(
-            503,
-            Uint8List.fromList(utf8.encode('<html>gateway unavailable</html>')),
-          );
-        },
-      );
-      expect(seen, Uri.https('chat.example.org', '/_matrix/client/versions'));
-      expect(status, 503);
-      await expectLater(
-        checkChatVersions(
-          'chat.example.org',
-          get: (uri, limit) async =>
-              MyTsHttpResponse(200, Uint8List.fromList(utf8.encode('<html>'))),
-        ),
-        throwsFormatException,
-      );
-      expect(
-        await checkChatVersions(
-          'chat.example.org',
-          get: (uri, limit) async => MyTsHttpResponse(
-            200,
-            Uint8List.fromList(utf8.encode('{"versions":["v1.1"]}')),
-          ),
-        ),
-        200,
-      );
-    },
-  );
+  test('host validation rejects local and malformed names', () {
+    expect(safePublicHttpsHost('chat.example.org'), isTrue);
+    for (final host in [
+      'localhost',
+      '127.0.0.1',
+      '192.168.1.1',
+      'host.local',
+      'a..org',
+      'host.internal',
+    ]) {
+      expect(safePublicHttpsHost(host), isFalse);
+    }
+  });
 
   test('GET rejects local destinations before contacting them', () async {
     for (final address in [

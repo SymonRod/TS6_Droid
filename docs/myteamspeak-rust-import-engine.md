@@ -210,12 +210,35 @@ Verification in this turn:
 
 Temporary probe sources and the runnable worker were removed after use; build
 artifacts outside the repositories contain no runtime account data. This is not
-an app feature or a persisted real-account fixture. Next gate: establish nonempty-reference and
-empty/default selection semantics from independent protocol/desktop evidence
-or a separately authorized account already containing explicit references.
-Do not create/edit cloud bookmarks to manufacture evidence under this grant.
-Resolve that gate and define failure/default policy before secure multi-identity
-persistence, an opaque FRB key/context boundary and typed Flutter import.
+an app feature or a persisted real-account fixture. The nonempty-reference part
+of this gate is now resolved by the test-account observation below; the
+empty-reference effective-default rule stays narrowed but open.
+
+### Nonempty bookmark-reference gate (resolved 2026-10-15, test account)
+
+With a separate explicit grant the owner used the disposable test account
+(`EMAIL`/`PASSWORD` in root `.env`) and, on the desktop client, created a new
+identity, pointed two bookmarks at it, then pressed its "Use as Default"
+button. A read-only probe (`/tmp` only, nothing saved, aggregates printed)
+ran three pulls across those desktop edits:
+
+- `Bookmark_Data.identity` is the **cloud `item_uuid` of the identity**
+  (36-char UUID shape). Both nonempty references matched an identity item UUID
+  (2/2); neither matched `id_name`, nickname, UID (independently derived,
+  synthetic-validated) or private material. Both references were identical,
+  consistent with the two bookmarks pointing at the same new identity.
+- **"Use Default" in the desktop bookmark editor is an explicitly present but
+  empty `identity` string**, not an absent field. Absent vs empty stays
+  distinguished by the decoder.
+- `is_default` is a stored per-identity flag and multiple `true` values
+  coexist (2 of 3 before and after). Creating the identity stored `false`
+  without the button; pressing "Use as Default" flipped the new identity to
+  `true` and exactly one previously `true` identity to `false`. The desktop
+  therefore moves defaultness rather than enforcing a single `true`.
+- Still open: which identity the desktop actually connects with for an
+  empty-reference bookmark when several flags are `true` (recency order is
+  suspected, not proven). The app keeps asking once per bookmark with no
+  preselection, so no import policy depends on this answer.
 
 ## Flutter import integration (implemented, offline-tested and owner-tested live)
 
@@ -237,8 +260,9 @@ merge into a secure vault -> setup marker.
   confirmation showing counts only. Nothing is stored before it. Cancel drops it.
 - **Retry / later import**: the wrapped account key (ciphertext) is stored with
   the session, so an import can be repeated with the stored session and the
-  password re-entered. The password and the raw account key are never persisted;
-  the key exists only as an opaque Rust handle during the import.
+  password re-entered (or the one the user chose to remember, see
+  `myteamspeak-chat-gui.md`, "Remembered password"). The raw account key is never
+  persisted; it exists only as an opaque Rust handle during the import.
 
 ### Rust / FRB (`tslib-frb::myts`)
 

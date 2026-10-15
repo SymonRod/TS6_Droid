@@ -7,7 +7,8 @@ import '../rust/myts.dart' as rs;
 import '../state/onboarding_controller.dart';
 import '../state/server_controller.dart';
 import 'api.dart';
-import 'controller.dart' show myTsSessionStoreProvider, myTsApiProvider;
+import 'controller.dart'
+    show myTsSessionStoreProvider, myTsApiProvider, rememberPasswordProvider;
 
 /// Account import: sign-in credentials -> unwrap -> read-only download ->
 /// validation -> local secure storage. Read-only towards the cloud.
@@ -111,12 +112,19 @@ class MyTsImportController extends Notifier<ImportState> {
   );
 
   /// Explicit import or retry for a stored session. The password is needed
-  /// again to unwrap the account key; it is never stored.
-  Future<void> startFromStoredSession(String password) async {
+  /// again to unwrap the account key: the caller passes the one saved on this
+  /// device (if the user allows that) or asks for it.
+  Future<void> startFromStoredSession(
+    String password, {
+    bool fromSaved = false,
+  }) async {
     if (state.busy) return;
     final stored = await ref.read(myTsSessionStoreProvider).load();
     if (stored == null) {
-      state = const ImportState(phase: ImportPhase.failed, failure: ImportFailure.noSession);
+      state = const ImportState(
+        phase: ImportPhase.failed,
+        failure: ImportFailure.noSession,
+      );
       return;
     }
     await _run(
@@ -125,6 +133,23 @@ class MyTsImportController extends Notifier<ImportState> {
       session: stored.session,
       wrappedKey: stored.wrappedKey,
     );
+    if (!ref.mounted) return;
+    // A saved password that no longer unwraps the key is dropped, so the
+    // field comes back; a typed one that worked is kept unless opted out.
+    final remember = ref.read(rememberPasswordProvider.notifier);
+    if (fromSaved) {
+      if (state.failure == ImportFailure.unlock) await remember.forget();
+    } else if (state.phase != ImportPhase.failed) {
+      await remember.remember(password);
+    }
+  }
+
+  /// Same as [startFromStoredSession], with the password kept on this device.
+  Future<void> startFromSavedPassword() async {
+    final saved = await ref.read(myTsSessionStoreProvider).loadPassword();
+    if (saved == null)
+      return ref.read(rememberPasswordProvider.notifier).forget();
+    await startFromStoredSession(saved, fromSaved: true);
   }
 
   Future<void> _run({
@@ -165,7 +190,11 @@ class MyTsImportController extends Notifier<ImportState> {
     // unreadable state can never import silently.
     if (setupDone == false) {
       try {
-        final report = await importer.commit(batch, owner, onlyIfEmptyApp: true);
+        final report = await importer.commit(
+          batch,
+          owner,
+          onlyIfEmptyApp: true,
+        );
         return await _finish(report);
       } on ImportBlocked {
         // Became non-empty meanwhile: fall through to explicit confirmation.
@@ -178,13 +207,17 @@ class MyTsImportController extends Notifier<ImportState> {
     _pending = batch;
     _pendingOwner = owner;
     if (!ref.mounted) return;
-    state = ImportState(phase: ImportPhase.awaitingConfirmation, report: plan.report);
+    state = ImportState(
+      phase: ImportPhase.awaitingConfirmation,
+      report: plan.report,
+    );
   }
 
   /// Applies the downloaded batch after the user confirmed.
   Future<void> confirm() async {
     final batch = _pending;
-    if (batch == null || state.phase != ImportPhase.awaitingConfirmation) return;
+    if (batch == null || state.phase != ImportPhase.awaitingConfirmation)
+      return;
     state = ImportState(phase: ImportPhase.working, report: state.report);
     try {
       final report = await ref
@@ -222,7 +255,8 @@ class MyTsImportController extends Notifier<ImportState> {
   }
 
   void _fail(ImportFailure failure) {
-    if (ref.mounted) state = ImportState(phase: ImportPhase.failed, failure: failure);
+    if (ref.mounted)
+      state = ImportState(phase: ImportPhase.failed, failure: failure);
   }
 
   static ImportFailure _failureOf(MyTsPullKind? kind) => switch (kind) {
@@ -230,7 +264,9 @@ class MyTsImportController extends Notifier<ImportState> {
     MyTsPullKind.network => ImportFailure.network,
     MyTsPullKind.http || MyTsPullKind.server => ImportFailure.service,
     MyTsPullKind.sessionExpired => ImportFailure.sessionExpired,
-    MyTsPullKind.tooLarge || MyTsPullKind.invalid || null => ImportFailure.invalidData,
+    MyTsPullKind.tooLarge ||
+    MyTsPullKind.invalid ||
+    null => ImportFailure.invalidData,
     MyTsPullKind.integrity => ImportFailure.integrity,
   };
 

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../data/account_vault.dart';
 import '../data/server_bookmark.dart';
+import '../myts/controller.dart';
 import '../state/identity_resolver.dart';
 import '../state/imported_bookmarks.dart';
 import '../state/server_controller.dart';
@@ -278,6 +279,7 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
     final connecting = s.status == ConnStatus.connecting;
     final l = AppLocalizations.of(context);
     final cs = Theme.of(context).colorScheme;
+    final signedIn = ref.watch(myTsProvider.select((m) => m.status == MyTsStatus.signedIn));
 
     return Scaffold(
       appBar: AppBar(
@@ -315,6 +317,19 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
           if (connecting) const Padding(
             padding: EdgeInsets.only(bottom: 8),
             child: LinearProgressIndicator(),
+          ),
+          Card(
+            color: cs.secondaryContainer,
+            child: ListTile(
+              leading: Icon(Icons.forum_outlined, color: cs.onSecondaryContainer),
+              title: Text(l.chatOpen, style: TextStyle(color: cs.onSecondaryContainer)),
+              subtitle: Text(
+                signedIn ? l.homeChatSignedIn : l.homeChatSignedOut,
+                style: TextStyle(color: cs.onSecondaryContainer),
+              ),
+              trailing: Icon(Icons.chevron_right, color: cs.onSecondaryContainer),
+              onTap: () => context.push(signedIn ? '/chat' : '/myts'),
+            ),
           ),
           Card(
             child: SwitchListTile(

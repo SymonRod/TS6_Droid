@@ -100,114 +100,6 @@ abstract class AppLocalizations {
     Locale('it'),
   ];
 
-  /// No description provided for @mytsHistoryTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Account chat history'**
-  String get mytsHistoryTitle;
-
-  /// No description provided for @mytsHistoryReadOnly.
-  ///
-  /// In en, this message translates to:
-  /// **'Read-only text history. No messages, key publication or background sync. Available keys may cover only part of a conversation.'**
-  String get mytsHistoryReadOnly;
-
-  /// No description provided for @mytsHistoryUnlock.
-  ///
-  /// In en, this message translates to:
-  /// **'Unlock history'**
-  String get mytsHistoryUnlock;
-
-  /// No description provided for @mytsHistoryAllowOwnEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'Also recover my own type-1 backups without sender metadata (identity remains unverified)'**
-  String get mytsHistoryAllowOwnEmpty;
-
-  /// No description provided for @mytsHistoryConnect.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect / refresh conversations'**
-  String get mytsHistoryConnect;
-
-  /// No description provided for @mytsHistoryRefresh.
-  ///
-  /// In en, this message translates to:
-  /// **'Refresh history'**
-  String get mytsHistoryRefresh;
-
-  /// No description provided for @mytsHistoryRooms.
-  ///
-  /// In en, this message translates to:
-  /// **'Conversations'**
-  String get mytsHistoryRooms;
-
-  /// No description provided for @mytsHistoryFirstLogin.
-  ///
-  /// In en, this message translates to:
-  /// **'The first connection creates one history-reader Matrix device. Later connections reuse it. No encryption keys are published.'**
-  String get mytsHistoryFirstLogin;
-
-  /// No description provided for @mytsHistoryEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'No conversations loaded. Connect to retrieve joined conversations.'**
-  String get mytsHistoryEmpty;
-
-  /// No description provided for @mytsHistoryNoMessages.
-  ///
-  /// In en, this message translates to:
-  /// **'No text messages loaded on this page.'**
-  String get mytsHistoryNoMessages;
-
-  /// No description provided for @mytsHistoryOlder.
-  ///
-  /// In en, this message translates to:
-  /// **'Load older messages'**
-  String get mytsHistoryOlder;
-
-  /// No description provided for @mytsHistoryError.
-  ///
-  /// In en, this message translates to:
-  /// **'Unable to load history. Check your password, connection and account session. Saved history is preserved. An uncertain Matrix login is not repeated automatically.'**
-  String get mytsHistoryError;
-
-  /// No description provided for @mytsHistoryPartial.
-  ///
-  /// In en, this message translates to:
-  /// **'This key does not cover this older message.'**
-  String get mytsHistoryPartial;
-
-  /// No description provided for @mytsHistoryMissingKey.
-  ///
-  /// In en, this message translates to:
-  /// **'Encrypted message: cloud key unavailable or not yet supported. Refresh to retry.'**
-  String get mytsHistoryMissingKey;
-
-  /// No description provided for @mytsHistoryInvalid.
-  ///
-  /// In en, this message translates to:
-  /// **'Message unavailable: unsupported format or validation failed.'**
-  String get mytsHistoryInvalid;
-
-  /// No description provided for @mytsHistoryPlaintext.
-  ///
-  /// In en, this message translates to:
-  /// **'Not end-to-end encrypted'**
-  String get mytsHistoryPlaintext;
-
-  /// No description provided for @mytsHistoryUnverified.
-  ///
-  /// In en, this message translates to:
-  /// **'Decrypted · sender device identity not verified'**
-  String get mytsHistoryUnverified;
-
-  /// No description provided for @mytsHistoryOwnUnverified.
-  ///
-  /// In en, this message translates to:
-  /// **'Decrypted own message · cloud sender metadata absent; identity not verified'**
-  String get mytsHistoryOwnUnverified;
-
   /// No description provided for @serverAddress.
   ///
   /// In en, this message translates to:
@@ -787,7 +679,7 @@ abstract class AppLocalizations {
   /// No description provided for @mytsImportPasswordNote.
   ///
   /// In en, this message translates to:
-  /// **'The password unlocks your account key for this import only and is not stored.'**
+  /// **'The password unlocks your account key for this import.'**
   String get mytsImportPasswordNote;
 
   /// No description provided for @mytsImportWorking.
@@ -946,95 +838,635 @@ abstract class AppLocalizations {
   /// **'Change identity'**
   String get identityChange;
 
-  /// No description provided for @mytsContactsTitle.
+  /// No description provided for @chatOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Account chat'**
+  String get chatOpen;
+
+  /// No description provided for @chatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get chatTitle;
+
+  /// No description provided for @chatTabChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get chatTabChats;
+
+  /// No description provided for @chatTabContacts.
   ///
   /// In en, this message translates to:
   /// **'Contacts'**
-  String get mytsContactsTitle;
+  String get chatTabContacts;
 
-  /// No description provided for @mytsContactsReadOnly.
+  /// No description provided for @chatTabProfile.
   ///
   /// In en, this message translates to:
-  /// **'Read-only account contacts. No chat or online status.'**
-  String get mytsContactsReadOnly;
+  /// **'Profile'**
+  String get chatTabProfile;
 
-  /// No description provided for @mytsContactsNotLoaded.
+  /// No description provided for @chatSignInRequired.
   ///
   /// In en, this message translates to:
-  /// **'Not loaded yet.'**
-  String get mytsContactsNotLoaded;
+  /// **'Sign in to myTeamSpeak to use account chat.'**
+  String get chatSignInRequired;
 
-  /// No description provided for @mytsContactsEmpty.
+  /// No description provided for @chatSignIn.
   ///
   /// In en, this message translates to:
-  /// **'No contacts found.'**
-  String get mytsContactsEmpty;
+  /// **'Sign in'**
+  String get chatSignIn;
 
-  /// No description provided for @mytsContactsPasswordHint.
+  /// No description provided for @chatUnlockTitle.
   ///
   /// In en, this message translates to:
-  /// **'Account password (optional, to discover chat host)'**
-  String get mytsContactsPasswordHint;
+  /// **'Unlock your chat'**
+  String get chatUnlockTitle;
 
-  /// No description provided for @mytsContactsRefresh.
+  /// No description provided for @chatUnlockBody.
   ///
   /// In en, this message translates to:
-  /// **'Refresh contacts'**
-  String get mytsContactsRefresh;
+  /// **'Your conversations and keys are stored encrypted on this device. Enter your myTeamSpeak password to unlock them.'**
+  String get chatUnlockBody;
 
-  /// No description provided for @mytsContactsStorageError.
+  /// No description provided for @chatUnlock.
   ///
   /// In en, this message translates to:
-  /// **'Could not read saved contacts.'**
-  String get mytsContactsStorageError;
+  /// **'Unlock'**
+  String get chatUnlock;
 
-  /// No description provided for @mytsContactsLoadError.
+  /// No description provided for @homeChatSignedIn.
   ///
   /// In en, this message translates to:
-  /// **'Could not load contacts; saved contacts remain.'**
-  String get mytsContactsLoadError;
+  /// **'Conversations and contacts'**
+  String get homeChatSignedIn;
 
-  /// No description provided for @mytsChatHost.
+  /// No description provided for @homeChatSignedOut.
   ///
   /// In en, this message translates to:
-  /// **'Chat host: {host}'**
-  String mytsChatHost(String host);
+  /// **'Sign in with myTeamSpeak to chat with your contacts'**
+  String get homeChatSignedOut;
 
-  /// No description provided for @mytsChatProbeHint.
+  /// No description provided for @mytsRememberPassword.
   ///
   /// In en, this message translates to:
-  /// **'Checks only the unauthenticated Matrix versions endpoint; it does not sign in to chat.'**
-  String get mytsChatProbeHint;
+  /// **'Remember password on this device'**
+  String get mytsRememberPassword;
 
-  /// No description provided for @mytsChatProbe.
+  /// No description provided for @mytsRememberPasswordHint.
   ///
   /// In en, this message translates to:
-  /// **'Check chat connectivity'**
-  String get mytsChatProbe;
+  /// **'Kept in the device\'s secure storage so you aren\'t asked each time. Turn off for maximum security.'**
+  String get mytsRememberPasswordHint;
 
-  /// No description provided for @mytsChatProbeOk.
+  /// No description provided for @mytsImportUsingSaved.
   ///
   /// In en, this message translates to:
-  /// **'Matrix versions endpoint responded. Chat login is not verified.'**
-  String get mytsChatProbeOk;
+  /// **'The password saved on this device will be used.'**
+  String get mytsImportUsingSaved;
 
-  /// No description provided for @mytsChatProbeHttp.
+  /// No description provided for @chatUnlockSavedBody.
   ///
   /// In en, this message translates to:
-  /// **'Connectivity check returned HTTP {status}. Chat login has not been verified; try Account chat history.'**
-  String mytsChatProbeHttp(String status);
+  /// **'Unlocking with the password saved on this device.'**
+  String get chatUnlockSavedBody;
 
-  /// No description provided for @mytsChatProbeNetwork.
+  /// No description provided for @chatUnlockManual.
   ///
   /// In en, this message translates to:
-  /// **'Could not reach the chat endpoint.'**
-  String get mytsChatProbeNetwork;
+  /// **'Enter password manually'**
+  String get chatUnlockManual;
 
-  /// No description provided for @mytsChatHostMissing.
+  /// No description provided for @chatErrSavedPasswordRejected.
   ///
   /// In en, this message translates to:
-  /// **'Chat host unavailable. Refresh with your account password to read its configuration.'**
-  String get mytsChatHostMissing;
+  /// **'The saved password no longer works. Enter it again.'**
+  String get chatErrSavedPasswordRejected;
+
+  /// No description provided for @chatAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get chatAdvanced;
+
+  /// No description provided for @chatAllowOwnEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Also read my own older messages whose key backup has no sender information (the sender identity can\'t be verified)'**
+  String get chatAllowOwnEmpty;
+
+  /// No description provided for @chatConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get chatConnecting;
+
+  /// No description provided for @chatErrWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong password, or the account key couldn\'t be unlocked.'**
+  String get chatErrWrongPassword;
+
+  /// No description provided for @chatErrNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t reach the chat server. Saved conversations are still available.'**
+  String get chatErrNetwork;
+
+  /// No description provided for @chatErrAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'The chat server rejected the saved chat login. To avoid creating duplicate devices, it is not retried automatically.'**
+  String get chatErrAuth;
+
+  /// No description provided for @chatErrRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Please wait a moment.'**
+  String get chatErrRateLimited;
+
+  /// No description provided for @chatErrServer.
+  ///
+  /// In en, this message translates to:
+  /// **'The chat server returned an error (HTTP {status}).'**
+  String chatErrServer(String status);
+
+  /// No description provided for @chatErrInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Unexpected response from the chat server.'**
+  String get chatErrInvalid;
+
+  /// No description provided for @chatErrLoginUncertain.
+  ///
+  /// In en, this message translates to:
+  /// **'An earlier chat login on this device didn\'t finish cleanly. Tap retry: the same chat device is reused, no duplicate is created.'**
+  String get chatErrLoginUncertain;
+
+  /// No description provided for @chatErrNotSendable.
+  ///
+  /// In en, this message translates to:
+  /// **'This message can\'t be sent in this conversation.'**
+  String get chatErrNotSendable;
+
+  /// No description provided for @chatErrContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update your contacts.'**
+  String get chatErrContacts;
+
+  /// No description provided for @chatRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get chatRefresh;
+
+  /// No description provided for @chatNoChats.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations yet. Start one from your contacts.'**
+  String get chatNoChats;
+
+  /// No description provided for @chatNewChat.
+  ///
+  /// In en, this message translates to:
+  /// **'New chat'**
+  String get chatNewChat;
+
+  /// No description provided for @chatInvites.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitations'**
+  String get chatInvites;
+
+  /// No description provided for @chatInvitedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} invited you'**
+  String chatInvitedBy(Object name);
+
+  /// No description provided for @chatAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get chatAccept;
+
+  /// No description provided for @chatDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get chatDecline;
+
+  /// No description provided for @chatYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get chatYou;
+
+  /// No description provided for @chatLastEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted message'**
+  String get chatLastEncrypted;
+
+  /// No description provided for @chatLastUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Message unavailable'**
+  String get chatLastUnavailable;
+
+  /// No description provided for @chatLastDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Message deleted'**
+  String get chatLastDeleted;
+
+  /// No description provided for @chatEncryptedRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'End-to-end encrypted'**
+  String get chatEncryptedRoom;
+
+  /// No description provided for @chatPlainRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Not encrypted'**
+  String get chatPlainRoom;
+
+  /// No description provided for @chatSendDisabledEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending is only available in one-to-one encrypted conversations for now. You can read messages here and reply from the desktop app.'**
+  String get chatSendDisabledEncrypted;
+
+  /// No description provided for @chatSendDisabledLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation details are still loading…'**
+  String get chatSendDisabledLoading;
+
+  /// No description provided for @chatMessageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get chatMessageHint;
+
+  /// No description provided for @chatSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get chatSend;
+
+  /// No description provided for @chatNotSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sent · tap to retry'**
+  String get chatNotSent;
+
+  /// No description provided for @chatDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get chatDiscard;
+
+  /// No description provided for @chatMissingKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted message · key not available'**
+  String get chatMissingKey;
+
+  /// No description provided for @chatPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Older than the available key'**
+  String get chatPartial;
+
+  /// No description provided for @chatDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Message deleted'**
+  String get chatDeleted;
+
+  /// No description provided for @chatInvalidMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Message couldn\'t be verified'**
+  String get chatInvalidMessage;
+
+  /// No description provided for @chatOlder.
+  ///
+  /// In en, this message translates to:
+  /// **'Load older messages'**
+  String get chatOlder;
+
+  /// No description provided for @chatEmptyConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet. Say hello!'**
+  String get chatEmptyConversation;
+
+  /// No description provided for @chatCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get chatCopy;
+
+  /// No description provided for @chatCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get chatCopied;
+
+  /// No description provided for @chatLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave conversation'**
+  String get chatLeave;
+
+  /// No description provided for @chatLeaveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave this conversation? It will disappear from your list.'**
+  String get chatLeaveConfirm;
+
+  /// No description provided for @chatToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get chatToday;
+
+  /// No description provided for @chatYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get chatYesterday;
+
+  /// No description provided for @chatFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File: {name}'**
+  String chatFile(String name);
+
+  /// No description provided for @chatImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo: {name}'**
+  String chatImage(String name);
+
+  /// No description provided for @chatStatusAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get chatStatusAvailable;
+
+  /// No description provided for @chatStatusAway.
+  ///
+  /// In en, this message translates to:
+  /// **'Away'**
+  String get chatStatusAway;
+
+  /// No description provided for @chatStatusDnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not disturb'**
+  String get chatStatusDnd;
+
+  /// No description provided for @chatStatusOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get chatStatusOffline;
+
+  /// No description provided for @chatStatusInvisible.
+  ///
+  /// In en, this message translates to:
+  /// **'Appear offline'**
+  String get chatStatusInvisible;
+
+  /// No description provided for @chatContactsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts yet.'**
+  String get chatContactsEmpty;
+
+  /// No description provided for @chatAddContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Add contact'**
+  String get chatAddContact;
+
+  /// No description provided for @chatEditContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit contact'**
+  String get chatEditContact;
+
+  /// No description provided for @chatContactId.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat ID (@user:server)'**
+  String get chatContactId;
+
+  /// No description provided for @chatContactNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Name or note'**
+  String get chatContactNote;
+
+  /// No description provided for @chatSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get chatSave;
+
+  /// No description provided for @chatRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get chatRemove;
+
+  /// No description provided for @chatRemoveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name} from your contacts?'**
+  String chatRemoveConfirm(String name);
+
+  /// No description provided for @chatStartChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Start chat'**
+  String get chatStartChat;
+
+  /// No description provided for @chatStartPlainTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start an unencrypted chat?'**
+  String get chatStartPlainTitle;
+
+  /// No description provided for @chatStartPlainBody.
+  ///
+  /// In en, this message translates to:
+  /// **'New conversations started here are not end-to-end encrypted: the chat server can read them. For private topics, start the conversation from the desktop app.'**
+  String get chatStartPlainBody;
+
+  /// No description provided for @chatStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get chatStart;
+
+  /// No description provided for @chatProfileName.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name'**
+  String get chatProfileName;
+
+  /// No description provided for @chatProfileId.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat ID'**
+  String get chatProfileId;
+
+  /// No description provided for @chatProfileStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get chatProfileStatus;
+
+  /// No description provided for @chatProfileStatusMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Status message'**
+  String get chatProfileStatusMessage;
+
+  /// No description provided for @chatProfileStatusHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What are you up to?'**
+  String get chatProfileStatusHint;
+
+  /// No description provided for @chatProfileSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get chatProfileSaved;
+
+  /// No description provided for @chatProfileAvatarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile picture'**
+  String get chatProfileAvatarTitle;
+
+  /// No description provided for @chatProfileAvatarNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Changing your picture isn\'t available in TS6 Droid yet. A picture set in the desktop app shows up here.'**
+  String get chatProfileAvatarNote;
+
+  /// No description provided for @chatLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock chat'**
+  String get chatLock;
+
+  /// No description provided for @chatLockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgets the unlocked key. Saved conversations stay encrypted on this device.'**
+  String get chatLockHint;
+
+  /// No description provided for @chatSecurityNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted messages are read with keys restored from your myTeamSpeak account, and the ones you send use keys of this phone\'s own chat device. This app does not verify the devices of the people you talk to.'**
+  String get chatSecurityNote;
+
+  /// No description provided for @chatSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get chatSearch;
+
+  /// No description provided for @chatErrNotLoggedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'The chat login hasn\'t completed on this device yet, so nothing can be sent or loaded.'**
+  String get chatErrNotLoggedIn;
+
+  /// No description provided for @chatRetryLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry chat login'**
+  String get chatRetryLogin;
+
+  /// No description provided for @chatEncryptConsentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send encrypted messages from this phone?'**
+  String get chatEncryptConsentTitle;
+
+  /// No description provided for @chatEncryptConsentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To send end-to-end encrypted messages, TS6 Droid publishes this phone\'s encryption keys to your myTeamSpeak chat account. It shows up as a new device named “TS6 Droid” in the device list of the desktop app, for you and for your contacts.\n\nRoom keys are shared with every device of the people in the conversation, including devices that haven\'t been verified. This app can\'t verify devices yet.'**
+  String get chatEncryptConsentBody;
+
+  /// No description provided for @chatEncryptConsentContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get chatEncryptConsentContinue;
+
+  /// No description provided for @chatErrNoRecipients.
+  ///
+  /// In en, this message translates to:
+  /// **'The message wasn\'t sent: none of this contact\'s devices is available to receive encryption keys. They may need to open their chat app first.'**
+  String get chatErrNoRecipients;
+
+  /// No description provided for @chatErrUnsupportedRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages can\'t be sent in this conversation yet.'**
+  String get chatErrUnsupportedRoom;
+
+  /// No description provided for @chatErrLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone can\'t hold more encryption sessions, so the message wasn\'t sent.'**
+  String get chatErrLimit;
+
+  /// No description provided for @chatNoticeDeviceChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'One of this contact\'s devices changed its encryption keys unexpectedly. It was left out and can\'t read new messages.'**
+  String get chatNoticeDeviceChanged;
+
+  /// No description provided for @chatContactAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact added'**
+  String get chatContactAdded;
+
+  /// No description provided for @mytsResetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start from scratch?'**
+  String get mytsResetTitle;
+
+  /// No description provided for @mytsResetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in deletes everything this phone keeps about myTeamSpeak and starts over: the saved session and password, imported identities and bookmarks, chat keys and cache, cached contacts and saved server bookmarks. Your local TeamSpeak identity file and the app settings stay. You\'ll have to import your account again, and the chat will ask again to publish this phone\'s encryption keys. This can\'t be undone.'**
+  String get mytsResetBody;
+
+  /// No description provided for @mytsResetConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete and sign in'**
+  String get mytsResetConfirm;
 }
 
 class _AppLocalizationsDelegate

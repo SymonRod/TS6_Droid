@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api.dart';
 import 'import_controller.dart';
+import 'local_reset.dart';
 import 'session_store.dart';
 
 /// myTeamSpeak sign-in state. A successful sign-in hands the still-available
@@ -45,7 +46,51 @@ class MyTsState {
 }
 
 final myTsApiProvider = Provider<MyTsApi>((_) => MyTsApi());
-final myTsSessionStoreProvider = Provider<MyTsSessionStore>((_) => MyTsSessionStore());
+final myTsSessionStoreProvider = Provider<MyTsSessionStore>(
+  (_) => MyTsSessionStore(),
+);
+
+/// Whether a saved account password is available (remembering on and a
+/// password stored). Invalidate after anything that saves or forgets it.
+final hasSavedPasswordProvider = FutureProvider.autoDispose<bool>(
+  (ref) async =>
+      await ref.read(myTsSessionStoreProvider).loadPassword() != null,
+);
+
+/// The "remember password on this device" option (on by default). Switching
+/// it off wipes the saved password immediately.
+class RememberPasswordController extends Notifier<bool> {
+  @override
+  bool build() {
+    ref.read(myTsSessionStoreProvider).rememberPassword().then((v) {
+      if (ref.mounted) state = v;
+    });
+    return true;
+  }
+
+  Future<void> set(bool value) async {
+    state = value;
+    await ref.read(myTsSessionStoreProvider).setRememberPassword(value);
+    ref.invalidate(hasSavedPasswordProvider);
+  }
+
+  /// Drops the saved password only (a wrong or outdated one); the option stays.
+  Future<void> forget() async {
+    await ref.read(myTsSessionStoreProvider).clearPassword();
+    ref.invalidate(hasSavedPasswordProvider);
+  }
+
+  /// Saves [password] after it was just proven correct, if the option is on.
+  Future<void> remember(String password) async {
+    await ref.read(myTsSessionStoreProvider).savePassword(password);
+    ref.invalidate(hasSavedPasswordProvider);
+  }
+}
+
+final rememberPasswordProvider =
+    NotifierProvider<RememberPasswordController, bool>(
+      RememberPasswordController.new,
+    );
 
 class MyTsController extends Notifier<MyTsState> {
   DateTime? _lastAttemptStart;
@@ -69,13 +114,24 @@ class MyTsController extends Notifier<MyTsState> {
   /// One login attempt. [rawEmail] is trimmed once here and the same
   /// trimmed value feeds both the KDF and the request (protocol doc 2.5).
   /// The password is always used byte-for-byte, never trimmed.
+  ///
+  /// With [resetLocalData] (the user confirmed the warning) every local
+  /// account/chat/bookmark datum is deleted once the credentials are proven
+  /// right, before the new session is stored; a failed attempt deletes nothing.
   /// When [otp] is null and the server requires it, state moves to
   /// [MyTsStatus.otpNeeded] and the caller retries with the code.
-  Future<void> login(String rawEmail, String password, {String? otp}) async {
+  Future<void> login(
+    String rawEmail,
+    String password, {
+    String? otp,
+    bool resetLocalData = false,
+  }) async {
     final email = rawEmail.trim();
     if (email.isEmpty || password.isEmpty) {
       state = MyTsState(
-        status: state.status == MyTsStatus.signedIn ? MyTsStatus.signedIn : MyTsStatus.signedOut,
+        status: state.status == MyTsStatus.signedIn
+            ? MyTsStatus.signedIn
+            : MyTsStatus.signedOut,
         username: state.username,
         email: state.email,
         failure: MyTsFailure.invalidInput,
@@ -100,29 +156,46 @@ class MyTsController extends Notifier<MyTsState> {
       username: state.username,
       email: email,
     );
-    final outcome = await ref.read(myTsApiProvider).login(
-          email: email,
-          password: password,
-          otp: otp,
-        );
+    final outcome = await ref
+        .read(myTsApiProvider)
+        .login(email: email, password: password, otp: otp);
     if (!ref.mounted) return;
     final ok = outcome.success;
     if (ok != null) {
-      await ref.read(myTsSessionStoreProvider).save(
+      if (resetLocalData) {
+        final old = await ref.read(myTsSessionStoreProvider).load();
+        if (old != null && old.session != ok.session) {
+          try {
+            await ref.read(myTsApiProvider).deleteSession(old.session);
+          } catch (_) {
+            // Best effort, like on sign-out.
+          }
+        }
+        ref.read(myTsImportProvider.notifier).reset();
+        await ref.read(localResetProvider).wipe();
+        if (!ref.mounted) return;
+      }
+      await ref
+          .read(myTsSessionStoreProvider)
+          .save(
             session: ok.session,
             uuid: ok.uuid,
             username: ok.username,
             email: email,
             wrappedKey: ok.wrappedKey,
           );
+      // Kept in secure storage only if the user did not opt out, so the chat
+      // and later imports can unlock without asking again.
+      await ref.read(rememberPasswordProvider.notifier).remember(password);
       if (!ref.mounted) return;
-      state = MyTsState(status: MyTsStatus.signedIn, username: ok.username, email: email);
-      // The password is only borrowed for the key unwrap and never stored.
-      await ref.read(myTsImportProvider.notifier).startAfterLogin(
-            email: email,
-            password: password,
-            login: ok,
-          );
+      state = MyTsState(
+        status: MyTsStatus.signedIn,
+        username: ok.username,
+        email: email,
+      );
+      await ref
+          .read(myTsImportProvider.notifier)
+          .startAfterLogin(email: email, password: password, login: ok);
       return;
     }
     state = MyTsState(
@@ -139,7 +212,11 @@ class MyTsController extends Notifier<MyTsState> {
 
   void clearError() {
     if (state.failure == null) return;
-    state = MyTsState(status: state.status, username: state.username, email: state.email);
+    state = MyTsState(
+      status: state.status,
+      username: state.username,
+      email: state.email,
+    );
   }
 
   /// Best-effort server-side session deletion, then the local wipe always
@@ -155,6 +232,7 @@ class MyTsController extends Notifier<MyTsState> {
       }
     }
     await ref.read(myTsSessionStoreProvider).clear();
+    ref.invalidate(hasSavedPasswordProvider);
     // Pending downloaded data is dropped; already imported data stays.
     ref.read(myTsImportProvider.notifier).reset();
     _lastAttemptStart = null;
@@ -162,4 +240,6 @@ class MyTsController extends Notifier<MyTsState> {
   }
 }
 
-final myTsProvider = NotifierProvider<MyTsController, MyTsState>(MyTsController.new);
+final myTsProvider = NotifierProvider<MyTsController, MyTsState>(
+  MyTsController.new,
+);

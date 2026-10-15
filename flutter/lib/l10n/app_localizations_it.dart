@@ -9,71 +9,6 @@ class AppLocalizationsIt extends AppLocalizations {
   AppLocalizationsIt([String locale = 'it']) : super(locale);
 
   @override
-  String get mytsHistoryTitle => 'Cronologia chat account';
-
-  @override
-  String get mytsHistoryReadOnly =>
-      'Cronologia testuale in sola lettura. Nessun invio, pubblicazione di chiavi o sincronizzazione in background. Le chiavi disponibili possono coprire solo parte della conversazione.';
-
-  @override
-  String get mytsHistoryUnlock => 'Sblocca cronologia';
-
-  @override
-  String get mytsHistoryAllowOwnEmpty =>
-      'Recupera anche i miei backup tipo 1 senza metadati del mittente (identità non verificata)';
-
-  @override
-  String get mytsHistoryConnect => 'Connetti / aggiorna conversazioni';
-
-  @override
-  String get mytsHistoryRefresh => 'Aggiorna cronologia';
-
-  @override
-  String get mytsHistoryRooms => 'Conversazioni';
-
-  @override
-  String get mytsHistoryFirstLogin =>
-      'La prima connessione crea un solo dispositivo Matrix per leggere la cronologia. Le successive lo riutilizzano. Non vengono pubblicate chiavi di cifratura.';
-
-  @override
-  String get mytsHistoryEmpty =>
-      'Nessuna conversazione caricata. Connettiti per recuperare le conversazioni di cui fai parte.';
-
-  @override
-  String get mytsHistoryNoMessages =>
-      'Nessun messaggio testuale caricato in questa pagina.';
-
-  @override
-  String get mytsHistoryOlder => 'Carica messaggi precedenti';
-
-  @override
-  String get mytsHistoryError =>
-      'Impossibile caricare la cronologia. Controlla password, connessione e sessione account. La cronologia salvata resta conservata. Un accesso Matrix con esito incerto non viene ripetuto automaticamente.';
-
-  @override
-  String get mytsHistoryPartial =>
-      'Questa chiave non copre questo messaggio precedente.';
-
-  @override
-  String get mytsHistoryMissingKey =>
-      'Messaggio cifrato: chiave cloud non disponibile o non ancora supportata. Aggiorna per riprovare.';
-
-  @override
-  String get mytsHistoryInvalid =>
-      'Messaggio non disponibile: formato non supportato o validazione fallita.';
-
-  @override
-  String get mytsHistoryPlaintext => 'Non cifrato end-to-end';
-
-  @override
-  String get mytsHistoryUnverified =>
-      'Decifrato · identità del dispositivo mittente non verificata';
-
-  @override
-  String get mytsHistoryOwnUnverified =>
-      'Messaggio proprio decifrato · metadati cloud del mittente assenti; identità non verificata';
-
-  @override
   String get serverAddress => 'Indirizzo del server (host:porta)';
 
   @override
@@ -381,7 +316,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get mytsImportPasswordNote =>
-      'La password sblocca la chiave dell’account solo per questa importazione e non viene salvata.';
+      'La password sblocca la chiave dell’account per questa importazione.';
 
   @override
   String get mytsImportWorking => 'Download e verifica dei dati dell’account…';
@@ -482,58 +417,357 @@ class AppLocalizationsIt extends AppLocalizations {
   String get identityChange => 'Cambia identità';
 
   @override
-  String get mytsContactsTitle => 'Contatti';
+  String get chatOpen => 'Chat dell\'account';
 
   @override
-  String get mytsContactsReadOnly =>
-      'Contatti dell’account in sola lettura. Nessuna chat o stato online.';
+  String get chatTitle => 'Chat';
 
   @override
-  String get mytsContactsNotLoaded => 'Non ancora caricati.';
+  String get chatTabChats => 'Chat';
 
   @override
-  String get mytsContactsEmpty => 'Nessun contatto trovato.';
+  String get chatTabContacts => 'Contatti';
 
   @override
-  String get mytsContactsPasswordHint =>
-      'Password account (facoltativa, per trovare il server chat)';
+  String get chatTabProfile => 'Profilo';
 
   @override
-  String get mytsContactsRefresh => 'Aggiorna contatti';
+  String get chatSignInRequired =>
+      'Accedi a myTeamSpeak per usare la chat dell\'account.';
 
   @override
-  String get mytsContactsStorageError =>
-      'Impossibile leggere i contatti salvati.';
+  String get chatSignIn => 'Accedi';
 
   @override
-  String get mytsContactsLoadError =>
-      'Impossibile caricare i contatti; quelli salvati restano disponibili.';
+  String get chatUnlockTitle => 'Sblocca la chat';
 
   @override
-  String mytsChatHost(String host) {
-    return 'Server chat: $host';
+  String get chatUnlockBody =>
+      'Conversazioni e chiavi sono salvate cifrate su questo dispositivo. Inserisci la password di myTeamSpeak per sbloccarle.';
+
+  @override
+  String get chatUnlock => 'Sblocca';
+
+  @override
+  String get homeChatSignedIn => 'Conversazioni e contatti';
+
+  @override
+  String get homeChatSignedOut =>
+      'Accedi con myTeamSpeak per chattare con i tuoi contatti';
+
+  @override
+  String get mytsRememberPassword =>
+      'Ricorda la password su questo dispositivo';
+
+  @override
+  String get mytsRememberPasswordHint =>
+      'Viene conservata nell’archivio sicuro del dispositivo, così non te la chiediamo ogni volta. Disattiva per la massima sicurezza.';
+
+  @override
+  String get mytsImportUsingSaved =>
+      'Verrà usata la password salvata su questo dispositivo.';
+
+  @override
+  String get chatUnlockSavedBody =>
+      'Sblocco con la password salvata su questo dispositivo.';
+
+  @override
+  String get chatUnlockManual => 'Inserisci la password manualmente';
+
+  @override
+  String get chatErrSavedPasswordRejected =>
+      'La password salvata non funziona più. Inseriscila di nuovo.';
+
+  @override
+  String get chatAdvanced => 'Avanzate';
+
+  @override
+  String get chatAllowOwnEmpty =>
+      'Leggi anche i miei messaggi precedenti il cui backup della chiave non contiene informazioni sul mittente (l\'identità del mittente non è verificabile)';
+
+  @override
+  String get chatConnecting => 'Connessione in corso…';
+
+  @override
+  String get chatErrWrongPassword =>
+      'Password errata, oppure la chiave dell\'account non è stata sbloccata.';
+
+  @override
+  String get chatErrNetwork =>
+      'Impossibile raggiungere il server della chat. Le conversazioni salvate restano disponibili.';
+
+  @override
+  String get chatErrAuth =>
+      'Il server della chat ha rifiutato l\'accesso salvato. Per non creare dispositivi duplicati non viene ritentato automaticamente.';
+
+  @override
+  String get chatErrRateLimited => 'Troppe richieste. Attendi un momento.';
+
+  @override
+  String chatErrServer(String status) {
+    return 'Il server della chat ha restituito un errore (HTTP $status).';
   }
 
   @override
-  String get mytsChatProbeHint =>
-      'Controlla solo l’endpoint Matrix versions senza autenticazione; non accede alla chat.';
+  String get chatErrInvalid => 'Risposta inattesa dal server della chat.';
 
   @override
-  String get mytsChatProbe => 'Verifica connessione chat';
+  String get chatErrLoginUncertain =>
+      'Un precedente login alla chat su questo dispositivo non si è concluso correttamente. Tocca riprova: viene riusato lo stesso dispositivo chat, senza crearne un duplicato.';
 
   @override
-  String get mytsChatProbeOk =>
-      'L’endpoint Matrix ha risposto. Accesso alla chat non verificato.';
+  String get chatErrNotSendable =>
+      'Questo messaggio non può essere inviato in questa conversazione.';
 
   @override
-  String mytsChatProbeHttp(String status) {
-    return 'La verifica connessione ha ricevuto HTTP $status. Accesso alla chat non verificato; prova Cronologia chat account.';
+  String get chatErrContacts => 'Impossibile aggiornare i contatti.';
+
+  @override
+  String get chatRefresh => 'Aggiorna';
+
+  @override
+  String get chatNoChats =>
+      'Nessuna conversazione. Iniziane una dai tuoi contatti.';
+
+  @override
+  String get chatNewChat => 'Nuova chat';
+
+  @override
+  String get chatInvites => 'Inviti';
+
+  @override
+  String chatInvitedBy(Object name) {
+    return '$name ti ha invitato';
   }
 
   @override
-  String get mytsChatProbeNetwork => 'Impossibile raggiungere il server chat.';
+  String get chatAccept => 'Accetta';
 
   @override
-  String get mytsChatHostMissing =>
-      'Server chat non disponibile. Aggiorna con la password per leggere la configurazione.';
+  String get chatDecline => 'Rifiuta';
+
+  @override
+  String get chatYou => 'Tu';
+
+  @override
+  String get chatLastEncrypted => 'Messaggio cifrato';
+
+  @override
+  String get chatLastUnavailable => 'Messaggio non disponibile';
+
+  @override
+  String get chatLastDeleted => 'Messaggio eliminato';
+
+  @override
+  String get chatEncryptedRoom => 'Cifrata end-to-end';
+
+  @override
+  String get chatPlainRoom => 'Non cifrata';
+
+  @override
+  String get chatSendDisabledEncrypted =>
+      'Per ora l\'invio è disponibile solo nelle conversazioni cifrate uno a uno. Puoi leggere qui i messaggi e rispondere dall\'app desktop.';
+
+  @override
+  String get chatSendDisabledLoading =>
+      'Dettagli della conversazione in caricamento…';
+
+  @override
+  String get chatMessageHint => 'Messaggio';
+
+  @override
+  String get chatSend => 'Invia';
+
+  @override
+  String get chatNotSent => 'Non inviato · tocca per riprovare';
+
+  @override
+  String get chatDiscard => 'Scarta';
+
+  @override
+  String get chatMissingKey => 'Messaggio cifrato · chiave non disponibile';
+
+  @override
+  String get chatPartial => 'Precedente alla chiave disponibile';
+
+  @override
+  String get chatDeleted => 'Messaggio eliminato';
+
+  @override
+  String get chatInvalidMessage => 'Impossibile verificare il messaggio';
+
+  @override
+  String get chatOlder => 'Carica messaggi precedenti';
+
+  @override
+  String get chatEmptyConversation => 'Ancora nessun messaggio. Saluta!';
+
+  @override
+  String get chatCopy => 'Copia';
+
+  @override
+  String get chatCopied => 'Copiato';
+
+  @override
+  String get chatLeave => 'Esci dalla conversazione';
+
+  @override
+  String get chatLeaveConfirm =>
+      'Uscire da questa conversazione? Sparirà dalla tua lista.';
+
+  @override
+  String get chatToday => 'Oggi';
+
+  @override
+  String get chatYesterday => 'Ieri';
+
+  @override
+  String chatFile(String name) {
+    return 'File: $name';
+  }
+
+  @override
+  String chatImage(String name) {
+    return 'Foto: $name';
+  }
+
+  @override
+  String get chatStatusAvailable => 'Disponibile';
+
+  @override
+  String get chatStatusAway => 'Assente';
+
+  @override
+  String get chatStatusDnd => 'Non disturbare';
+
+  @override
+  String get chatStatusOffline => 'Offline';
+
+  @override
+  String get chatStatusInvisible => 'Appari offline';
+
+  @override
+  String get chatContactsEmpty => 'Ancora nessun contatto.';
+
+  @override
+  String get chatAddContact => 'Aggiungi contatto';
+
+  @override
+  String get chatEditContact => 'Modifica contatto';
+
+  @override
+  String get chatContactId => 'ID chat (@utente:server)';
+
+  @override
+  String get chatContactNote => 'Nome o nota';
+
+  @override
+  String get chatSave => 'Salva';
+
+  @override
+  String get chatRemove => 'Rimuovi';
+
+  @override
+  String chatRemoveConfirm(String name) {
+    return 'Rimuovere $name dai tuoi contatti?';
+  }
+
+  @override
+  String get chatStartChat => 'Inizia chat';
+
+  @override
+  String get chatStartPlainTitle => 'Iniziare una chat non cifrata?';
+
+  @override
+  String get chatStartPlainBody =>
+      'Le nuove conversazioni avviate da qui non sono cifrate end-to-end: il server della chat può leggerle. Per argomenti riservati, avvia la conversazione dall\'app desktop.';
+
+  @override
+  String get chatStart => 'Inizia';
+
+  @override
+  String get chatProfileName => 'Nome visualizzato';
+
+  @override
+  String get chatProfileId => 'ID chat';
+
+  @override
+  String get chatProfileStatus => 'Stato';
+
+  @override
+  String get chatProfileStatusMessage => 'Messaggio di stato';
+
+  @override
+  String get chatProfileStatusHint => 'Cosa stai facendo?';
+
+  @override
+  String get chatProfileSaved => 'Salvato';
+
+  @override
+  String get chatProfileAvatarTitle => 'Immagine del profilo';
+
+  @override
+  String get chatProfileAvatarNote =>
+      'La modifica dell\'immagine non è ancora disponibile in TS6 Droid. Un\'immagine impostata nell\'app desktop compare qui.';
+
+  @override
+  String get chatLock => 'Blocca la chat';
+
+  @override
+  String get chatLockHint =>
+      'Dimentica la chiave sbloccata. Le conversazioni salvate restano cifrate su questo dispositivo.';
+
+  @override
+  String get chatSecurityNote =>
+      'I messaggi cifrati vengono letti con le chiavi ripristinate dal tuo account myTeamSpeak, e quelli che invii usano le chiavi del dispositivo di chat di questo telefono. L\'app non verifica i dispositivi delle persone con cui parli.';
+
+  @override
+  String get chatSearch => 'Cerca';
+
+  @override
+  String get chatErrNotLoggedIn =>
+      'Il login alla chat non è ancora stato completato su questo dispositivo, quindi non si può inviare né caricare nulla.';
+
+  @override
+  String get chatRetryLogin => 'Riprova il login alla chat';
+
+  @override
+  String get chatEncryptConsentTitle =>
+      'Inviare messaggi cifrati da questo telefono?';
+
+  @override
+  String get chatEncryptConsentBody =>
+      'Per inviare messaggi cifrati end-to-end, TS6 Droid pubblica le chiavi di cifratura di questo telefono sul tuo account chat myTeamSpeak. Comparirà come nuovo dispositivo chiamato «TS6 Droid» nell\'elenco dei dispositivi dell\'app desktop, per te e per i tuoi contatti.\n\nLe chiavi della conversazione vengono condivise con tutti i dispositivi delle persone coinvolte, anche con quelli non verificati. L\'app non può ancora verificare i dispositivi.';
+
+  @override
+  String get chatEncryptConsentContinue => 'Continua';
+
+  @override
+  String get chatErrNoRecipients =>
+      'Il messaggio non è stato inviato: nessun dispositivo di questo contatto è disponibile a ricevere le chiavi di cifratura. Forse deve prima aprire la sua app di chat.';
+
+  @override
+  String get chatErrUnsupportedRoom =>
+      'In questa conversazione non è ancora possibile inviare messaggi.';
+
+  @override
+  String get chatErrLimit =>
+      'Questo telefono non può memorizzare altre sessioni di cifratura, quindi il messaggio non è stato inviato.';
+
+  @override
+  String get chatNoticeDeviceChanged =>
+      'Un dispositivo di questo contatto ha cambiato le proprie chiavi di cifratura in modo inatteso. È stato escluso e non può leggere i nuovi messaggi.';
+
+  @override
+  String get chatContactAdded => 'Contatto aggiunto';
+
+  @override
+  String get mytsResetTitle => 'Ripartire da zero?';
+
+  @override
+  String get mytsResetBody =>
+      'Accedendo si elimina tutto ciò che questo telefono conserva su myTeamSpeak e si riparte da capo: sessione e password salvata, identità e bookmark importati, chiavi e cache della chat, contatti in cache e bookmark dei server salvati. Restano il file dell\'identità TeamSpeak locale e le impostazioni dell\'app. Dovrai importare di nuovo l\'account e la chat chiederà di nuovo di pubblicare le chiavi di cifratura di questo telefono. L\'operazione non è reversibile.';
+
+  @override
+  String get mytsResetConfirm => 'Elimina e accedi';
 }
