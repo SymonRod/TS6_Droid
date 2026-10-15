@@ -1,5 +1,23 @@
 {
   "@@locale": "en",
+  "mytsHistoryTitle": "Account chat history",
+  "mytsHistoryReadOnly": "Read-only text history. No messages, key publication or background sync. Available keys may cover only part of a conversation.",
+  "mytsHistoryUnlock": "Unlock history",
+  "mytsHistoryAllowOwnEmpty": "Also recover my own type-1 backups without sender metadata (identity remains unverified)",
+  "mytsHistoryConnect": "Connect / refresh conversations",
+  "mytsHistoryRefresh": "Refresh history",
+  "mytsHistoryRooms": "Conversations",
+  "mytsHistoryFirstLogin": "The first connection creates one history-reader Matrix device. Later connections reuse it. No encryption keys are published.",
+  "mytsHistoryEmpty": "No conversations loaded. Connect to retrieve joined conversations.",
+  "mytsHistoryNoMessages": "No text messages loaded on this page.",
+  "mytsHistoryOlder": "Load older messages",
+  "mytsHistoryError": "Unable to load history. Check your password, connection and account session. Saved history is preserved. An uncertain Matrix login is not repeated automatically.",
+  "mytsHistoryPartial": "This key does not cover this older message.",
+  "mytsHistoryMissingKey": "Encrypted message: cloud key unavailable or not yet supported. Refresh to retry.",
+  "mytsHistoryInvalid": "Message unavailable: unsupported format or validation failed.",
+  "mytsHistoryPlaintext": "Not end-to-end encrypted",
+  "mytsHistoryUnverified": "Decrypted · sender device identity not verified",
+  "mytsHistoryOwnUnverified": "Decrypted own message · cloud sender metadata absent; identity not verified",
   "serverAddress": "Server address (host:port)",
   "nickname": "Nickname",
   "serverPassword": "Server password (optional)",
@@ -167,5 +185,34 @@
       }
     }
   },
-  "identityChange": "Change identity"
+  "identityChange": "Change identity",
+  "mytsContactsTitle": "Contacts",
+  "mytsContactsReadOnly": "Read-only account contacts. No chat or online status.",
+  "mytsContactsNotLoaded": "Not loaded yet.",
+  "mytsContactsEmpty": "No contacts found.",
+  "mytsContactsPasswordHint": "Account password (optional, to discover chat host)",
+  "mytsContactsRefresh": "Refresh contacts",
+  "mytsContactsStorageError": "Could not read saved contacts.",
+  "mytsContactsLoadError": "Could not load contacts; saved contacts remain.",
+  "mytsChatHost": "Chat host: {host}",
+  "mytsChatProbeHint": "Checks only the unauthenticated Matrix versions endpoint; it does not sign in to chat.",
+  "mytsChatProbe": "Check chat connectivity",
+  "mytsChatProbeOk": "Matrix versions endpoint responded. Chat login is not verified.",
+  "mytsChatProbeHttp": "Connectivity check returned HTTP {status}. Chat login has not been verified; try Account chat history.",
+  "mytsChatProbeNetwork": "Could not reach the chat endpoint.",
+  "mytsChatHostMissing": "Chat host unavailable. Refresh with your account password to read its configuration.",
+  "@mytsChatHost": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "@mytsChatProbeHttp": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  }
 }

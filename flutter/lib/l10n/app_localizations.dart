@@ -100,6 +100,114 @@ abstract class AppLocalizations {
     Locale('it'),
   ];
 
+  /// No description provided for @mytsHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account chat history'**
+  String get mytsHistoryTitle;
+
+  /// No description provided for @mytsHistoryReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only text history. No messages, key publication or background sync. Available keys may cover only part of a conversation.'**
+  String get mytsHistoryReadOnly;
+
+  /// No description provided for @mytsHistoryUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock history'**
+  String get mytsHistoryUnlock;
+
+  /// No description provided for @mytsHistoryAllowOwnEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Also recover my own type-1 backups without sender metadata (identity remains unverified)'**
+  String get mytsHistoryAllowOwnEmpty;
+
+  /// No description provided for @mytsHistoryConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect / refresh conversations'**
+  String get mytsHistoryConnect;
+
+  /// No description provided for @mytsHistoryRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh history'**
+  String get mytsHistoryRefresh;
+
+  /// No description provided for @mytsHistoryRooms.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversations'**
+  String get mytsHistoryRooms;
+
+  /// No description provided for @mytsHistoryFirstLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'The first connection creates one history-reader Matrix device. Later connections reuse it. No encryption keys are published.'**
+  String get mytsHistoryFirstLogin;
+
+  /// No description provided for @mytsHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations loaded. Connect to retrieve joined conversations.'**
+  String get mytsHistoryEmpty;
+
+  /// No description provided for @mytsHistoryNoMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'No text messages loaded on this page.'**
+  String get mytsHistoryNoMessages;
+
+  /// No description provided for @mytsHistoryOlder.
+  ///
+  /// In en, this message translates to:
+  /// **'Load older messages'**
+  String get mytsHistoryOlder;
+
+  /// No description provided for @mytsHistoryError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load history. Check your password, connection and account session. Saved history is preserved. An uncertain Matrix login is not repeated automatically.'**
+  String get mytsHistoryError;
+
+  /// No description provided for @mytsHistoryPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'This key does not cover this older message.'**
+  String get mytsHistoryPartial;
+
+  /// No description provided for @mytsHistoryMissingKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted message: cloud key unavailable or not yet supported. Refresh to retry.'**
+  String get mytsHistoryMissingKey;
+
+  /// No description provided for @mytsHistoryInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Message unavailable: unsupported format or validation failed.'**
+  String get mytsHistoryInvalid;
+
+  /// No description provided for @mytsHistoryPlaintext.
+  ///
+  /// In en, this message translates to:
+  /// **'Not end-to-end encrypted'**
+  String get mytsHistoryPlaintext;
+
+  /// No description provided for @mytsHistoryUnverified.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrypted · sender device identity not verified'**
+  String get mytsHistoryUnverified;
+
+  /// No description provided for @mytsHistoryOwnUnverified.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrypted own message · cloud sender metadata absent; identity not verified'**
+  String get mytsHistoryOwnUnverified;
+
   /// No description provided for @serverAddress.
   ///
   /// In en, this message translates to:
@@ -837,6 +945,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change identity'**
   String get identityChange;
+
+  /// No description provided for @mytsContactsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get mytsContactsTitle;
+
+  /// No description provided for @mytsContactsReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only account contacts. No chat or online status.'**
+  String get mytsContactsReadOnly;
+
+  /// No description provided for @mytsContactsNotLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Not loaded yet.'**
+  String get mytsContactsNotLoaded;
+
+  /// No description provided for @mytsContactsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts found.'**
+  String get mytsContactsEmpty;
+
+  /// No description provided for @mytsContactsPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Account password (optional, to discover chat host)'**
+  String get mytsContactsPasswordHint;
+
+  /// No description provided for @mytsContactsRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh contacts'**
+  String get mytsContactsRefresh;
+
+  /// No description provided for @mytsContactsStorageError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read saved contacts.'**
+  String get mytsContactsStorageError;
+
+  /// No description provided for @mytsContactsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load contacts; saved contacts remain.'**
+  String get mytsContactsLoadError;
+
+  /// No description provided for @mytsChatHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat host: {host}'**
+  String mytsChatHost(String host);
+
+  /// No description provided for @mytsChatProbeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Checks only the unauthenticated Matrix versions endpoint; it does not sign in to chat.'**
+  String get mytsChatProbeHint;
+
+  /// No description provided for @mytsChatProbe.
+  ///
+  /// In en, this message translates to:
+  /// **'Check chat connectivity'**
+  String get mytsChatProbe;
+
+  /// No description provided for @mytsChatProbeOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Matrix versions endpoint responded. Chat login is not verified.'**
+  String get mytsChatProbeOk;
+
+  /// No description provided for @mytsChatProbeHttp.
+  ///
+  /// In en, this message translates to:
+  /// **'Connectivity check returned HTTP {status}. Chat login has not been verified; try Account chat history.'**
+  String mytsChatProbeHttp(String status);
+
+  /// No description provided for @mytsChatProbeNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the chat endpoint.'**
+  String get mytsChatProbeNetwork;
+
+  /// No description provided for @mytsChatHostMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat host unavailable. Refresh with your account password to read its configuration.'**
+  String get mytsChatHostMissing;
 }
 
 class _AppLocalizationsDelegate

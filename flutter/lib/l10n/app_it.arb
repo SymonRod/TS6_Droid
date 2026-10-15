@@ -1,5 +1,23 @@
 {
   "@@locale": "it",
+  "mytsHistoryTitle": "Cronologia chat account",
+  "mytsHistoryReadOnly": "Cronologia testuale in sola lettura. Nessun invio, pubblicazione di chiavi o sincronizzazione in background. Le chiavi disponibili possono coprire solo parte della conversazione.",
+  "mytsHistoryUnlock": "Sblocca cronologia",
+  "mytsHistoryAllowOwnEmpty": "Recupera anche i miei backup tipo 1 senza metadati del mittente (identità non verificata)",
+  "mytsHistoryConnect": "Connetti / aggiorna conversazioni",
+  "mytsHistoryRefresh": "Aggiorna cronologia",
+  "mytsHistoryRooms": "Conversazioni",
+  "mytsHistoryFirstLogin": "La prima connessione crea un solo dispositivo Matrix per leggere la cronologia. Le successive lo riutilizzano. Non vengono pubblicate chiavi di cifratura.",
+  "mytsHistoryEmpty": "Nessuna conversazione caricata. Connettiti per recuperare le conversazioni di cui fai parte.",
+  "mytsHistoryNoMessages": "Nessun messaggio testuale caricato in questa pagina.",
+  "mytsHistoryOlder": "Carica messaggi precedenti",
+  "mytsHistoryError": "Impossibile caricare la cronologia. Controlla password, connessione e sessione account. La cronologia salvata resta conservata. Un accesso Matrix con esito incerto non viene ripetuto automaticamente.",
+  "mytsHistoryPartial": "Questa chiave non copre questo messaggio precedente.",
+  "mytsHistoryMissingKey": "Messaggio cifrato: chiave cloud non disponibile o non ancora supportata. Aggiorna per riprovare.",
+  "mytsHistoryInvalid": "Messaggio non disponibile: formato non supportato o validazione fallita.",
+  "mytsHistoryPlaintext": "Non cifrato end-to-end",
+  "mytsHistoryUnverified": "Decifrato · identità del dispositivo mittente non verificata",
+  "mytsHistoryOwnUnverified": "Messaggio proprio decifrato · metadati cloud del mittente assenti; identità non verificata",
   "serverAddress": "Indirizzo del server (host:porta)",
   "nickname": "Nickname",
   "serverPassword": "Password del server (facoltativa)",
@@ -146,5 +164,34 @@
       }
     }
   },
-  "identityChange": "Cambia identità"
+  "identityChange": "Cambia identità",
+  "mytsContactsTitle": "Contatti",
+  "mytsContactsReadOnly": "Contatti dell’account in sola lettura. Nessuna chat o stato online.",
+  "mytsContactsNotLoaded": "Non ancora caricati.",
+  "mytsContactsEmpty": "Nessun contatto trovato.",
+  "mytsContactsPasswordHint": "Password account (facoltativa, per trovare il server chat)",
+  "mytsContactsRefresh": "Aggiorna contatti",
+  "mytsContactsStorageError": "Impossibile leggere i contatti salvati.",
+  "mytsContactsLoadError": "Impossibile caricare i contatti; quelli salvati restano disponibili.",
+  "mytsChatHost": "Server chat: {host}",
+  "mytsChatProbeHint": "Controlla solo l’endpoint Matrix versions senza autenticazione; non accede alla chat.",
+  "mytsChatProbe": "Verifica connessione chat",
+  "mytsChatProbeOk": "L’endpoint Matrix ha risposto. Accesso alla chat non verificato.",
+  "mytsChatProbeHttp": "La verifica connessione ha ricevuto HTTP {status}. Accesso alla chat non verificato; prova Cronologia chat account.",
+  "mytsChatProbeNetwork": "Impossibile raggiungere il server chat.",
+  "mytsChatHostMissing": "Server chat non disponibile. Aggiorna con la password per leggere la configurazione.",
+  "@mytsChatHost": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "@mytsChatProbeHttp": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  }
 }

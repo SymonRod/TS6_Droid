@@ -9,6 +9,71 @@ class AppLocalizationsIt extends AppLocalizations {
   AppLocalizationsIt([String locale = 'it']) : super(locale);
 
   @override
+  String get mytsHistoryTitle => 'Cronologia chat account';
+
+  @override
+  String get mytsHistoryReadOnly =>
+      'Cronologia testuale in sola lettura. Nessun invio, pubblicazione di chiavi o sincronizzazione in background. Le chiavi disponibili possono coprire solo parte della conversazione.';
+
+  @override
+  String get mytsHistoryUnlock => 'Sblocca cronologia';
+
+  @override
+  String get mytsHistoryAllowOwnEmpty =>
+      'Recupera anche i miei backup tipo 1 senza metadati del mittente (identità non verificata)';
+
+  @override
+  String get mytsHistoryConnect => 'Connetti / aggiorna conversazioni';
+
+  @override
+  String get mytsHistoryRefresh => 'Aggiorna cronologia';
+
+  @override
+  String get mytsHistoryRooms => 'Conversazioni';
+
+  @override
+  String get mytsHistoryFirstLogin =>
+      'La prima connessione crea un solo dispositivo Matrix per leggere la cronologia. Le successive lo riutilizzano. Non vengono pubblicate chiavi di cifratura.';
+
+  @override
+  String get mytsHistoryEmpty =>
+      'Nessuna conversazione caricata. Connettiti per recuperare le conversazioni di cui fai parte.';
+
+  @override
+  String get mytsHistoryNoMessages =>
+      'Nessun messaggio testuale caricato in questa pagina.';
+
+  @override
+  String get mytsHistoryOlder => 'Carica messaggi precedenti';
+
+  @override
+  String get mytsHistoryError =>
+      'Impossibile caricare la cronologia. Controlla password, connessione e sessione account. La cronologia salvata resta conservata. Un accesso Matrix con esito incerto non viene ripetuto automaticamente.';
+
+  @override
+  String get mytsHistoryPartial =>
+      'Questa chiave non copre questo messaggio precedente.';
+
+  @override
+  String get mytsHistoryMissingKey =>
+      'Messaggio cifrato: chiave cloud non disponibile o non ancora supportata. Aggiorna per riprovare.';
+
+  @override
+  String get mytsHistoryInvalid =>
+      'Messaggio non disponibile: formato non supportato o validazione fallita.';
+
+  @override
+  String get mytsHistoryPlaintext => 'Non cifrato end-to-end';
+
+  @override
+  String get mytsHistoryUnverified =>
+      'Decifrato · identità del dispositivo mittente non verificata';
+
+  @override
+  String get mytsHistoryOwnUnverified =>
+      'Messaggio proprio decifrato · metadati cloud del mittente assenti; identità non verificata';
+
+  @override
   String get serverAddress => 'Indirizzo del server (host:porta)';
 
   @override
@@ -415,4 +480,60 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get identityChange => 'Cambia identità';
+
+  @override
+  String get mytsContactsTitle => 'Contatti';
+
+  @override
+  String get mytsContactsReadOnly =>
+      'Contatti dell’account in sola lettura. Nessuna chat o stato online.';
+
+  @override
+  String get mytsContactsNotLoaded => 'Non ancora caricati.';
+
+  @override
+  String get mytsContactsEmpty => 'Nessun contatto trovato.';
+
+  @override
+  String get mytsContactsPasswordHint =>
+      'Password account (facoltativa, per trovare il server chat)';
+
+  @override
+  String get mytsContactsRefresh => 'Aggiorna contatti';
+
+  @override
+  String get mytsContactsStorageError =>
+      'Impossibile leggere i contatti salvati.';
+
+  @override
+  String get mytsContactsLoadError =>
+      'Impossibile caricare i contatti; quelli salvati restano disponibili.';
+
+  @override
+  String mytsChatHost(String host) {
+    return 'Server chat: $host';
+  }
+
+  @override
+  String get mytsChatProbeHint =>
+      'Controlla solo l’endpoint Matrix versions senza autenticazione; non accede alla chat.';
+
+  @override
+  String get mytsChatProbe => 'Verifica connessione chat';
+
+  @override
+  String get mytsChatProbeOk =>
+      'L’endpoint Matrix ha risposto. Accesso alla chat non verificato.';
+
+  @override
+  String mytsChatProbeHttp(String status) {
+    return 'La verifica connessione ha ricevuto HTTP $status. Accesso alla chat non verificato; prova Cronologia chat account.';
+  }
+
+  @override
+  String get mytsChatProbeNetwork => 'Impossibile raggiungere il server chat.';
+
+  @override
+  String get mytsChatHostMissing =>
+      'Server chat non disponibile. Aggiorna con la password per leggere la configurazione.';
 }

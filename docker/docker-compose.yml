@@ -24,9 +24,13 @@ services:
       - pub-cache:/home/dev/.pub-cache
       - cargo-registry:/home/dev/.cargo/registry
       - cargo-git:/home/dev/.cargo/git
+      # Keep the debug signing key across ephemeral `run --rm` containers.
+      # Seed with the installed app's matching key before the first update.
+      - android-home:/home/dev/.android
 
 volumes:
   gradle-cache:
   pub-cache:
   cargo-registry:
   cargo-git:
+  android-home:

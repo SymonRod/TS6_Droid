@@ -51,8 +51,13 @@ If your checkout is elsewhere: `TSLIB_DIR=/path/to/ts6-lib docker/dev.sh apk deb
 
 Named Docker volumes keep downloads between runs: `gradle-cache`, `pub-cache`,
 `cargo-registry`, `cargo-git`. The first build downloads Gradle and all
-dependencies (a few minutes); later ones are much faster. Reset with
-`docker compose -f docker/docker-compose.yml down -v`.
+dependencies (a few minutes); later ones are much faster.
+
+The `android-home` volume also preserves the **debug signing keystore**, so
+ephemeral build containers can produce compatible updates. If an app is already
+installed, seed this volume with its matching existing keystore before building
+an update. Back up that keystore privately; never commit it. **Do not use
+`docker compose down -v` to reset caches**: it also deletes the signing key.
 
 Gradle's JVM options are set in the image (`~/.gradle/gradle.properties`,
 `-Xmx6g`); the Flutter build runs out of heap with the default. If you reset the
@@ -112,12 +117,14 @@ WSL2 does not see Windows USB ports by itself.
   USB installs. The install hangs until you tap accept; with a ~235 MB debug
   APK over USB/IP it can also just take a few minutes.
 - **`INSTALL_FAILED_VERSION_DOWNGRADE`.** The installed build has a higher
-  `versionCode` (the app id is `com.flammedemon.ts6_flutter`). `-d` does not
-  help when the installed build is not debuggable. Uninstall first:
-  `docker/dev.sh adb uninstall com.flammedemon.ts6_flutter`. **This deletes the
-  app's data** (server bookmarks, myTeamSpeak session, saved chats).
+  `versionCode` (the app id is `com.flammedemon.ts6_flutter`). Build with a
+  compatible version code. Do not uninstall or clear app data to work around it.
 - **`INSTALL_FAILED_UPDATE_INCOMPATIBLE`.** The container's debug keystore
-  differs from the one the installed build was signed with. Same fix.
+  differs from the one the installed build was signed with. Recover the matching
+  original keystore, preserve it in `android-home`, and rebuild/re-sign the APK.
+  Compare certificate SHA-256 fingerprints before `adb install -r`. If the key
+  cannot be recovered, stop and ask the owner; uninstalling deletes server
+  bookmarks, the myTeamSpeak session and saved chats.
 - `adb shell pm list packages` can fail with `Shell does not have permission to
   access user 150` (secondary profile); add `--user 0`.
 

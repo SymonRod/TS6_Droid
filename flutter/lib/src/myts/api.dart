@@ -1,8 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import '../rust/myts.dart' as rs;
+import 'public_https.dart';
+
+export 'public_https.dart' show safePublicHttpsHost, isPublicAddress;
 
 /// Thin myTeamSpeak `/authentication` client. The password KDF, the
 /// ProtobufRPC framing (`application/ts3cloud`) and the reply classification
@@ -83,12 +87,25 @@ class MyTsLoginOutcome {
   /// Raw `ErrorCommon` value when the server answered with one.
   final int? appError;
 
-  const MyTsLoginOutcome._({this.success, this.failure, this.httpStatus, this.appError});
+  const MyTsLoginOutcome._({
+    this.success,
+    this.failure,
+    this.httpStatus,
+    this.appError,
+  });
 
-  factory MyTsLoginOutcome.ok(MyTsLoginSuccess s) => MyTsLoginOutcome._(success: s);
+  factory MyTsLoginOutcome.ok(MyTsLoginSuccess s) =>
+      MyTsLoginOutcome._(success: s);
 
-  factory MyTsLoginOutcome.fail(MyTsFailure f, {int? httpStatus, int? appError}) =>
-      MyTsLoginOutcome._(failure: f, httpStatus: httpStatus, appError: appError);
+  factory MyTsLoginOutcome.fail(
+    MyTsFailure f, {
+    int? httpStatus,
+    int? appError,
+  }) => MyTsLoginOutcome._(
+    failure: f,
+    httpStatus: httpStatus,
+    appError: appError,
+  );
 
   bool get isOk => success != null;
 }
@@ -128,12 +145,15 @@ class MyTsPullResult {
   final int? serverStatus;
 
   const MyTsPullResult.ok(rs.MyTsImportBatch this.batch)
-      : failure = null,
-        httpStatus = null,
-        serverStatus = null;
+    : failure = null,
+      httpStatus = null,
+      serverStatus = null;
 
-  const MyTsPullResult.fail(MyTsPullKind this.failure, {this.httpStatus, this.serverStatus})
-      : batch = null;
+  const MyTsPullResult.fail(
+    MyTsPullKind this.failure, {
+    this.httpStatus,
+    this.serverStatus,
+  }) : batch = null;
 }
 
 class MyTsHttpResponse {
@@ -141,6 +161,13 @@ class MyTsHttpResponse {
   final Uint8List body;
 
   const MyTsHttpResponse(this.status, this.body);
+}
+
+enum ContactFailure { network, expired, service, invalid }
+
+class ContactRequestFailure implements Exception {
+  final ContactFailure kind;
+  const ContactRequestFailure(this.kind);
 }
 
 /// A reply exceeded the receive cap (checked against the declared length and
@@ -155,12 +182,13 @@ class MyTsResponseRejected implements Exception {
 /// enforce while the reply streams in. The default implementation uses
 /// `dart:io` with verified TLS, redirects disabled, a cap on decompressed
 /// bytes and an overall deadline.
-typedef MyTsPost = Future<MyTsHttpResponse> Function(
-  Uri uri,
-  Map<String, String> headers,
-  Uint8List body,
-  int maxBytes,
-);
+typedef MyTsPost =
+    Future<MyTsHttpResponse> Function(
+      Uri uri,
+      Map<String, String> headers,
+      Uint8List body,
+      int maxBytes,
+    );
 
 const _connectTimeout = Duration(seconds: 15);
 const _requestDeadline = Duration(seconds: 45);
@@ -239,11 +267,13 @@ class MyTsApi {
 
   Uri get _uri => Uri.https(_endpoint.host, _endpoint.authPath);
   Uri get _syncUri => Uri.https(_endpoint.host, _endpoint.syncPath);
+  Uri get _chatUri => Uri.https(_endpoint.host, _endpoint.chatPath);
+  Uri get _userUri => Uri.https(_endpoint.host, _endpoint.userPath);
 
   Map<String, String> get _headers => {
-        HttpHeaders.contentTypeHeader: _endpoint.contentType,
-        HttpHeaders.userAgentHeader: _endpoint.userAgent,
-      };
+    HttpHeaders.contentTypeHeader: _endpoint.contentType,
+    HttpHeaders.userAgentHeader: _endpoint.userAgent,
+  };
 
   /// One password-login attempt, no retries. [email] must already be the
   /// trimmed address the UI also sends as the KDF input (the API never
@@ -282,12 +312,14 @@ class MyTsApi {
     final parsed = rs.myTsParseLogin(httpStatus: resp.status, body: resp.body);
     final ok = parsed.success;
     if (ok != null) {
-      return MyTsLoginOutcome.ok(MyTsLoginSuccess(
-        session: ok.session,
-        uuid: ok.uuid,
-        username: ok.username,
-        wrappedKey: Uint8List.fromList(ok.wrappedKey),
-      ));
+      return MyTsLoginOutcome.ok(
+        MyTsLoginSuccess(
+          session: ok.session,
+          uuid: ok.uuid,
+          username: ok.username,
+          wrappedKey: Uint8List.fromList(ok.wrappedKey),
+        ),
+      );
     }
     return MyTsLoginOutcome.fail(
       _failure(parsed.failure),
@@ -297,15 +329,15 @@ class MyTsApi {
   }
 
   static MyTsFailure _failure(rs.MyTsLoginFailure? f) => switch (f) {
-        rs.MyTsLoginFailure.http => MyTsFailure.http,
-        rs.MyTsLoginFailure.malformed || null => MyTsFailure.malformed,
-        rs.MyTsLoginFailure.credentials => MyTsFailure.credentials,
-        rs.MyTsLoginFailure.offline => MyTsFailure.offline,
-        rs.MyTsLoginFailure.emailPending => MyTsFailure.emailPending,
-        rs.MyTsLoginFailure.otpRequired => MyTsFailure.otpRequired,
-        rs.MyTsLoginFailure.otpInvalid => MyTsFailure.otpInvalid,
-        rs.MyTsLoginFailure.other => MyTsFailure.other,
-      };
+    rs.MyTsLoginFailure.http => MyTsFailure.http,
+    rs.MyTsLoginFailure.malformed || null => MyTsFailure.malformed,
+    rs.MyTsLoginFailure.credentials => MyTsFailure.credentials,
+    rs.MyTsLoginFailure.offline => MyTsFailure.offline,
+    rs.MyTsLoginFailure.emailPending => MyTsFailure.emailPending,
+    rs.MyTsLoginFailure.otpRequired => MyTsFailure.otpRequired,
+    rs.MyTsLoginFailure.otpInvalid => MyTsFailure.otpInvalid,
+    rs.MyTsLoginFailure.other => MyTsFailure.other,
+  };
 
   /// Deletes a session created by [login] (`ERROR_SESSION_DELETED_OK`
   /// is 204, not 200). Used to clean up test sessions and on logout.
@@ -316,7 +348,10 @@ class MyTsApi {
     if (body == null) return false;
     try {
       final resp = await _post(_uri, _headers, body, _endpoint.loginReplyLimit);
-      return rs.myTsParseDeleteSession(httpStatus: resp.status, body: resp.body);
+      return rs.myTsParseDeleteSession(
+        httpStatus: resp.status,
+        body: resp.body,
+      );
     } catch (_) {
       return false;
     }
@@ -349,7 +384,9 @@ class MyTsApi {
     required rs.MyTsAccountKey key,
   }) async {
     final request = rs.myTsBuildInitialPull(session: session);
-    if (request == null) return const MyTsPullResult.fail(MyTsPullKind.invalidInput);
+    if (request == null) {
+      return const MyTsPullResult.fail(MyTsPullKind.invalidInput);
+    }
     final MyTsHttpResponse resp;
     try {
       resp = await _post(_syncUri, _headers, request, _endpoint.pullReplyLimit);
@@ -384,4 +421,203 @@ class MyTsApi {
       serverStatus: parsed.serverStatus,
     );
   }
+
+  /// Read-only roster, separate from legacy CONTACTS sync class.
+  Future<List<rs.MyTsContact>> contacts(String session) async {
+    final request = rs.myTsBuildContactsRequest(session: session);
+    if (request == null) {
+      throw const ContactRequestFailure(ContactFailure.expired);
+    }
+    final MyTsHttpResponse resp;
+    try {
+      resp = await _post(_chatUri, _headers, request, 1024 * 1024);
+    } on MyTsResponseRejected {
+      throw const ContactRequestFailure(ContactFailure.invalid);
+    } on SocketException {
+      throw const ContactRequestFailure(ContactFailure.network);
+    } on TlsException {
+      throw const ContactRequestFailure(ContactFailure.network);
+    } on TimeoutException {
+      throw const ContactRequestFailure(ContactFailure.network);
+    } on HttpException {
+      throw const ContactRequestFailure(ContactFailure.network);
+    }
+    if (resp.status != 200) throw HttpException('contacts HTTP ${resp.status}');
+    final result = rs.myTsParseContacts(
+      httpStatus: resp.status,
+      body: resp.body,
+    );
+    if (result.contacts == null) {
+      throw ContactRequestFailure(
+        result.error == 5
+            ? ContactFailure.expired
+            : result.error != null
+            ? ContactFailure.service
+            : ContactFailure.invalid,
+      );
+    }
+    return result.contacts!;
+  }
+
+  /// Config is decrypted in Rust; only the declared host crosses into Dart.
+  Future<String?> chatHost(String session, rs.MyTsAccountKey key) async {
+    final request = rs.myTsBuildConfigPull(session: session);
+    if (request == null) return null;
+    final resp = await _post(
+      _syncUri,
+      _headers,
+      request,
+      _endpoint.pullReplyLimit,
+    );
+    if (resp.status != 200) throw HttpException('config HTTP ${resp.status}');
+    return rs.myTsParseConfigHost(
+      key: key,
+      httpStatus: resp.status,
+      body: resp.body,
+    );
+  }
+
+  /// Bounded encrypted CONFIG response for the opaque Rust history reader.
+  Future<Uint8List> historyConfig(String session) async {
+    final request = rs.myTsBuildConfigPull(session: session);
+    if (request == null) throw const FormatException('session unavailable');
+    final response = await _post(
+      _syncUri,
+      _headers,
+      request,
+      _endpoint.pullReplyLimit,
+    );
+    if (response.status != 200) {
+      throw const HttpException('history configuration unavailable');
+    }
+    return response.body;
+  }
+
+  Future<Uint8List> historyCloud(Uint8List request) async {
+    final response = await _post(_chatUri, _headers, request, 2 * 1024 * 1024);
+    if (response.status != 200) {
+      throw const HttpException('history cloud unavailable');
+    }
+    return response.body;
+  }
+
+  Future<Uint8List?> contactAvatar(
+    String session,
+    String matrixId,
+    String accountHost,
+  ) async {
+    // Only the account's own declared home server has demonstrated Base32
+    // myTS IDs. Never derive an avatar key for an unrelated Matrix host.
+    if (!safePublicHttpsHost(accountHost) ||
+        !matrixId.endsWith(':$accountHost')) {
+      return null;
+    }
+    final request = rs.myTsBuildAvatarInfoRequest(
+      session: session,
+      matrixId: matrixId,
+    );
+    if (request == null) return null;
+    final info = await _post(_userUri, _headers, request, 1024 * 1024);
+    if (info.status != 200) throw HttpException('avatar HTTP ${info.status}');
+    final name = rs.myTsParseAvatarName(
+      httpStatus: info.status,
+      body: info.body,
+      matrixId: matrixId,
+    );
+    if (name == null) return null;
+    final urlRequest = rs.myTsBuildAvatarUrlRequest(
+      session: session,
+      name: name,
+    );
+    if (urlRequest == null) return null;
+    final signed = await _post(_userUri, _headers, urlRequest, 1024 * 1024);
+    if (signed.status != 200) {
+      throw HttpException('avatar URL HTTP ${signed.status}');
+    }
+    final url = rs.myTsParseAvatarUrl(
+      httpStatus: signed.status,
+      body: signed.body,
+      name: name,
+    );
+    if (url == null) return null;
+    final uri = Uri.tryParse(url);
+    if (uri == null ||
+        !safePublicHttpsHost(uri.host) ||
+        uri.scheme != 'https' ||
+        uri.userInfo.isNotEmpty ||
+        uri.hasPort && uri.port != 443) {
+      return null;
+    }
+    final image = await myTsHttpGet(uri, 512 * 1024);
+    return image.status == 200 ? image.body : null;
+  }
+}
+
+Future<MyTsHttpResponse> myTsHttpGet(
+  Uri uri,
+  int maxBytes, {
+  Duration deadline = _requestDeadline,
+  String? userAgent,
+}) async {
+  if (uri.scheme != 'https' ||
+      uri.userInfo.isNotEmpty ||
+      !safePublicHttpsHost(uri.host) ||
+      (uri.hasPort && uri.port != 443)) {
+    throw const FormatException('unsafe HTTPS destination');
+  }
+  final client = HttpClient()..connectionTimeout = _connectTimeout;
+  if (userAgent != null) client.userAgent = userAgent;
+  client.findProxy = (_) => 'DIRECT';
+  client.connectionFactory = publicHttpsConnection;
+  try {
+    return await (() async {
+      final request = await client.getUrl(uri);
+      request.followRedirects = false;
+      final response = await request.close();
+      if (response.statusCode != 200) {
+        return MyTsHttpResponse(response.statusCode, Uint8List(0));
+      }
+      if (response.contentLength > maxBytes) throw const MyTsResponseRejected();
+      final out = BytesBuilder(copy: false);
+      await for (final chunk in response) {
+        if (out.length + chunk.length > maxBytes) {
+          throw const MyTsResponseRejected();
+        }
+        out.add(chunk);
+      }
+      return MyTsHttpResponse(200, out.takeBytes());
+    })().timeout(deadline);
+  } finally {
+    client.close(force: true);
+  }
+}
+
+/// An unauthenticated bounded GET, using the same gateway-compatible User-Agent
+/// as the history reader. Failure here does not establish chat login availability.
+Future<int> checkChatVersions(
+  String host, {
+  Future<MyTsHttpResponse> Function(Uri, int)? get,
+}) async {
+  if (!safePublicHttpsHost(host)) {
+    throw const FormatException('unsafe chat host');
+  }
+  final response =
+      await (get ??
+          (uri, limit) => myTsHttpGet(
+            uri,
+            limit,
+            userAgent: 'Go-http-client/1.1',
+          ))(Uri.https(host, '/_matrix/client/versions'), 64 * 1024);
+  if (response.status == 200) {
+    final decoded = jsonDecode(utf8.decode(response.body));
+    if (decoded is! Map ||
+        decoded['versions'] is! List ||
+        (decoded['versions'] as List).isEmpty ||
+        !(decoded['versions'] as List).every(
+          (v) => v is String && v.isNotEmpty,
+        )) {
+      throw const FormatException('invalid Matrix versions response');
+    }
+  }
+  return response.status;
 }

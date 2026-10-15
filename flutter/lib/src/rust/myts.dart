@@ -7,7 +7,7 @@ import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `convert_batch`, `pull_outcome`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 MyTsEndpoint myTsEndpoint() => RustLib.instance.api.crateMytsMyTsEndpoint();
 
@@ -65,6 +65,142 @@ Future<MyTsAccountKey> myTsUnlockAccountKey({
 Uint8List? myTsBuildInitialPull({required String session}) =>
     RustLib.instance.api.crateMytsMyTsBuildInitialPull(session: session);
 
+Uint8List? myTsBuildContactsRequest({required String session}) =>
+    RustLib.instance.api.crateMytsMyTsBuildContactsRequest(session: session);
+
+MyTsContactsOutcome myTsParseContacts({
+  required int httpStatus,
+  required List<int> body,
+}) => RustLib.instance.api.crateMytsMyTsParseContacts(
+  httpStatus: httpStatus,
+  body: body,
+);
+
+Uint8List? myTsBuildAvatarInfoRequest({
+  required String session,
+  required String matrixId,
+}) => RustLib.instance.api.crateMytsMyTsBuildAvatarInfoRequest(
+  session: session,
+  matrixId: matrixId,
+);
+
+String? myTsParseAvatarName({
+  required int httpStatus,
+  required List<int> body,
+  required String matrixId,
+}) => RustLib.instance.api.crateMytsMyTsParseAvatarName(
+  httpStatus: httpStatus,
+  body: body,
+  matrixId: matrixId,
+);
+
+Uint8List? myTsBuildAvatarUrlRequest({
+  required String session,
+  required String name,
+}) => RustLib.instance.api.crateMytsMyTsBuildAvatarUrlRequest(
+  session: session,
+  name: name,
+);
+
+String? myTsParseAvatarUrl({
+  required int httpStatus,
+  required List<int> body,
+  required String name,
+}) => RustLib.instance.api.crateMytsMyTsParseAvatarUrl(
+  httpStatus: httpStatus,
+  body: body,
+  name: name,
+);
+
+Uint8List? myTsBuildConfigPull({required String session}) =>
+    RustLib.instance.api.crateMytsMyTsBuildConfigPull(session: session);
+
+Future<String?> myTsParseConfigHost({
+  required MyTsAccountKey key,
+  required int httpStatus,
+  required List<int> body,
+}) => RustLib.instance.api.crateMytsMyTsParseConfigHost(
+  key: key,
+  httpStatus: httpStatus,
+  body: body,
+);
+
+Future<MyTsHistory> myTsHistoryOpen({
+  required MyTsAccountKey key,
+  required String account,
+  required List<int> configBody,
+  required List<int> snapshot,
+  required bool allowOwnEmpty,
+}) => RustLib.instance.api.crateMytsMyTsHistoryOpen(
+  key: key,
+  account: account,
+  configBody: configBody,
+  snapshot: snapshot,
+  allowOwnEmpty: allowOwnEmpty,
+);
+
+Future<MyTsHistoryRequest> myTsHistoryRequest({
+  required MyTsHistory history,
+  required String action,
+  required String room,
+  required bool older,
+}) => RustLib.instance.api.crateMytsMyTsHistoryRequest(
+  history: history,
+  action: action,
+  room: room,
+  older: older,
+);
+
+Future<void> myTsHistoryAccept({
+  required MyTsHistory history,
+  required String action,
+  required String room,
+  required bool older,
+  required List<int> body,
+}) => RustLib.instance.api.crateMytsMyTsHistoryAccept(
+  history: history,
+  action: action,
+  room: room,
+  older: older,
+  body: body,
+);
+
+Future<Uint8List> myTsHistorySnapshot({required MyTsHistory history}) =>
+    RustLib.instance.api.crateMytsMyTsHistorySnapshot(history: history);
+
+/// Only display data crosses this boundary; no session keys, tokens or passwords.
+Future<String> myTsHistoryView({
+  required MyTsHistory history,
+  required String room,
+}) =>
+    RustLib.instance.api.crateMytsMyTsHistoryView(history: history, room: room);
+
+Future<Uint8List> myTsHistoryCloudRequest({
+  required MyTsHistory history,
+  required String session,
+  required String room,
+  required String groupSession,
+}) => RustLib.instance.api.crateMytsMyTsHistoryCloudRequest(
+  history: history,
+  session: session,
+  room: room,
+  groupSession: groupSession,
+);
+
+Future<bool> myTsHistoryAcceptCloud({
+  required MyTsHistory history,
+  required MyTsAccountKey key,
+  required String room,
+  required String groupSession,
+  required List<int> body,
+}) => RustLib.instance.api.crateMytsMyTsHistoryAcceptCloud(
+  history: history,
+  key: key,
+  room: room,
+  groupSession: groupSession,
+  body: body,
+);
+
 /// Decrypts and validates a whole sync reply atomically: either a complete
 /// batch or a failure, never a partial result.
 Future<MyTsPullOutcome> myTsParsePull({
@@ -79,6 +215,9 @@ Future<MyTsPullOutcome> myTsParsePull({
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<MyTsAccountKey>>
 abstract class MyTsAccountKey implements RustOpaqueInterface {}
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<MyTsHistory>>
+abstract class MyTsHistory implements RustOpaqueInterface {}
 
 /// One cloud bookmark. `identity` is the opaque cloud reference exactly as
 /// received: `None` is absent, `Some("")` is present but empty. No matching
@@ -225,6 +364,48 @@ class MyTsCloudIdentity {
           sortOrder == other.sortOrder;
 }
 
+class MyTsContact {
+  final String identifier;
+  final String note;
+  final String matrixId;
+
+  const MyTsContact({
+    required this.identifier,
+    required this.note,
+    required this.matrixId,
+  });
+
+  @override
+  int get hashCode => identifier.hashCode ^ note.hashCode ^ matrixId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MyTsContact &&
+          runtimeType == other.runtimeType &&
+          identifier == other.identifier &&
+          note == other.note &&
+          matrixId == other.matrixId;
+}
+
+class MyTsContactsOutcome {
+  final List<MyTsContact>? contacts;
+  final int? error;
+
+  const MyTsContactsOutcome({this.contacts, this.error});
+
+  @override
+  int get hashCode => contacts.hashCode ^ error.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MyTsContactsOutcome &&
+          runtimeType == other.runtimeType &&
+          contacts == other.contacts &&
+          error == other.error;
+}
+
 /// Connection constants Dart needs to build the POST.
 class MyTsEndpoint {
   final String host;
@@ -235,6 +416,8 @@ class MyTsEndpoint {
 
   /// Path of the read-only `requestServerItems` service.
   final String syncPath;
+  final String chatPath;
+  final String userPath;
 
   /// Receive cap for a login reply; Dart enforces it while streaming.
   final int loginReplyLimit;
@@ -249,6 +432,8 @@ class MyTsEndpoint {
     required this.userAgent,
     required this.defaultDeviceName,
     required this.syncPath,
+    required this.chatPath,
+    required this.userPath,
     required this.loginReplyLimit,
     required this.pullReplyLimit,
   });
@@ -261,6 +446,8 @@ class MyTsEndpoint {
       userAgent.hashCode ^
       defaultDeviceName.hashCode ^
       syncPath.hashCode ^
+      chatPath.hashCode ^
+      userPath.hashCode ^
       loginReplyLimit.hashCode ^
       pullReplyLimit.hashCode;
 
@@ -275,8 +462,46 @@ class MyTsEndpoint {
           userAgent == other.userAgent &&
           defaultDeviceName == other.defaultDeviceName &&
           syncPath == other.syncPath &&
+          chatPath == other.chatPath &&
+          userPath == other.userPath &&
           loginReplyLimit == other.loginReplyLimit &&
           pullReplyLimit == other.pullReplyLimit;
+}
+
+/// Ephemeral transport envelope, never for logging or persistence.
+class MyTsHistoryRequest {
+  final String host;
+  final String path;
+  final String query;
+  final String headers;
+  final Uint8List body;
+
+  const MyTsHistoryRequest({
+    required this.host,
+    required this.path,
+    required this.query,
+    required this.headers,
+    required this.body,
+  });
+
+  @override
+  int get hashCode =>
+      host.hashCode ^
+      path.hashCode ^
+      query.hashCode ^
+      headers.hashCode ^
+      body.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MyTsHistoryRequest &&
+          runtimeType == other.runtimeType &&
+          host == other.host &&
+          path == other.path &&
+          query == other.query &&
+          headers == other.headers &&
+          body == other.body;
 }
 
 class MyTsImportBatch {

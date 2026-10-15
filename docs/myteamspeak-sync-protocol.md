@@ -1,5 +1,16 @@
 # myTeamSpeak — sync protocol reference (system A)
 
+> **Contacts/chat update (2026-10-15):** the authorized demo-account probe
+> returned one account contact from `/tschat/getContactList` while sync
+> `CONTACTS=8` and `GROUP_CHATS=7` were empty. CONFIG supplied chat credentials;
+> `/user` returned four avatar variants and signed download URLs. The account's
+> Matrix host returned HTTP 503 through both the gateway and a public phone
+> cellular probe, so messages, history and
+> live presence are not yet verified. See
+> [myteamspeak-contacts-chat-protocol.md](myteamspeak-contacts-chat-protocol.md).
+> Historical “never touch”/out-of-scope System-B wording below is not a permanent
+> product restriction; it is not authorization for speculative cloud writes.
+
 > **Product policy (2026-10-14):**
 > [product-direction.md](product-direction.md) supersedes historical manual-only
 > identity-import/M5 policy below. Automatic identity + bookmark import is

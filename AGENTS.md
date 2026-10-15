@@ -225,3 +225,94 @@ and effective-default rules remain open.
 On this machine the Rust checkout is `../ts6-lib`, not `../tslib`.
 Real-account tests require explicit authorization;
 credentials, salts, derived values and captures must stay out of logs/docs/git.
+
+### myTeamSpeak contacts, avatars and account chat
+
+Start with **[docs/myteamspeak-contacts-chat-protocol.md](docs/myteamspeak-contacts-chat-protocol.md)**
+for the authorized 2026-10-15 demo-account findings and implementation gates.
+`/tschat/getContactList` returned one contact while legacy sync CONTACTS and
+GROUP_CHATS were empty; CONFIG contained chat credentials. `/user` returned
+four avatar state variants and signed download URLs (image bytes/signature
+verification not yet tested). Base32 Matrix localparts may include `=` padding.
+Earlier standard-UA requests returned Matrix 503 through the gateway and phone
+cellular shell (`rmnet_data0`), but the later controlled comparison found
+**`User-Agent: Go-http-client/1.1` changes the same login endpoint to HTTP 200**;
+do not treat the earlier 503 as a service outage. An authorized Matrix password
+login and bounded initial sync then succeeded, with zero joined rooms/events.
+**Cleanup warning: the earlier temporary Matrix device/token may remain active
+because logout returned 404 and its memory-only identifiers were lost.** The
+owner subsequently made revocation optional and authorized a bounded follow-up;
+read **[docs/myteamspeak-chat-history-protocol.md](docs/myteamspeak-chat-history-protocol.md)**
+§12–17 for the current state (§10–11 are the earlier stop; §17 is the latest
+owner-requested stop and next-chat handoff). Exactly one additional
+research device was created, with token/ID retained in ignored owner-only local
+storage, and reused. Do not create another login or delete guessed devices.
+The empty sync is now explained: changing only its encrypted-only timeline
+filter reveals one joined direct room and three ordinary plaintext message
+events. Broader sync and bounded scrollback agreed. The owner then enabled
+`Encrypt Chat` and sent a dummy message: **§14 demonstrates a real encrypted
+event → exact-pair cloud pull → type-1 key unwrap/import → successful Megolm
+decryption**, first-known/message index 0. The real own-outbound backup had
+explicit empty `sender`/`c25519`/`ed25519` strings: a narrowly scoped research
+exception handles that without claiming matched metadata or verified device
+identity. Default validation remains strict; do not generalize this to incoming
+senders/types 2/3. Earlier plaintext is not retroactively encrypted. No key
+upload, research message send or cloud write was performed **through §14**.
+**§15 records the owner's later authorization for autonomous tests between two
+disposable accounts**: one new identifiable research Matrix device only for
+account 2; account 1 reused its existing token/device. Public sender device keys
+were uploaded and an Olm-encrypted room key shared to existing devices. Exactly
+three encrypted dummy events were initially sent account 2 → account 1 in one new
+private test room, indices 0/1/2. **§16 corrects the research sender's missing
+numeric `chain_index` in `m.room_key`**, required by native TeamSpeak parsing.
+The compatible share reused the same Olm/Megolm sessions at actual index 3;
+messages **3/4/5 were then read on the official desktop (owner-confirmed) and
+independently recovered through a real recipient cloud type-2 backup**, with
+exact plaintext and populated sender/Curve25519/claimed-signing-key matches.
+No own-type-1 exception was used. Backup JSON `chain_index=0` but actual first
+known index is **3**: original 0/1/2 remain unrecovered. No device/session reset,
+rotation or research cloud upload occurred. Retain/reuse both protected records;
+the sender's crypto is stored as account-key-encrypted libolm pickles, but bearer
+tokens are only permission-protected. Do not rerun `--exchange` or create another
+device; see §16 for `--recover`, which now reads only the corrected segment 3–5.
+The sender phase is `cloud_recovery_completed_for_repair_only`. Only explicit
+`--prepare` may create a missing second-account research device; other modes
+fail closed. Native compatibility and partial-history tests were added.
+The last executed offline suites passed **70 helper + 15 runner tests (85)**;
+three later lifecycle tests and the latest CLI mode fence have not yet been
+rerun. The owner requested stopping all tests; after that only handoff docs were
+updated. No live/background operation remains. Do not start another live test
+merely from this handoff; see §17 for safe resumption and outstanding checks.
+No production/app Matrix check or corrected-UA phone test was performed;
+complete-history recovery, cross-signed incoming-key trust, type-3 forwarding,
+rotation, production Rust/Flutter chat and live cleanup remain unverified.
+Desktop Away/DND are extended JSON inside Matrix `status_msg`, with base
+`online`; its presence enum differs from the avatar enum. Do not fake online
+state from avatar availability. The owner requested contacts/avatar Flutter
+implementation and a phone/5G check; implementation/device verification must
+be recorded separately from these protocol findings. Preserve existing app
+data; do not uninstall/clear data to make a phone test work.
+
+### Flutter account-history reader (subsequent 2026-10-15 delivery)
+
+See **[docs/myteamspeak-history-reader.md](docs/myteamspeak-history-reader.md)**.
+The owner subsequently authorized pragmatic implementation and disposable-account
+tests. A receive-only Flutter history screen and Rust `tslib-myts::history` engine
+now implement manual room/history reads, targeted cloud-key recovery, encrypted
+account-scoped state and replay bookkeeping. No `/sync`, key publication, sends or
+to-device Olm receiver is enabled. Type 3 is unsupported; own type-1 empty metadata
+requires a default-off explicit checkbox, never an incoming-key exception.
+The app's first explicit connection creates its own labelled Matrix reader device;
+later connections reuse the saved token. Unknown login outcomes fail closed.
+Focused checks passed 63 myTS + 6 FRB Rust tests and 27 Flutter tests. A newly
+authorized real read reused both research Matrix records, obtained one real type-2
+backup and verified exact messages 3/4/5 through the new Rust engine and an encrypted
+snapshot round-trip in memory. No new Matrix login, send, key write or research-record
+change occurred; temporary myTS sessions were cleaned with 204. This is not phone/
+Flutter live acceptance or recovery of 0/1/2. Historical Python lifecycle checks
+remain unexecuted. Preserve all protected research records and existing app data.
+The reader's debug APK is built (arm64-v8a/x86_64) and installed on the owner's
+SM-S938B. After a signature-conflict rejection the owner uninstalled the previous
+Flutter app themselves; the agent did not uninstall/clear data. The unchanged APK
+then installed successfully. Its hash/details are in the reader handoff. No app
+launch/login was performed; functional phone acceptance remains pending.

@@ -170,3 +170,19 @@ Future changes to these requirements should be explicit and recorded here.
   to pick an identity. Each imported bookmark asks the user once; the answer is a
   local link. The `is_default` flag is stored, not used.
 - A new local identity is created only by an explicit user choice.
+
+## 8. Contacts and account-chat research follow-up (2026-10-15)
+
+The owner authorized demo-account research and requested a background Flutter
+implementation of demonstrated contacts/avatar capabilities, alongside a
+phone/5G connectivity comparison. See
+[the contacts/chat protocol handoff](myteamspeak-contacts-chat-protocol.md).
+The roster is available through `/tschat` even when legacy CONTACTS sync is
+empty. Avatar metadata and signed download authorization are demonstrated.
+The account-declared Matrix host returned HTTP 503 through the gateway and a
+public phone cellular probe (native curl, TLS verification successful; not an
+app-level test). Chat messages, encrypted-history recovery and live presence
+remain unverified.
+This request does not authorize discarding existing local app data or imply
+that account chat is implemented. Track implementation, offline tests and
+on-device/live acceptance as separate gates.

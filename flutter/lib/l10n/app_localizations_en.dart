@@ -9,6 +9,70 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get mytsHistoryTitle => 'Account chat history';
+
+  @override
+  String get mytsHistoryReadOnly =>
+      'Read-only text history. No messages, key publication or background sync. Available keys may cover only part of a conversation.';
+
+  @override
+  String get mytsHistoryUnlock => 'Unlock history';
+
+  @override
+  String get mytsHistoryAllowOwnEmpty =>
+      'Also recover my own type-1 backups without sender metadata (identity remains unverified)';
+
+  @override
+  String get mytsHistoryConnect => 'Connect / refresh conversations';
+
+  @override
+  String get mytsHistoryRefresh => 'Refresh history';
+
+  @override
+  String get mytsHistoryRooms => 'Conversations';
+
+  @override
+  String get mytsHistoryFirstLogin =>
+      'The first connection creates one history-reader Matrix device. Later connections reuse it. No encryption keys are published.';
+
+  @override
+  String get mytsHistoryEmpty =>
+      'No conversations loaded. Connect to retrieve joined conversations.';
+
+  @override
+  String get mytsHistoryNoMessages => 'No text messages loaded on this page.';
+
+  @override
+  String get mytsHistoryOlder => 'Load older messages';
+
+  @override
+  String get mytsHistoryError =>
+      'Unable to load history. Check your password, connection and account session. Saved history is preserved. An uncertain Matrix login is not repeated automatically.';
+
+  @override
+  String get mytsHistoryPartial =>
+      'This key does not cover this older message.';
+
+  @override
+  String get mytsHistoryMissingKey =>
+      'Encrypted message: cloud key unavailable or not yet supported. Refresh to retry.';
+
+  @override
+  String get mytsHistoryInvalid =>
+      'Message unavailable: unsupported format or validation failed.';
+
+  @override
+  String get mytsHistoryPlaintext => 'Not end-to-end encrypted';
+
+  @override
+  String get mytsHistoryUnverified =>
+      'Decrypted · sender device identity not verified';
+
+  @override
+  String get mytsHistoryOwnUnverified =>
+      'Decrypted own message · cloud sender metadata absent; identity not verified';
+
+  @override
   String get serverAddress => 'Server address (host:port)';
 
   @override
@@ -411,4 +475,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get identityChange => 'Change identity';
+
+  @override
+  String get mytsContactsTitle => 'Contacts';
+
+  @override
+  String get mytsContactsReadOnly =>
+      'Read-only account contacts. No chat or online status.';
+
+  @override
+  String get mytsContactsNotLoaded => 'Not loaded yet.';
+
+  @override
+  String get mytsContactsEmpty => 'No contacts found.';
+
+  @override
+  String get mytsContactsPasswordHint =>
+      'Account password (optional, to discover chat host)';
+
+  @override
+  String get mytsContactsRefresh => 'Refresh contacts';
+
+  @override
+  String get mytsContactsStorageError => 'Could not read saved contacts.';
+
+  @override
+  String get mytsContactsLoadError =>
+      'Could not load contacts; saved contacts remain.';
+
+  @override
+  String mytsChatHost(String host) {
+    return 'Chat host: $host';
+  }
+
+  @override
+  String get mytsChatProbeHint =>
+      'Checks only the unauthenticated Matrix versions endpoint; it does not sign in to chat.';
+
+  @override
+  String get mytsChatProbe => 'Check chat connectivity';
+
+  @override
+  String get mytsChatProbeOk =>
+      'Matrix versions endpoint responded. Chat login is not verified.';
+
+  @override
+  String mytsChatProbeHttp(String status) {
+    return 'Connectivity check returned HTTP $status. Chat login has not been verified; try Account chat history.';
+  }
+
+  @override
+  String get mytsChatProbeNetwork => 'Could not reach the chat endpoint.';
+
+  @override
+  String get mytsChatHostMissing =>
+      'Chat host unavailable. Refresh with your account password to read its configuration.';
 }

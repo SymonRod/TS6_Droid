@@ -24,6 +24,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKeyPtr;
 
   CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_MyTsHistoryPtr => wire
+      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistoryPtr;
+
+  CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_TsClientPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClientPtr;
 
@@ -37,6 +41,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   MyTsAccountKey
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey(
+    dynamic raw,
+  );
+
+  @protected
+  MyTsHistory
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
     dynamic raw,
   );
 
@@ -59,6 +69,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  MyTsHistory
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+    dynamic raw,
+  );
+
+  @protected
   TsClient
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
     dynamic raw,
@@ -73,6 +89,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   MyTsAccountKey
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey(
+    dynamic raw,
+  );
+
+  @protected
+  MyTsHistory
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
     dynamic raw,
   );
 
@@ -137,6 +159,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<MyTsCloudIdentity> dco_decode_list_my_ts_cloud_identity(dynamic raw);
 
   @protected
+  List<MyTsContact> dco_decode_list_my_ts_contact(dynamic raw);
+
+  @protected
   Int64List dco_decode_list_prim_i_64_strict(dynamic raw);
 
   @protected
@@ -161,7 +186,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MyTsCloudIdentity dco_decode_my_ts_cloud_identity(dynamic raw);
 
   @protected
+  MyTsContact dco_decode_my_ts_contact(dynamic raw);
+
+  @protected
+  MyTsContactsOutcome dco_decode_my_ts_contacts_outcome(dynamic raw);
+
+  @protected
   MyTsEndpoint dco_decode_my_ts_endpoint(dynamic raw);
+
+  @protected
+  MyTsHistoryRequest dco_decode_my_ts_history_request(dynamic raw);
 
   @protected
   MyTsImportBatch dco_decode_my_ts_import_batch(dynamic raw);
@@ -207,6 +241,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
+
+  @protected
+  List<MyTsContact>? dco_decode_opt_list_my_ts_contact(dynamic raw);
 
   @protected
   Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw);
@@ -263,6 +300,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  MyTsHistory
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   TsClient
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
     SseDeserializer deserializer,
@@ -281,6 +324,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  MyTsHistory
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   TsClient
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
     SseDeserializer deserializer,
@@ -295,6 +344,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   MyTsAccountKey
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MyTsHistory
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
     SseDeserializer deserializer,
   );
 
@@ -373,6 +428,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<MyTsContact> sse_decode_list_my_ts_contact(SseDeserializer deserializer);
+
+  @protected
   Int64List sse_decode_list_prim_i_64_strict(SseDeserializer deserializer);
 
   @protected
@@ -401,7 +459,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  MyTsContact sse_decode_my_ts_contact(SseDeserializer deserializer);
+
+  @protected
+  MyTsContactsOutcome sse_decode_my_ts_contacts_outcome(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   MyTsEndpoint sse_decode_my_ts_endpoint(SseDeserializer deserializer);
+
+  @protected
+  MyTsHistoryRequest sse_decode_my_ts_history_request(
+    SseDeserializer deserializer,
+  );
 
   @protected
   MyTsImportBatch sse_decode_my_ts_import_batch(SseDeserializer deserializer);
@@ -455,6 +526,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
+
+  @protected
+  List<MyTsContact>? sse_decode_opt_list_my_ts_contact(
+    SseDeserializer deserializer,
+  );
 
   @protected
   Uint8List? sse_decode_opt_list_prim_u_8_strict(SseDeserializer deserializer);
@@ -518,6 +594,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+    MyTsHistory self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
     TsClient self,
     SseSerializer serializer,
@@ -539,6 +622,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+    MyTsHistory self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
     TsClient self,
     SseSerializer serializer,
@@ -555,6 +645,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey(
     MyTsAccountKey self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+    MyTsHistory self,
     SseSerializer serializer,
   );
 
@@ -645,6 +742,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_my_ts_contact(
+    List<MyTsContact> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_prim_i_64_strict(
     Int64List self,
     SseSerializer serializer,
@@ -684,7 +787,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_my_ts_contact(MyTsContact self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_my_ts_contacts_outcome(
+    MyTsContactsOutcome self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_my_ts_endpoint(MyTsEndpoint self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_my_ts_history_request(
+    MyTsHistoryRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_my_ts_import_batch(
@@ -763,6 +881,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_my_ts_contact(
+    List<MyTsContact>? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_list_prim_u_8_strict(
@@ -865,6 +989,40 @@ class RustLibWire implements BaseWire {
       );
   late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey =
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKeyPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistoryPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_ts6_flutter_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory',
+      );
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistoryPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistoryPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_ts6_flutter_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory',
+      );
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistoryPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void

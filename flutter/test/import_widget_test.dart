@@ -11,6 +11,10 @@ import 'package:ts6_flutter/src/data/account_vault.dart';
 import 'package:ts6_flutter/src/data/import_plan.dart';
 import 'package:ts6_flutter/src/data/server_bookmark.dart';
 import 'package:ts6_flutter/src/myts/controller.dart';
+import 'package:ts6_flutter/src/myts/contact_store.dart';
+import 'package:ts6_flutter/src/myts/api.dart';
+import 'package:ts6_flutter/src/myts/session_store.dart';
+import 'package:ts6_flutter/src/rust/myts.dart' as rust;
 import 'package:ts6_flutter/src/myts/import_controller.dart';
 import 'package:ts6_flutter/src/rust/api.dart';
 import 'package:ts6_flutter/src/state/identity_resolver.dart';
@@ -72,6 +76,12 @@ class RecordingServer extends TestServerController {
   }
 }
 
+class OfflineContactsApi extends MyTsApi {
+  @override
+  Future<List<rust.MyTsContact>> contacts(String session) async =>
+      throw const ContactRequestFailure(ContactFailure.network);
+}
+
 ImportedBookmark importedEntry({String nickname = 'Me', String? label}) => ImportedBookmark(
   ServerBookmark(
     name: 'Server Three',
@@ -87,6 +97,9 @@ Future<(ProviderContainer, FakeImport?, FakeResolver, RecordingServer)> mount(
   ImportState importState = const ImportState(),
   List<ImportedBookmark> imported = const [],
   bool setupDone = true,
+  ContactStore? contacts,
+  MyTsSessionStore? session,
+  MyTsApi? accountApi,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final identities = TestIdentityStore()..present = setupDone;
@@ -104,6 +117,9 @@ Future<(ProviderContainer, FakeImport?, FakeResolver, RecordingServer)> mount(
         ),
       ),
       myTsImportProvider.overrideWith(() => import),
+      contactStoreProvider.overrideWithValue(contacts ?? ContactStore(MemoryMyTsSecureBackend())),
+      if (session != null) myTsSessionStoreProvider.overrideWithValue(session),
+      if (accountApi != null) myTsApiProvider.overrideWithValue(accountApi),
       identityResolverProvider.overrideWithValue(resolver),
       importedBookmarksProvider.overrideWith((_) async => imported),
     ],
@@ -132,6 +148,25 @@ Future<void> openAccountScreen(WidgetTester tester, ProviderContainer c) async {
 
 void main() {
   group('account import card', () {
+    testWidgets('cached contacts remain visible on network failure without claiming chat', (tester) async {
+      final store = ContactStore(MemoryMyTsSecureBackend());
+      await store.save('', const ContactSnapshot([
+        StoredContact('synthetic-tag', 'Saved note', '@MY======:example.org'),
+      ], 'chat.example.org'));
+      final session = MyTsSessionStore(MemoryMyTsSecureBackend());
+      await session.save(session: 'synthetic-session', uuid: 'uuid', username: 'Synthetic user', email: '');
+      final (c, _, _, _) = await mount(tester, contacts: store, session: session, accountApi: OfflineContactsApi());
+      await openAccountScreen(tester, c);
+      expect(find.text('Saved note'), findsOneWidget);
+      expect(find.text('@MY======:example.org'), findsOneWidget);
+      expect(find.textContaining('No chat or online status'), findsOneWidget);
+      await tester.ensureVisible(find.text('Refresh contacts'));
+      await tester.tap(find.text('Refresh contacts'));
+      await tester.pumpAndSettle();
+      expect(find.text('Saved note'), findsOneWidget);
+      expect(find.textContaining('Network error'), findsOneWidget);
+    });
+
     testWidgets('idle: asks for the password and starts an import, clearing the field', (tester) async {
       final (c, import, _, _) = await mount(tester);
       await openAccountScreen(tester, c);
@@ -139,11 +174,11 @@ void main() {
       await tester.tap(find.text('Import account data'));
       await tester.pumpAndSettle();
       expect(import!.calls, isEmpty, reason: 'an empty password does nothing');
-      await tester.enterText(find.byType(TextField), 'synthetic-password');
+      await tester.enterText(find.byType(TextField).first, 'synthetic-password');
       await tester.tap(find.text('Import account data'));
       await tester.pumpAndSettle();
       expect(import.calls, ['start:synthetic-password']);
-      expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, isEmpty);
+      expect(tester.widget<TextField>(find.byType(TextField).first).controller!.text, isEmpty);
     });
 
     testWidgets('working shows progress', (tester) async {
@@ -221,7 +256,7 @@ void main() {
         );
         await openAccountScreen(tester, c);
         expect(find.textContaining(text), findsOneWidget);
-        await tester.enterText(find.byType(TextField), 'pw');
+        await tester.enterText(find.byType(TextField).first, 'pw');
         await tester.tap(find.text('Import account data'));
         await tester.pumpAndSettle();
         expect(import!.calls, ['start:pw']);
@@ -297,6 +332,8 @@ void main() {
     testWidgets('own bookmarks and manual addresses go through the same resolver', (tester) async {
       final (_, _, resolver, server) = await mount(tester);
       resolver.result = ResolvedIdentity(StubIdentity(), null);
+      await tester.tap(find.text('New server'));
+      await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField).at(0), 'manual.example.invalid');
       await tester.enterText(find.byType(TextField).at(1), 'Me');
       await tester.tap(find.widgetWithText(FilledButton, 'Connect'));

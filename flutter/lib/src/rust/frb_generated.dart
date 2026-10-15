@@ -65,7 +65,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 944502803;
+  int get rustContentHash => 1119729644;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -207,6 +207,20 @@ abstract class RustLibApi extends BaseApi {
 
   String crateApiTsIdentityUniqueId({required TsIdentity that});
 
+  Uint8List? crateMytsMyTsBuildAvatarInfoRequest({
+    required String session,
+    required String matrixId,
+  });
+
+  Uint8List? crateMytsMyTsBuildAvatarUrlRequest({
+    required String session,
+    required String name,
+  });
+
+  Uint8List? crateMytsMyTsBuildConfigPull({required String session});
+
+  Uint8List? crateMytsMyTsBuildContactsRequest({required String session});
+
   Uint8List? crateMytsMyTsBuildDeleteSession({required String session});
 
   Uint8List? crateMytsMyTsBuildInitialPull({required String session});
@@ -219,6 +233,76 @@ abstract class RustLibApi extends BaseApi {
   });
 
   MyTsEndpoint crateMytsMyTsEndpoint();
+
+  Future<void> crateMytsMyTsHistoryAccept({
+    required MyTsHistory history,
+    required String action,
+    required String room,
+    required bool older,
+    required List<int> body,
+  });
+
+  Future<bool> crateMytsMyTsHistoryAcceptCloud({
+    required MyTsHistory history,
+    required MyTsAccountKey key,
+    required String room,
+    required String groupSession,
+    required List<int> body,
+  });
+
+  Future<Uint8List> crateMytsMyTsHistoryCloudRequest({
+    required MyTsHistory history,
+    required String session,
+    required String room,
+    required String groupSession,
+  });
+
+  Future<MyTsHistory> crateMytsMyTsHistoryOpen({
+    required MyTsAccountKey key,
+    required String account,
+    required List<int> configBody,
+    required List<int> snapshot,
+    required bool allowOwnEmpty,
+  });
+
+  Future<MyTsHistoryRequest> crateMytsMyTsHistoryRequest({
+    required MyTsHistory history,
+    required String action,
+    required String room,
+    required bool older,
+  });
+
+  Future<Uint8List> crateMytsMyTsHistorySnapshot({
+    required MyTsHistory history,
+  });
+
+  Future<String> crateMytsMyTsHistoryView({
+    required MyTsHistory history,
+    required String room,
+  });
+
+  String? crateMytsMyTsParseAvatarName({
+    required int httpStatus,
+    required List<int> body,
+    required String matrixId,
+  });
+
+  String? crateMytsMyTsParseAvatarUrl({
+    required int httpStatus,
+    required List<int> body,
+    required String name,
+  });
+
+  Future<String?> crateMytsMyTsParseConfigHost({
+    required MyTsAccountKey key,
+    required int httpStatus,
+    required List<int> body,
+  });
+
+  MyTsContactsOutcome crateMytsMyTsParseContacts({
+    required int httpStatus,
+    required List<int> body,
+  });
 
   bool crateMytsMyTsParseDeleteSession({
     required int httpStatus,
@@ -250,6 +334,14 @@ abstract class RustLibApi extends BaseApi {
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_MyTsAccountKeyPtr;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_MyTsHistory;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_MyTsHistory;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_MyTsHistoryPtr;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_TsClient;
@@ -1329,13 +1421,125 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
+  Uint8List? crateMytsMyTsBuildAvatarInfoRequest({
+    required String session,
+    required String matrixId,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(session, serializer);
+          sse_encode_String(matrixId, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 30)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_list_prim_u_8_strict,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateMytsMyTsBuildAvatarInfoRequestConstMeta,
+        argValues: [session, matrixId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsBuildAvatarInfoRequestConstMeta =>
+      const TaskConstMeta(
+        debugName: "my_ts_build_avatar_info_request",
+        argNames: ["session", "matrixId"],
+      );
+
+  @override
+  Uint8List? crateMytsMyTsBuildAvatarUrlRequest({
+    required String session,
+    required String name,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(session, serializer);
+          sse_encode_String(name, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 31)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_list_prim_u_8_strict,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateMytsMyTsBuildAvatarUrlRequestConstMeta,
+        argValues: [session, name],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsBuildAvatarUrlRequestConstMeta =>
+      const TaskConstMeta(
+        debugName: "my_ts_build_avatar_url_request",
+        argNames: ["session", "name"],
+      );
+
+  @override
+  Uint8List? crateMytsMyTsBuildConfigPull({required String session}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(session, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 32)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_list_prim_u_8_strict,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateMytsMyTsBuildConfigPullConstMeta,
+        argValues: [session],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsBuildConfigPullConstMeta =>
+      const TaskConstMeta(
+        debugName: "my_ts_build_config_pull",
+        argNames: ["session"],
+      );
+
+  @override
+  Uint8List? crateMytsMyTsBuildContactsRequest({required String session}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(session, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 33)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_list_prim_u_8_strict,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateMytsMyTsBuildContactsRequestConstMeta,
+        argValues: [session],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsBuildContactsRequestConstMeta =>
+      const TaskConstMeta(
+        debugName: "my_ts_build_contacts_request",
+        argNames: ["session"],
+      );
+
+  @override
   Uint8List? crateMytsMyTsBuildDeleteSession({required String session}) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(session, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 30)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 34)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_opt_list_prim_u_8_strict,
@@ -1361,7 +1565,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(session, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 31)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 35)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_opt_list_prim_u_8_strict,
@@ -1398,7 +1602,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 32,
+            funcId: 36,
             port: port_,
           );
         },
@@ -1424,7 +1628,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 33)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 37)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_my_ts_endpoint,
@@ -1441,6 +1645,430 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "my_ts_endpoint", argNames: []);
 
   @override
+  Future<void> crateMytsMyTsHistoryAccept({
+    required MyTsHistory history,
+    required String action,
+    required String room,
+    required bool older,
+    required List<int> body,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+            history,
+            serializer,
+          );
+          sse_encode_String(action, serializer);
+          sse_encode_String(room, serializer);
+          sse_encode_bool(older, serializer);
+          sse_encode_list_prim_u_8_loose(body, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 38,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateMytsMyTsHistoryAcceptConstMeta,
+        argValues: [history, action, room, older, body],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsHistoryAcceptConstMeta => const TaskConstMeta(
+    debugName: "my_ts_history_accept",
+    argNames: ["history", "action", "room", "older", "body"],
+  );
+
+  @override
+  Future<bool> crateMytsMyTsHistoryAcceptCloud({
+    required MyTsHistory history,
+    required MyTsAccountKey key,
+    required String room,
+    required String groupSession,
+    required List<int> body,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+            history,
+            serializer,
+          );
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey(
+            key,
+            serializer,
+          );
+          sse_encode_String(room, serializer);
+          sse_encode_String(groupSession, serializer);
+          sse_encode_list_prim_u_8_loose(body, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 39,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateMytsMyTsHistoryAcceptCloudConstMeta,
+        argValues: [history, key, room, groupSession, body],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsHistoryAcceptCloudConstMeta =>
+      const TaskConstMeta(
+        debugName: "my_ts_history_accept_cloud",
+        argNames: ["history", "key", "room", "groupSession", "body"],
+      );
+
+  @override
+  Future<Uint8List> crateMytsMyTsHistoryCloudRequest({
+    required MyTsHistory history,
+    required String session,
+    required String room,
+    required String groupSession,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+            history,
+            serializer,
+          );
+          sse_encode_String(session, serializer);
+          sse_encode_String(room, serializer);
+          sse_encode_String(groupSession, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 40,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateMytsMyTsHistoryCloudRequestConstMeta,
+        argValues: [history, session, room, groupSession],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsHistoryCloudRequestConstMeta =>
+      const TaskConstMeta(
+        debugName: "my_ts_history_cloud_request",
+        argNames: ["history", "session", "room", "groupSession"],
+      );
+
+  @override
+  Future<MyTsHistory> crateMytsMyTsHistoryOpen({
+    required MyTsAccountKey key,
+    required String account,
+    required List<int> configBody,
+    required List<int> snapshot,
+    required bool allowOwnEmpty,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey(
+            key,
+            serializer,
+          );
+          sse_encode_String(account, serializer);
+          sse_encode_list_prim_u_8_loose(configBody, serializer);
+          sse_encode_list_prim_u_8_loose(snapshot, serializer);
+          sse_encode_bool(allowOwnEmpty, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 41,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateMytsMyTsHistoryOpenConstMeta,
+        argValues: [key, account, configBody, snapshot, allowOwnEmpty],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsHistoryOpenConstMeta => const TaskConstMeta(
+    debugName: "my_ts_history_open",
+    argNames: ["key", "account", "configBody", "snapshot", "allowOwnEmpty"],
+  );
+
+  @override
+  Future<MyTsHistoryRequest> crateMytsMyTsHistoryRequest({
+    required MyTsHistory history,
+    required String action,
+    required String room,
+    required bool older,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+            history,
+            serializer,
+          );
+          sse_encode_String(action, serializer);
+          sse_encode_String(room, serializer);
+          sse_encode_bool(older, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 42,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_my_ts_history_request,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateMytsMyTsHistoryRequestConstMeta,
+        argValues: [history, action, room, older],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsHistoryRequestConstMeta =>
+      const TaskConstMeta(
+        debugName: "my_ts_history_request",
+        argNames: ["history", "action", "room", "older"],
+      );
+
+  @override
+  Future<Uint8List> crateMytsMyTsHistorySnapshot({
+    required MyTsHistory history,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+            history,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 43,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateMytsMyTsHistorySnapshotConstMeta,
+        argValues: [history],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsHistorySnapshotConstMeta =>
+      const TaskConstMeta(
+        debugName: "my_ts_history_snapshot",
+        argNames: ["history"],
+      );
+
+  @override
+  Future<String> crateMytsMyTsHistoryView({
+    required MyTsHistory history,
+    required String room,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+            history,
+            serializer,
+          );
+          sse_encode_String(room, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 44,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateMytsMyTsHistoryViewConstMeta,
+        argValues: [history, room],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsHistoryViewConstMeta => const TaskConstMeta(
+    debugName: "my_ts_history_view",
+    argNames: ["history", "room"],
+  );
+
+  @override
+  String? crateMytsMyTsParseAvatarName({
+    required int httpStatus,
+    required List<int> body,
+    required String matrixId,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_16(httpStatus, serializer);
+          sse_encode_list_prim_u_8_loose(body, serializer);
+          sse_encode_String(matrixId, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 45)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_String,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateMytsMyTsParseAvatarNameConstMeta,
+        argValues: [httpStatus, body, matrixId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsParseAvatarNameConstMeta =>
+      const TaskConstMeta(
+        debugName: "my_ts_parse_avatar_name",
+        argNames: ["httpStatus", "body", "matrixId"],
+      );
+
+  @override
+  String? crateMytsMyTsParseAvatarUrl({
+    required int httpStatus,
+    required List<int> body,
+    required String name,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_16(httpStatus, serializer);
+          sse_encode_list_prim_u_8_loose(body, serializer);
+          sse_encode_String(name, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 46)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_String,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateMytsMyTsParseAvatarUrlConstMeta,
+        argValues: [httpStatus, body, name],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsParseAvatarUrlConstMeta =>
+      const TaskConstMeta(
+        debugName: "my_ts_parse_avatar_url",
+        argNames: ["httpStatus", "body", "name"],
+      );
+
+  @override
+  Future<String?> crateMytsMyTsParseConfigHost({
+    required MyTsAccountKey key,
+    required int httpStatus,
+    required List<int> body,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey(
+            key,
+            serializer,
+          );
+          sse_encode_u_16(httpStatus, serializer);
+          sse_encode_list_prim_u_8_loose(body, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 47,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_String,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateMytsMyTsParseConfigHostConstMeta,
+        argValues: [key, httpStatus, body],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsParseConfigHostConstMeta =>
+      const TaskConstMeta(
+        debugName: "my_ts_parse_config_host",
+        argNames: ["key", "httpStatus", "body"],
+      );
+
+  @override
+  MyTsContactsOutcome crateMytsMyTsParseContacts({
+    required int httpStatus,
+    required List<int> body,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_16(httpStatus, serializer);
+          sse_encode_list_prim_u_8_loose(body, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 48)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_my_ts_contacts_outcome,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateMytsMyTsParseContactsConstMeta,
+        argValues: [httpStatus, body],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateMytsMyTsParseContactsConstMeta => const TaskConstMeta(
+    debugName: "my_ts_parse_contacts",
+    argNames: ["httpStatus", "body"],
+  );
+
+  @override
   bool crateMytsMyTsParseDeleteSession({
     required int httpStatus,
     required List<int> body,
@@ -1451,7 +2079,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_u_16(httpStatus, serializer);
           sse_encode_list_prim_u_8_loose(body, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 34)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 49)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_bool,
@@ -1481,7 +2109,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_u_16(httpStatus, serializer);
           sse_encode_list_prim_u_8_loose(body, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 35)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 50)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_my_ts_login_outcome,
@@ -1518,7 +2146,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 36,
+            funcId: 51,
             port: port_,
           );
         },
@@ -1554,7 +2182,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 37,
+            funcId: 52,
             port: port_,
           );
         },
@@ -1583,6 +2211,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_MyTsAccountKey => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsAccountKey;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_MyTsHistory => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_MyTsHistory => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_TsClient => wire
@@ -1616,6 +2252,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MyTsHistory
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return MyTsHistoryImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   TsClient
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
     dynamic raw,
@@ -1643,6 +2288,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MyTsHistory
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return MyTsHistoryImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   TsClient
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
     dynamic raw,
@@ -1667,6 +2321,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return MyTsAccountKeyImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  MyTsHistory
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return MyTsHistoryImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -1784,6 +2447,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<MyTsContact> dco_decode_list_my_ts_contact(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_my_ts_contact).toList();
+  }
+
+  @protected
   Int64List dco_decode_list_prim_i_64_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dcoDecodeInt64List(raw);
@@ -1866,11 +2535,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MyTsContact dco_decode_my_ts_contact(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return MyTsContact(
+      identifier: dco_decode_String(arr[0]),
+      note: dco_decode_String(arr[1]),
+      matrixId: dco_decode_String(arr[2]),
+    );
+  }
+
+  @protected
+  MyTsContactsOutcome dco_decode_my_ts_contacts_outcome(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return MyTsContactsOutcome(
+      contacts: dco_decode_opt_list_my_ts_contact(arr[0]),
+      error: dco_decode_opt_box_autoadd_u_32(arr[1]),
+    );
+  }
+
+  @protected
   MyTsEndpoint dco_decode_my_ts_endpoint(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 8)
-      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    if (arr.length != 10)
+      throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
     return MyTsEndpoint(
       host: dco_decode_String(arr[0]),
       authPath: dco_decode_String(arr[1]),
@@ -1878,8 +2572,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       userAgent: dco_decode_String(arr[3]),
       defaultDeviceName: dco_decode_String(arr[4]),
       syncPath: dco_decode_String(arr[5]),
-      loginReplyLimit: dco_decode_u_32(arr[6]),
-      pullReplyLimit: dco_decode_u_32(arr[7]),
+      chatPath: dco_decode_String(arr[6]),
+      userPath: dco_decode_String(arr[7]),
+      loginReplyLimit: dco_decode_u_32(arr[8]),
+      pullReplyLimit: dco_decode_u_32(arr[9]),
+    );
+  }
+
+  @protected
+  MyTsHistoryRequest dco_decode_my_ts_history_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return MyTsHistoryRequest(
+      host: dco_decode_String(arr[0]),
+      path: dco_decode_String(arr[1]),
+      query: dco_decode_String(arr[2]),
+      headers: dco_decode_String(arr[3]),
+      body: dco_decode_list_prim_u_8_strict(arr[4]),
     );
   }
 
@@ -2009,6 +2720,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_u_32(raw);
+  }
+
+  @protected
+  List<MyTsContact>? dco_decode_opt_list_my_ts_contact(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_list_my_ts_contact(raw);
   }
 
   @protected
@@ -2344,6 +3061,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MyTsHistory
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return MyTsHistoryImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   TsClient
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
     SseDeserializer deserializer,
@@ -2380,6 +3109,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MyTsHistory
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return MyTsHistoryImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   TsClient
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
     SseDeserializer deserializer,
@@ -2410,6 +3151,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return MyTsAccountKeyImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  MyTsHistory
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return MyTsHistoryImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -2569,6 +3322,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<MyTsContact> sse_decode_list_my_ts_contact(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <MyTsContact>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_my_ts_contact(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   Int64List sse_decode_list_prim_i_64_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
@@ -2696,6 +3463,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  MyTsContact sse_decode_my_ts_contact(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_identifier = sse_decode_String(deserializer);
+    var var_note = sse_decode_String(deserializer);
+    var var_matrixId = sse_decode_String(deserializer);
+    return MyTsContact(
+      identifier: var_identifier,
+      note: var_note,
+      matrixId: var_matrixId,
+    );
+  }
+
+  @protected
+  MyTsContactsOutcome sse_decode_my_ts_contacts_outcome(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_contacts = sse_decode_opt_list_my_ts_contact(deserializer);
+    var var_error = sse_decode_opt_box_autoadd_u_32(deserializer);
+    return MyTsContactsOutcome(contacts: var_contacts, error: var_error);
+  }
+
+  @protected
   MyTsEndpoint sse_decode_my_ts_endpoint(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_host = sse_decode_String(deserializer);
@@ -2704,6 +3494,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_userAgent = sse_decode_String(deserializer);
     var var_defaultDeviceName = sse_decode_String(deserializer);
     var var_syncPath = sse_decode_String(deserializer);
+    var var_chatPath = sse_decode_String(deserializer);
+    var var_userPath = sse_decode_String(deserializer);
     var var_loginReplyLimit = sse_decode_u_32(deserializer);
     var var_pullReplyLimit = sse_decode_u_32(deserializer);
     return MyTsEndpoint(
@@ -2713,8 +3505,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       userAgent: var_userAgent,
       defaultDeviceName: var_defaultDeviceName,
       syncPath: var_syncPath,
+      chatPath: var_chatPath,
+      userPath: var_userPath,
       loginReplyLimit: var_loginReplyLimit,
       pullReplyLimit: var_pullReplyLimit,
+    );
+  }
+
+  @protected
+  MyTsHistoryRequest sse_decode_my_ts_history_request(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_host = sse_decode_String(deserializer);
+    var var_path = sse_decode_String(deserializer);
+    var var_query = sse_decode_String(deserializer);
+    var var_headers = sse_decode_String(deserializer);
+    var var_body = sse_decode_list_prim_u_8_strict(deserializer);
+    return MyTsHistoryRequest(
+      host: var_host,
+      path: var_path,
+      query: var_query,
+      headers: var_headers,
+      body: var_body,
     );
   }
 
@@ -2910,6 +3723,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
     if (sse_decode_bool(deserializer)) {
       return (sse_decode_box_autoadd_u_32(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  List<MyTsContact>? sse_decode_opt_list_my_ts_contact(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_list_my_ts_contact(deserializer));
     } else {
       return null;
     }
@@ -3354,6 +4180,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+    MyTsHistory self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as MyTsHistoryImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
     TsClient self,
     SseSerializer serializer,
@@ -3393,6 +4232,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+    MyTsHistory self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as MyTsHistoryImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTsClient(
     TsClient self,
     SseSerializer serializer,
@@ -3426,6 +4278,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as MyTsAccountKeyImpl).frbInternalSseEncode(move: null),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMyTsHistory(
+    MyTsHistory self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as MyTsHistoryImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -3594,6 +4459,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_my_ts_contact(
+    List<MyTsContact> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_my_ts_contact(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_prim_i_64_strict(
     Int64List self,
     SseSerializer serializer,
@@ -3701,6 +4578,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_my_ts_contact(MyTsContact self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.identifier, serializer);
+    sse_encode_String(self.note, serializer);
+    sse_encode_String(self.matrixId, serializer);
+  }
+
+  @protected
+  void sse_encode_my_ts_contacts_outcome(
+    MyTsContactsOutcome self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_list_my_ts_contact(self.contacts, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.error, serializer);
+  }
+
+  @protected
   void sse_encode_my_ts_endpoint(MyTsEndpoint self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.host, serializer);
@@ -3709,8 +4604,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.userAgent, serializer);
     sse_encode_String(self.defaultDeviceName, serializer);
     sse_encode_String(self.syncPath, serializer);
+    sse_encode_String(self.chatPath, serializer);
+    sse_encode_String(self.userPath, serializer);
     sse_encode_u_32(self.loginReplyLimit, serializer);
     sse_encode_u_32(self.pullReplyLimit, serializer);
+  }
+
+  @protected
+  void sse_encode_my_ts_history_request(
+    MyTsHistoryRequest self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.host, serializer);
+    sse_encode_String(self.path, serializer);
+    sse_encode_String(self.query, serializer);
+    sse_encode_String(self.headers, serializer);
+    sse_encode_list_prim_u_8_strict(self.body, serializer);
   }
 
   @protected
@@ -3883,6 +4793,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_box_autoadd_u_32(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_list_my_ts_contact(
+    List<MyTsContact>? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_list_my_ts_contact(self, serializer);
     }
   }
 
@@ -4243,6 +5166,26 @@ class MyTsAccountKeyImpl extends RustOpaque implements MyTsAccountKey {
         RustLib.instance.api.rust_arc_decrement_strong_count_MyTsAccountKey,
     rustArcDecrementStrongCountPtr:
         RustLib.instance.api.rust_arc_decrement_strong_count_MyTsAccountKeyPtr,
+  );
+}
+
+@sealed
+class MyTsHistoryImpl extends RustOpaque implements MyTsHistory {
+  // Not to be used by end users
+  MyTsHistoryImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  MyTsHistoryImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_MyTsHistory,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_MyTsHistory,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_MyTsHistoryPtr,
   );
 }
 
