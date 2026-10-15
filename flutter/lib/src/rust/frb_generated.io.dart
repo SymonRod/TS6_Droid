@@ -126,7 +126,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
 
   @protected
+  MyTsBookmarkContent dco_decode_box_autoadd_my_ts_bookmark_content(
+    dynamic raw,
+  );
+
+  @protected
+  MyTsIdentityContent dco_decode_box_autoadd_my_ts_identity_content(
+    dynamic raw,
+  );
+
+  @protected
   MyTsImportBatch dco_decode_box_autoadd_my_ts_import_batch(dynamic raw);
+
+  @protected
+  MyTsItemMetadata dco_decode_box_autoadd_my_ts_item_metadata(dynamic raw);
 
   @protected
   MyTsLoginFailure dco_decode_box_autoadd_my_ts_login_failure(dynamic raw);
@@ -138,10 +151,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MyTsPullFailure dco_decode_box_autoadd_my_ts_pull_failure(dynamic raw);
 
   @protected
+  MyTsPushAccepted dco_decode_box_autoadd_my_ts_push_accepted(dynamic raw);
+
+  @protected
+  MyTsPushFailure dco_decode_box_autoadd_my_ts_push_failure(dynamic raw);
+
+  @protected
   int dco_decode_box_autoadd_u_16(dynamic raw);
 
   @protected
   int dco_decode_box_autoadd_u_32(dynamic raw);
+
+  @protected
+  BigInt dco_decode_box_autoadd_u_64(dynamic raw);
 
   @protected
   int dco_decode_i_32(dynamic raw);
@@ -153,6 +175,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
+  List<MyTsChannelPassword> dco_decode_list_my_ts_channel_password(dynamic raw);
+
+  @protected
+  List<MyTsClassVersion> dco_decode_list_my_ts_class_version(dynamic raw);
+
+  @protected
   List<MyTsCloudBookmark> dco_decode_list_my_ts_cloud_bookmark(dynamic raw);
 
   @protected
@@ -162,7 +190,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<MyTsContact> dco_decode_list_my_ts_contact(dynamic raw);
 
   @protected
+  List<MyTsPushChange> dco_decode_list_my_ts_push_change(dynamic raw);
+
+  @protected
+  List<MyTsPushClassVersion> dco_decode_list_my_ts_push_class_version(
+    dynamic raw,
+  );
+
+  @protected
   Int64List dco_decode_list_prim_i_64_strict(dynamic raw);
+
+  @protected
+  Uint64List dco_decode_list_prim_u_64_strict(dynamic raw);
 
   @protected
   List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
@@ -178,6 +217,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<TsUser> dco_decode_list_ts_user(dynamic raw);
+
+  @protected
+  MyTsBookmarkContent dco_decode_my_ts_bookmark_content(dynamic raw);
+
+  @protected
+  MyTsChannelPassword dco_decode_my_ts_channel_password(dynamic raw);
+
+  @protected
+  MyTsClassVersion dco_decode_my_ts_class_version(dynamic raw);
 
   @protected
   MyTsCloudBookmark dco_decode_my_ts_cloud_bookmark(dynamic raw);
@@ -198,7 +246,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MyTsHistoryRequest dco_decode_my_ts_history_request(dynamic raw);
 
   @protected
+  MyTsIdentityContent dco_decode_my_ts_identity_content(dynamic raw);
+
+  @protected
   MyTsImportBatch dco_decode_my_ts_import_batch(dynamic raw);
+
+  @protected
+  MyTsItemMetadata dco_decode_my_ts_item_metadata(dynamic raw);
 
   @protected
   MyTsLoginFailure dco_decode_my_ts_login_failure(dynamic raw);
@@ -214,6 +268,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MyTsPullOutcome dco_decode_my_ts_pull_outcome(dynamic raw);
+
+  @protected
+  MyTsPushAccepted dco_decode_my_ts_push_accepted(dynamic raw);
+
+  @protected
+  MyTsPushChange dco_decode_my_ts_push_change(dynamic raw);
+
+  @protected
+  MyTsPushClassVersion dco_decode_my_ts_push_class_version(dynamic raw);
+
+  @protected
+  MyTsPushFailure dco_decode_my_ts_push_failure(dynamic raw);
+
+  @protected
+  MyTsPushOutcome dco_decode_my_ts_push_outcome(dynamic raw);
+
+  @protected
+  MyTsSyncClass dco_decode_my_ts_sync_class(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
@@ -237,10 +309,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MyTsPullFailure? dco_decode_opt_box_autoadd_my_ts_pull_failure(dynamic raw);
 
   @protected
+  MyTsPushAccepted? dco_decode_opt_box_autoadd_my_ts_push_accepted(dynamic raw);
+
+  @protected
+  MyTsPushFailure? dco_decode_opt_box_autoadd_my_ts_push_failure(dynamic raw);
+
+  @protected
   int? dco_decode_opt_box_autoadd_u_16(dynamic raw);
 
   @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
+
+  @protected
+  BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw);
 
   @protected
   List<MyTsContact>? dco_decode_opt_list_my_ts_contact(dynamic raw);
@@ -383,7 +464,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
 
   @protected
+  MyTsBookmarkContent sse_decode_box_autoadd_my_ts_bookmark_content(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MyTsIdentityContent sse_decode_box_autoadd_my_ts_identity_content(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   MyTsImportBatch sse_decode_box_autoadd_my_ts_import_batch(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MyTsItemMetadata sse_decode_box_autoadd_my_ts_item_metadata(
     SseDeserializer deserializer,
   );
 
@@ -403,10 +499,23 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  MyTsPushAccepted sse_decode_box_autoadd_my_ts_push_accepted(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MyTsPushFailure sse_decode_box_autoadd_my_ts_push_failure(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   int sse_decode_box_autoadd_u_16(SseDeserializer deserializer);
 
   @protected
   int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
+
+  @protected
+  BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer);
 
   @protected
   int sse_decode_i_32(SseDeserializer deserializer);
@@ -416,6 +525,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
+
+  @protected
+  List<MyTsChannelPassword> sse_decode_list_my_ts_channel_password(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<MyTsClassVersion> sse_decode_list_my_ts_class_version(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<MyTsCloudBookmark> sse_decode_list_my_ts_cloud_bookmark(
@@ -431,7 +550,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<MyTsContact> sse_decode_list_my_ts_contact(SseDeserializer deserializer);
 
   @protected
+  List<MyTsPushChange> sse_decode_list_my_ts_push_change(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<MyTsPushClassVersion> sse_decode_list_my_ts_push_class_version(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   Int64List sse_decode_list_prim_i_64_strict(SseDeserializer deserializer);
+
+  @protected
+  Uint64List sse_decode_list_prim_u_64_strict(SseDeserializer deserializer);
 
   @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
@@ -447,6 +579,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<TsUser> sse_decode_list_ts_user(SseDeserializer deserializer);
+
+  @protected
+  MyTsBookmarkContent sse_decode_my_ts_bookmark_content(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MyTsChannelPassword sse_decode_my_ts_channel_password(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MyTsClassVersion sse_decode_my_ts_class_version(SseDeserializer deserializer);
 
   @protected
   MyTsCloudBookmark sse_decode_my_ts_cloud_bookmark(
@@ -475,7 +620,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  MyTsIdentityContent sse_decode_my_ts_identity_content(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   MyTsImportBatch sse_decode_my_ts_import_batch(SseDeserializer deserializer);
+
+  @protected
+  MyTsItemMetadata sse_decode_my_ts_item_metadata(SseDeserializer deserializer);
 
   @protected
   MyTsLoginFailure sse_decode_my_ts_login_failure(SseDeserializer deserializer);
@@ -491,6 +644,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MyTsPullOutcome sse_decode_my_ts_pull_outcome(SseDeserializer deserializer);
+
+  @protected
+  MyTsPushAccepted sse_decode_my_ts_push_accepted(SseDeserializer deserializer);
+
+  @protected
+  MyTsPushChange sse_decode_my_ts_push_change(SseDeserializer deserializer);
+
+  @protected
+  MyTsPushClassVersion sse_decode_my_ts_push_class_version(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MyTsPushFailure sse_decode_my_ts_push_failure(SseDeserializer deserializer);
+
+  @protected
+  MyTsPushOutcome sse_decode_my_ts_push_outcome(SseDeserializer deserializer);
+
+  @protected
+  MyTsSyncClass sse_decode_my_ts_sync_class(SseDeserializer deserializer);
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
@@ -522,10 +695,23 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  MyTsPushAccepted? sse_decode_opt_box_autoadd_my_ts_push_accepted(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MyTsPushFailure? sse_decode_opt_box_autoadd_my_ts_push_failure(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   int? sse_decode_opt_box_autoadd_u_16(SseDeserializer deserializer);
 
   @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
+
+  @protected
+  BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer);
 
   @protected
   List<MyTsContact>? sse_decode_opt_list_my_ts_contact(
@@ -691,8 +877,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_my_ts_bookmark_content(
+    MyTsBookmarkContent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_my_ts_identity_content(
+    MyTsIdentityContent self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_my_ts_import_batch(
     MyTsImportBatch self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_my_ts_item_metadata(
+    MyTsItemMetadata self,
     SseSerializer serializer,
   );
 
@@ -715,10 +919,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_my_ts_push_accepted(
+    MyTsPushAccepted self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_my_ts_push_failure(
+    MyTsPushFailure self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_u_16(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer);
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
@@ -728,6 +947,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_my_ts_channel_password(
+    List<MyTsChannelPassword> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_my_ts_class_version(
+    List<MyTsClassVersion> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_my_ts_cloud_bookmark(
@@ -748,8 +979,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_my_ts_push_change(
+    List<MyTsPushChange> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_my_ts_push_class_version(
+    List<MyTsPushClassVersion> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_prim_i_64_strict(
     Int64List self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_prim_u_64_strict(
+    Uint64List self,
     SseSerializer serializer,
   );
 
@@ -773,6 +1022,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_ts_user(List<TsUser> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_my_ts_bookmark_content(
+    MyTsBookmarkContent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_my_ts_channel_password(
+    MyTsChannelPassword self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_my_ts_class_version(
+    MyTsClassVersion self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_my_ts_cloud_bookmark(
@@ -805,8 +1072,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_my_ts_identity_content(
+    MyTsIdentityContent self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_my_ts_import_batch(
     MyTsImportBatch self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_my_ts_item_metadata(
+    MyTsItemMetadata self,
     SseSerializer serializer,
   );
 
@@ -837,6 +1116,42 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_my_ts_pull_outcome(
     MyTsPullOutcome self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_my_ts_push_accepted(
+    MyTsPushAccepted self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_my_ts_push_change(
+    MyTsPushChange self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_my_ts_push_class_version(
+    MyTsPushClassVersion self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_my_ts_push_failure(
+    MyTsPushFailure self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_my_ts_push_outcome(
+    MyTsPushOutcome self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_my_ts_sync_class(
+    MyTsSyncClass self,
     SseSerializer serializer,
   );
 
@@ -877,10 +1192,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_opt_box_autoadd_my_ts_push_accepted(
+    MyTsPushAccepted? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_my_ts_push_failure(
+    MyTsPushFailure? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_u_16(int? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_list_my_ts_contact(

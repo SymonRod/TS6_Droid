@@ -13,6 +13,7 @@ import '../data/account_vault.dart';
 import '../data/message_store.dart';
 import '../data/server_bookmark.dart';
 import '../data/stores.dart';
+import '../myts/sync_cursors.dart';
 import '../rust/api.dart';
 import '../util/errors.dart';
 import 'stream_broadcaster.dart';
@@ -26,6 +27,12 @@ final bookmarkStoreProvider = Provider((_) => BookmarkStore());
 final settingsStoreProvider = Provider((_) => SettingsStore());
 final identityStoreProvider = Provider((_) => IdentityStore());
 final accountVaultProvider = Provider<AccountVault>((_) => AccountVault());
+
+/// Sync cursors for myTeamSpeak write-back (last-known versions per push).
+/// Stored alongside the vault; advanced only on accepted pushes.
+final syncCursorStoreProvider = Provider<SyncCursorStore>(
+  (_) => SyncCursorStore(),
+);
 final messageStoreProvider = Provider((_) => MessageStore());
 
 AppLocalizations _l10n() {

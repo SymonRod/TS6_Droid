@@ -6,8 +6,8 @@
 import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `convert_batch`, `parse_args`, `pull_outcome`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These functions are ignored because they are not marked as `pub`: `convert_batch`, `convert_bookmark`, `convert_identity`, `convert_metadata`, `import_class`, `parse_args`, `pull_outcome`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 MyTsEndpoint myTsEndpoint() => RustLib.instance.api.crateMytsMyTsEndpoint();
 
@@ -274,11 +274,242 @@ Future<MyTsPullOutcome> myTsParsePull({
   body: body,
 );
 
+/// Framed `synchronizeItems` push, or `None` for an unusable session, an
+/// empty class list, a bad UUID/version or an oversized blob. POST it to
+/// `sync_path` with the pull transport policy. An empty change list is
+/// passed through (Dart should skip no-op pushes instead).
+Uint8List? myTsBuildSyncPush({
+  required String session,
+  required String globalVersion,
+  required List<MyTsClassVersion> classes,
+  required List<MyTsPushChange> changes,
+}) => RustLib.instance.api.crateMytsMyTsBuildSyncPush(
+  session: session,
+  globalVersion: globalVersion,
+  classes: classes,
+  changes: changes,
+);
+
+/// Classifies a whole `synchronizeItems` reply: accepted cursors or a typed
+/// failure, never a partial result.
+MyTsPushOutcome myTsParseSyncPush({
+  required int httpStatus,
+  required List<int> body,
+}) => RustLib.instance.api.crateMytsMyTsParseSyncPush(
+  httpStatus: httpStatus,
+  body: body,
+);
+
+/// Encoded `Bookmark_Data` bytes, or `None` when a field breaks a bound.
+/// Proto2 presence is preserved.
+Uint8List? myTsEncodeBookmarkContent({required MyTsBookmarkContent content}) =>
+    RustLib.instance.api.crateMytsMyTsEncodeBookmarkContent(content: content);
+
+/// Encoded `Identity_Data` bytes, or `None` when a field breaks a bound.
+Uint8List? myTsEncodeIdentityContent({required MyTsIdentityContent content}) =>
+    RustLib.instance.api.crateMytsMyTsEncodeIdentityContent(content: content);
+
+/// `Item_Data` plaintext ready for encryption, or `None` for a bad UUID, an
+/// unsupported content field (only 16 = bookmark, 17 = identity) or a bound
+/// breach. Only the content bytes are wrapped; the blob encryption is a
+/// separate call so IV generation stays with the caller.
+Uint8List? myTsEncodeItemData({
+  required String itemUuid,
+  required MyTsItemMetadata metadata,
+  required int contentField,
+  required List<int> content,
+}) => RustLib.instance.api.crateMytsMyTsEncodeItemData(
+  itemUuid: itemUuid,
+  metadata: metadata,
+  contentField: contentField,
+  content: content,
+);
+
+/// Freshly encrypted item blob (`IV || CTR || SHA512`), or `None` for a
+/// short IV, an empty plaintext or an oversized one. The caller generates
+/// the 16-byte IV with a cryptographic RNG per item (Dart:
+/// `Random.secure()`); fixed vectors are test-only.
+Future<Uint8List?> myTsEncryptItem({
+  required MyTsAccountKey key,
+  required List<int> plain,
+  required List<int> iv,
+}) => RustLib.instance.api.crateMytsMyTsEncryptItem(
+  key: key,
+  plain: plain,
+  iv: iv,
+);
+
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<MyTsAccountKey>>
 abstract class MyTsAccountKey implements RustOpaqueInterface {}
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<MyTsHistory>>
 abstract class MyTsHistory implements RustOpaqueInterface {}
+
+/// Full bookmark content for a push. Every cloud field is present so a
+/// re-push cannot wipe fields the app never displays; `None` is absent,
+/// `Some("")` is explicitly empty (matters for the identity reference:
+/// empty means "Use Default"). Unknown fields cannot be supplied and are
+/// dropped by the encoder — see the module notes before pushing a
+/// lossy-subset record.
+class MyTsBookmarkContent {
+  final String? name;
+  final String? address;
+  final int? port;
+  final String? nickname;
+  final String? phoneticNickname;
+  final String? identity;
+  final String? serverPassword;
+  final String? defaultChannel;
+  final String? defaultChannelPassword;
+  final BigInt? defaultChannelId;
+  final String? captureProfile;
+  final String? playbackProfile;
+  final String? hotkeyProfile;
+  final bool? autoconnect;
+  final String? serverUid;
+  final String? serverIcon;
+  final String? soundPack;
+  final bool? showServerQueryClients;
+  final int? subscriptionMode;
+  final Uint64List subscribedChannelIds;
+  final List<MyTsChannelPassword> channelPasswords;
+  final bool? sendMytsidOnServer;
+  final bool? announceToChat;
+  final String? resolvedServerNickname;
+  final bool? connectMuted;
+
+  const MyTsBookmarkContent({
+    this.name,
+    this.address,
+    this.port,
+    this.nickname,
+    this.phoneticNickname,
+    this.identity,
+    this.serverPassword,
+    this.defaultChannel,
+    this.defaultChannelPassword,
+    this.defaultChannelId,
+    this.captureProfile,
+    this.playbackProfile,
+    this.hotkeyProfile,
+    this.autoconnect,
+    this.serverUid,
+    this.serverIcon,
+    this.soundPack,
+    this.showServerQueryClients,
+    this.subscriptionMode,
+    required this.subscribedChannelIds,
+    required this.channelPasswords,
+    this.sendMytsidOnServer,
+    this.announceToChat,
+    this.resolvedServerNickname,
+    this.connectMuted,
+  });
+
+  static Future<MyTsBookmarkContent> default_() =>
+      RustLib.instance.api.crateMytsMyTsBookmarkContentDefault();
+
+  @override
+  int get hashCode =>
+      name.hashCode ^
+      address.hashCode ^
+      port.hashCode ^
+      nickname.hashCode ^
+      phoneticNickname.hashCode ^
+      identity.hashCode ^
+      serverPassword.hashCode ^
+      defaultChannel.hashCode ^
+      defaultChannelPassword.hashCode ^
+      defaultChannelId.hashCode ^
+      captureProfile.hashCode ^
+      playbackProfile.hashCode ^
+      hotkeyProfile.hashCode ^
+      autoconnect.hashCode ^
+      serverUid.hashCode ^
+      serverIcon.hashCode ^
+      soundPack.hashCode ^
+      showServerQueryClients.hashCode ^
+      subscriptionMode.hashCode ^
+      subscribedChannelIds.hashCode ^
+      channelPasswords.hashCode ^
+      sendMytsidOnServer.hashCode ^
+      announceToChat.hashCode ^
+      resolvedServerNickname.hashCode ^
+      connectMuted.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MyTsBookmarkContent &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          address == other.address &&
+          port == other.port &&
+          nickname == other.nickname &&
+          phoneticNickname == other.phoneticNickname &&
+          identity == other.identity &&
+          serverPassword == other.serverPassword &&
+          defaultChannel == other.defaultChannel &&
+          defaultChannelPassword == other.defaultChannelPassword &&
+          defaultChannelId == other.defaultChannelId &&
+          captureProfile == other.captureProfile &&
+          playbackProfile == other.playbackProfile &&
+          hotkeyProfile == other.hotkeyProfile &&
+          autoconnect == other.autoconnect &&
+          serverUid == other.serverUid &&
+          serverIcon == other.serverIcon &&
+          soundPack == other.soundPack &&
+          showServerQueryClients == other.showServerQueryClients &&
+          subscriptionMode == other.subscriptionMode &&
+          subscribedChannelIds == other.subscribedChannelIds &&
+          channelPasswords == other.channelPasswords &&
+          sendMytsidOnServer == other.sendMytsidOnServer &&
+          announceToChat == other.announceToChat &&
+          resolvedServerNickname == other.resolvedServerNickname &&
+          connectMuted == other.connectMuted;
+}
+
+/// One channel password of a bookmark push. Field presence mirrors the
+/// decoder: `None` is absent, never an empty default.
+class MyTsChannelPassword {
+  final BigInt? channelId;
+  final String? password;
+
+  const MyTsChannelPassword({this.channelId, this.password});
+
+  static Future<MyTsChannelPassword> default_() =>
+      RustLib.instance.api.crateMytsMyTsChannelPasswordDefault();
+
+  @override
+  int get hashCode => channelId.hashCode ^ password.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MyTsChannelPassword &&
+          runtimeType == other.runtimeType &&
+          channelId == other.channelId &&
+          password == other.password;
+}
+
+/// Last-known version of one class, sent with a push.
+class MyTsClassVersion {
+  final MyTsSyncClass class_;
+  final String version;
+
+  const MyTsClassVersion({required this.class_, required this.version});
+
+  @override
+  int get hashCode => class_.hashCode ^ version.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MyTsClassVersion &&
+          runtimeType == other.runtimeType &&
+          class_ == other.class_ &&
+          version == other.version;
+}
 
 /// One cloud bookmark. `identity` is the opaque cloud reference exactly as
 /// received: `None` is absent, `Some("")` is present but empty. No matching
@@ -576,6 +807,47 @@ class MyTsHistoryRequest {
           persist == other.persist;
 }
 
+/// Full identity content for a push. Only strict-validated desktop material
+/// may be supplied as `unique_identity`; this encoder never generates or
+/// repairs key material.
+class MyTsIdentityContent {
+  final String? uniqueIdentity;
+  final String? idName;
+  final String? nickname;
+  final String? phoneticNickname;
+  final bool? isDefault;
+
+  const MyTsIdentityContent({
+    this.uniqueIdentity,
+    this.idName,
+    this.nickname,
+    this.phoneticNickname,
+    this.isDefault,
+  });
+
+  static Future<MyTsIdentityContent> default_() =>
+      RustLib.instance.api.crateMytsMyTsIdentityContentDefault();
+
+  @override
+  int get hashCode =>
+      uniqueIdentity.hashCode ^
+      idName.hashCode ^
+      nickname.hashCode ^
+      phoneticNickname.hashCode ^
+      isDefault.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MyTsIdentityContent &&
+          runtimeType == other.runtimeType &&
+          uniqueIdentity == other.uniqueIdentity &&
+          idName == other.idName &&
+          nickname == other.nickname &&
+          phoneticNickname == other.phoneticNickname &&
+          isDefault == other.isDefault;
+}
+
 class MyTsImportBatch {
   final List<MyTsCloudIdentity> identities;
   final List<MyTsCloudBookmark> bookmarks;
@@ -593,6 +865,14 @@ class MyTsImportBatch {
   /// Items of classes this app does not import (not decrypted).
   final int unsupportedItems;
 
+  /// Opaque cursor for the next push. Persist it only together with a
+  /// successful import/commit, and advance it only on accepted pushes.
+  final String globalVersion;
+
+  /// Per-class versions echoed by the service, same lifetime as above.
+  /// Numbers pass through verbatim (only 0/1 are pushable).
+  final List<MyTsPushClassVersion> classVersions;
+
   const MyTsImportBatch({
     required this.identities,
     required this.bookmarks,
@@ -600,6 +880,8 @@ class MyTsImportBatch {
     required this.invalidBookmarkIds,
     required this.tombstones,
     required this.unsupportedItems,
+    required this.globalVersion,
+    required this.classVersions,
   });
 
   @override
@@ -609,7 +891,9 @@ class MyTsImportBatch {
       invalidIdentityIds.hashCode ^
       invalidBookmarkIds.hashCode ^
       tombstones.hashCode ^
-      unsupportedItems.hashCode;
+      unsupportedItems.hashCode ^
+      globalVersion.hashCode ^
+      classVersions.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -621,7 +905,58 @@ class MyTsImportBatch {
           invalidIdentityIds == other.invalidIdentityIds &&
           invalidBookmarkIds == other.invalidBookmarkIds &&
           tombstones == other.tombstones &&
-          unsupportedItems == other.unsupportedItems;
+          unsupportedItems == other.unsupportedItems &&
+          globalVersion == other.globalVersion &&
+          classVersions == other.classVersions;
+}
+
+/// `Item_Data` metadata for a push. Every field is passed through with
+/// presence preserved; `manipulated` is bounded to 0..=3 by the encoder.
+/// Its desktop semantics are unproven — pass explicitly.
+class MyTsItemMetadata {
+  final String? syncVersionUuid;
+  final int? manipulated;
+  final String? lastKnownVersion;
+  final int? itemType;
+  final String? parent;
+  final String? sortOrder;
+  final BigInt? timestamp;
+
+  const MyTsItemMetadata({
+    this.syncVersionUuid,
+    this.manipulated,
+    this.lastKnownVersion,
+    this.itemType,
+    this.parent,
+    this.sortOrder,
+    this.timestamp,
+  });
+
+  static Future<MyTsItemMetadata> default_() =>
+      RustLib.instance.api.crateMytsMyTsItemMetadataDefault();
+
+  @override
+  int get hashCode =>
+      syncVersionUuid.hashCode ^
+      manipulated.hashCode ^
+      lastKnownVersion.hashCode ^
+      itemType.hashCode ^
+      parent.hashCode ^
+      sortOrder.hashCode ^
+      timestamp.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MyTsItemMetadata &&
+          runtimeType == other.runtimeType &&
+          syncVersionUuid == other.syncVersionUuid &&
+          manipulated == other.manipulated &&
+          lastKnownVersion == other.lastKnownVersion &&
+          itemType == other.itemType &&
+          parent == other.parent &&
+          sortOrder == other.sortOrder &&
+          timestamp == other.timestamp;
 }
 
 enum MyTsLoginFailure {
@@ -750,3 +1085,134 @@ class MyTsPullOutcome {
           httpStatus == other.httpStatus &&
           serverStatus == other.serverStatus;
 }
+
+/// Cursors of an accepted push. Persist `global_version` and every class
+/// version only after this result; per-item versions advance alongside.
+class MyTsPushAccepted {
+  final String globalVersion;
+  final List<MyTsPushClassVersion> classes;
+
+  const MyTsPushAccepted({required this.globalVersion, required this.classes});
+
+  @override
+  int get hashCode => globalVersion.hashCode ^ classes.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MyTsPushAccepted &&
+          runtimeType == other.runtimeType &&
+          globalVersion == other.globalVersion &&
+          classes == other.classes;
+}
+
+/// One changed item: freshly encrypted blob plus a bumped outer
+/// `item_version`. Tombstone deletes cannot be expressed here.
+class MyTsPushChange {
+  final MyTsSyncClass class_;
+  final String itemUuid;
+  final String itemVersion;
+  final Uint8List blob;
+
+  const MyTsPushChange({
+    required this.class_,
+    required this.itemUuid,
+    required this.itemVersion,
+    required this.blob,
+  });
+
+  @override
+  int get hashCode =>
+      class_.hashCode ^
+      itemUuid.hashCode ^
+      itemVersion.hashCode ^
+      blob.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MyTsPushChange &&
+          runtimeType == other.runtimeType &&
+          class_ == other.class_ &&
+          itemUuid == other.itemUuid &&
+          itemVersion == other.itemVersion &&
+          blob == other.blob;
+}
+
+/// One class version echoed by an accepted push. The number is passed
+/// through verbatim (the service may echo classes beyond 0/1).
+class MyTsPushClassVersion {
+  final int classNumber;
+  final String version;
+
+  const MyTsPushClassVersion({
+    required this.classNumber,
+    required this.version,
+  });
+
+  @override
+  int get hashCode => classNumber.hashCode ^ version.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MyTsPushClassVersion &&
+          runtimeType == other.runtimeType &&
+          classNumber == other.classNumber &&
+          version == other.version;
+}
+
+enum MyTsPushFailure {
+  /// HTTP status other than 200 (`http_status` is set).
+  http,
+
+  /// The service rejected the session (status 102): sign in again.
+  sessionExpired,
+
+  /// Any other service status (`server_status` is set). `COLLISION` (303)
+  /// arrives here: the server copy wins and the UI must surface it, never
+  /// auto-overwrite or silently retry.
+  server,
+
+  /// A size or count limit was exceeded.
+  limit,
+
+  /// Malformed protobuf. Item-integrity failures cannot occur here: reply
+  /// details are counted, never decrypted.
+  invalid,
+}
+
+class MyTsPushOutcome {
+  final MyTsPushAccepted? accepted;
+  final MyTsPushFailure? failure;
+  final int? httpStatus;
+  final int? serverStatus;
+
+  const MyTsPushOutcome({
+    this.accepted,
+    this.failure,
+    this.httpStatus,
+    this.serverStatus,
+  });
+
+  @override
+  int get hashCode =>
+      accepted.hashCode ^
+      failure.hashCode ^
+      httpStatus.hashCode ^
+      serverStatus.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MyTsPushOutcome &&
+          runtimeType == other.runtimeType &&
+          accepted == other.accepted &&
+          failure == other.failure &&
+          httpStatus == other.httpStatus &&
+          serverStatus == other.serverStatus;
+}
+
+/// Sync class of a push cursor or change. Only the demonstrated bookmark
+/// and identity classes can be pushed.
+enum MyTsSyncClass { bookmark, identity }

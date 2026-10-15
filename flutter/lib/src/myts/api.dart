@@ -421,6 +421,14 @@ class MyTsApi {
     );
   }
 
+  /// One `synchronizeItems` POST with the pull transport policy (verified
+  /// TLS, no redirects/retries, sync receive cap, overall deadline).
+  /// Transport failures throw ([MyTsResponseRejected], [TimeoutException],
+  /// [SocketException], [HttpException], [TlsException]); callers map them.
+  /// Prefer the gated [MyTsSync] push over calling this directly.
+  Future<MyTsHttpResponse> postSyncPush(Uint8List request) =>
+      _post(_syncUri, _headers, request, _endpoint.pullReplyLimit);
+
   /// Read-only roster, separate from legacy CONTACTS sync class.
   Future<List<rs.MyTsContact>> contacts(String session) async {
     final request = rs.myTsBuildContactsRequest(session: session);

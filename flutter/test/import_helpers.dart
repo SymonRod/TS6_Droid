@@ -8,6 +8,7 @@ import 'package:ts6_flutter/src/data/account_vault.dart';
 import 'package:ts6_flutter/src/myts/api.dart';
 import 'package:ts6_flutter/src/myts/controller.dart';
 import 'package:ts6_flutter/src/myts/session_store.dart';
+import 'package:ts6_flutter/src/myts/sync_cursors.dart';
 import 'package:ts6_flutter/src/state/server_controller.dart';
 
 import 'fixtures/synthetic_pull.dart';
@@ -76,15 +77,18 @@ class World {
   final identities = TestIdentityStore();
   final sessionBackend = MemoryMyTsSecureBackend();
   final vaultBackend = FlakyBackend();
+  final cursorBackend = MemoryMyTsSecureBackend();
   late final ProviderContainer container = build();
 
   AccountVault get vault => AccountVault(vaultBackend);
+  SyncCursorStore get cursors => SyncCursorStore(cursorBackend);
 
   ProviderContainer build() => ProviderContainer(
     overrides: [
       myTsApiProvider.overrideWithValue(MyTsApi(post: service.post, deviceName: 'Test')),
       myTsSessionStoreProvider.overrideWithValue(MyTsSessionStore(sessionBackend)),
       accountVaultProvider.overrideWithValue(vault),
+      syncCursorStoreProvider.overrideWithValue(cursors),
       identityStoreProvider.overrideWithValue(identities),
     ],
   );

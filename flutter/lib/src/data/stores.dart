@@ -105,6 +105,16 @@ class SettingsStore {
       true;
   Future<void> setAutoLoadImages(bool v) async =>
       (await SharedPreferences.getInstance()).setBool('auto_load_images', v);
+
+  /// myTeamSpeak two-way sync master switch. Defaults to on: while off the
+  /// app never contacts `/synchronization` for sync (no pull, no push) and
+  /// never needs the unwrapped account key in memory. Cursors and the vault
+  /// are kept untouched; re-enabling runs one bounded pull, never a push.
+  Future<bool> myTsSyncEnabled() async =>
+      (await SharedPreferences.getInstance()).getBool('myts_sync_enabled') ??
+      true;
+  Future<void> setMyTsSyncEnabled(bool v) async =>
+      (await SharedPreferences.getInstance()).setBool('myts_sync_enabled', v);
 }
 
 /// Identity kept as the exported string in the app's files dir.

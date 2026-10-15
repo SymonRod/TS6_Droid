@@ -52,6 +52,8 @@ rs.MyTsImportBatch batch({
   invalidBookmarkIds: badBookmarks,
   tombstones: 0,
   unsupportedItems: 0,
+  globalVersion: '',
+  classVersions: const [],
 );
 
 class RecordingBackend extends MemoryMyTsSecureBackend {

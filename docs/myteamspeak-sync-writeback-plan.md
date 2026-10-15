@@ -110,6 +110,33 @@ Protocol/crypto in `tslib-myts` (`../ts6-lib`), sans-IO, exposed through
    with PyCryptodome. Tombstone-delete encoding explicitly out of scope.
 2. FRB exposure + cursor store + opt-out setting plumbed through, push/pull
    disabled behind a feature flag — offline tests.
+    **Done 2026-10-15 (this machine), no live traffic.** FRB
+    (`tslib-frb::myts`): `my_ts_build_sync_push`, `my_ts_parse_sync_push`
+    (300 advances, 102 is session-expiry, other statuses typed with 303
+    surfacing as `Server(303)`, never auto-merged),
+    `my_ts_encode_bookmark/identity/item_data` (proto2 presence preserved,
+    unknown fields dropped), `my_ts_encrypt_item` (caller-supplied 16-byte
+    IV; the Dart caller uses `Random.secure()`), plus `global_version` and
+    `class_versions` added to `MyTsImportBatch`. Dart: `SyncCursorStore`
+    (secure storage, account-scoped, atomic write with read-back verify and
+    rollback, same discipline as the vault), `SettingsStore.myTsSyncEnabled`
+    (default on), `MyTsSync.pushBookmark/pushIdentity` behind
+    `myTsSyncPushEnabled = false` (the flag is checked before any
+    Rust/network/storage/key use), `postSyncPush` reusing the pull transport
+    policy. `AccountImporter.commit` records batch cursors (global,
+    per-class, per-item) on every commit carrying cursor data; cursorless
+    batches never wipe stored cursors. Verified: 136 `tslib-myts` tests, 14
+    `tslib-frb` tests (8 new), full Flutter suite **245 green** (24 new:
+    cursor store, gating, gated push incl. collision/no-cursor/failure paths,
+    import-recorded cursors), `flutter analyze` clean on touched files, Rust
+    `fmt` clean under the MSRV 1.75 toolchain, `tslib-myts` Clippy
+    `-D warnings` clean (`tslib-frb` Clippy stays blocked by pre-existing
+    `vendor/tsclientlib` lints, as before this change). Step-3 prerequisites:
+    pushes need FULL records (the vault/cloud bookmark structs are lossy
+    subsets — the production source must be fresh-pull full records merged
+    with local edits, which needs the pull output extended); `manipulated`
+    values beyond the delete marker (2) are unproven; the item-version bump
+    scheme is provisional (fresh random ID per push).
 3. Bounded live validation on the disposable test account with explicit
    authorization per run: single-bookmark push → re-pull equality;
    collision path (desktop edits same bookmark meanwhile); opt-out on/off

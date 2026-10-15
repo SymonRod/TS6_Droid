@@ -78,6 +78,7 @@ final accountImporterProvider = Provider<AccountImporter>(
     vault: ref.read(accountVaultProvider),
     identities: ref.read(identityStoreProvider),
     onboarding: ref.read(onboardingStoreProvider),
+    cursors: ref.read(syncCursorStoreProvider),
   ),
 );
 

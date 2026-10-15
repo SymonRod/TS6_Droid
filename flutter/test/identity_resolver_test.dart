@@ -63,6 +63,8 @@ void main() {
         invalidBookmarkIds: [],
         tombstones: 0,
         unsupportedItems: 0,
+        globalVersion: '',
+        classVersions: const [],
       ),
     );
     imported = plan.next;

@@ -74,6 +74,22 @@ void main() {
       expect(state.links, isEmpty);
     });
 
+    test('a successful import records the sync cursors for a later push', () async {
+      final s = await signIn(w);
+      expect(s.phase, ImportPhase.done);
+      final stored = await w.cursors.load(_owner);
+      expect(stored, isNotNull);
+      expect(stored!.globalVersion, 'global-v1');
+      expect(stored.classVersions, {0: 'class-v1', 1: 'class-v1'});
+      expect(stored.itemVersions, {
+        'cloud-identity-a': 'outer-1',
+        'cloud-identity-b': 'outer-1',
+        'cloud-bookmark-1': 'outer-1',
+        'cloud-bookmark-2': 'outer-1',
+        'cloud-bookmark-3': 'outer-1',
+      });
+    });
+
     test('setup is complete only afterwards, and remembered across restarts', () async {
       await w.container.read(onboardingProvider.future);
       expect(w.container.read(onboardingProvider).requireValue.complete, isFalse);
@@ -221,6 +237,7 @@ void main() {
       expect(s.failure, anyOf(ImportFailure.integrity, ImportFailure.invalidData));
       expectNothingStored(w);
       expect(await flag(), isNull);
+      expect(await w.cursors.load(_owner), isNull);
     });
 
     test('missing wrapped key: unwrap fails closed, no pull is sent', () async {

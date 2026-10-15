@@ -1,3 +1,4 @@
+import '../myts/sync_cursors.dart';
 import '../rust/myts.dart' as rs;
 import 'account_vault.dart';
 import 'import_plan.dart';
@@ -19,10 +20,16 @@ class AccountImporter {
   final IdentityStore identities;
   final OnboardingStore onboarding;
 
+  /// Sync cursors recorded from every committed batch, so a later push can
+  /// send the last-known versions back. Local bookkeeping only: no network,
+  /// no key use, never gated by the push feature flag.
+  final SyncCursorStore cursors;
+
   AccountImporter({
     required this.vault,
     required this.identities,
     required this.onboarding,
+    required this.cursors,
   });
 
   Future<Set<String>> _localUids() async {
@@ -62,6 +69,7 @@ class AccountImporter {
           localUids: await _localUids(),
         );
         if (plan.report.hasChanges) await vault.write(plan.next);
+        await _recordCursors(batch, owner);
         if (plan.next.hasData) {
           try {
             await onboarding.markComplete();
@@ -70,5 +78,27 @@ class AccountImporter {
           }
         }
         return plan.report;
+      });
+
+  /// Records the batch cursors for a later push. Runs on every commit —
+  /// including a no-change re-import, which still refreshes versions — but
+  /// never wipes stored cursors from a cursorless (synthetic) batch.
+  Future<void> _recordCursors(rs.MyTsImportBatch batch, String owner) =>
+      cursors.synchronized(() async {
+        if (batch.globalVersion.isEmpty && batch.classVersions.isEmpty) return;
+        final items = <String, String>{
+          for (final i in batch.identities) i.cloudId: i.itemVersion,
+          for (final b in batch.bookmarks) b.cloudId: b.itemVersion,
+        };
+        await cursors.save(
+          owner,
+          SyncCursors(
+            globalVersion: batch.globalVersion,
+            classVersions: {
+              for (final c in batch.classVersions) c.classNumber: c.version,
+            },
+            itemVersions: items,
+          ),
+        );
       });
 }
